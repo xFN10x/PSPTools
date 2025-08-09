@@ -8,6 +8,7 @@ import javax.swing.JPanel;
 import javax.swing.SpringLayout;
 
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.Component;
@@ -29,7 +30,8 @@ public class LaunchPage extends JFrame {
 
     public static Point getScreenCenter(Component target) {
         var size = Toolkit.getDefaultToolkit().getScreenSize();
-        return new Point(((int)((size.getWidth() - target.getWidth()) * 0.5)), ((int) ((size.getHeight() - target.getHeight()) * 0.5)));
+        return new Point(((int) ((size.getWidth() - target.getWidth()) * 0.5)),
+                ((int) ((size.getHeight() - target.getHeight()) * 0.5)));
     }
 
     public LaunchPage() {
@@ -41,18 +43,20 @@ public class LaunchPage extends JFrame {
         Lay.putConstraint(SpringLayout.SOUTH, ButtonsPane, -10, SpringLayout.SOUTH, getContentPane());
         Lay.putConstraint(SpringLayout.NORTH, ButtonsPane, 10, SpringLayout.NORTH, getContentPane());
 
-        add(ButtonsPane);     
+        add(ButtonsPane);
 
-        ButtonsPane.setLayout(new GridLayout(0, 3,10,10));
-
-        GameEditor.
+        ButtonsPane.setLayout(new GridLayout(0, 3, 10, 10));
+        // #region we need this cause the r dont fit, wont fit
+        Font GameEditorFont = GameEditor.getFont();
+        GameEditorFont.deriveFont(GameEditorFont.getSize() - 1f);
+        // #endregion
         ButtonsPane.add(SaveEditor);
         ButtonsPane.add(GameEditor);
-        
+
         ButtonsPane.add(ConvertersButton);
 
         MenuBar.add(FileMenu);
-        
+
         setJMenuBar(MenuBar);
         setResizable(false);
         setSize(size);
