@@ -1,0 +1,61 @@
+package psptools.ui;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JPanel;
+import javax.swing.SpringLayout;
+
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.Point;
+import java.awt.Component;
+import java.awt.Toolkit;
+
+public class LaunchPage extends JFrame {
+
+    public final static Dimension size = new Dimension(400, 200);
+
+    public final JPanel ButtonsPane = new JPanel();
+    public final JMenuBar MenuBar = new JMenuBar();
+    public final JMenu FileMenu = new JMenu("File");
+
+    public final JButton SaveEditor = new JButton("Save Manager");
+    public final JButton GameEditor = new JButton("Game Manager");
+    public final JButton ConvertersButton = new JButton("Converters");
+
+    public final SpringLayout Lay = new SpringLayout();
+
+    public static Point getScreenCenter(Component target) {
+        var size = Toolkit.getDefaultToolkit().getScreenSize();
+        return new Point(((int)((size.getWidth() - target.getWidth()) * 0.5)), ((int) ((size.getHeight() - target.getHeight()) * 0.5)));
+    }
+
+    public LaunchPage() {
+        super("PSPTools");
+        setLayout(Lay);
+
+        Lay.putConstraint(SpringLayout.EAST, ButtonsPane, -10, SpringLayout.EAST, getContentPane());
+        Lay.putConstraint(SpringLayout.WEST, ButtonsPane, 10, SpringLayout.WEST, getContentPane());
+        Lay.putConstraint(SpringLayout.SOUTH, ButtonsPane, -10, SpringLayout.SOUTH, getContentPane());
+        Lay.putConstraint(SpringLayout.NORTH, ButtonsPane, 10, SpringLayout.NORTH, getContentPane());
+
+        add(ButtonsPane);     
+
+        ButtonsPane.setLayout(new GridLayout(0, 3,10,10));
+
+        GameEditor.
+        ButtonsPane.add(SaveEditor);
+        ButtonsPane.add(GameEditor);
+        
+        ButtonsPane.add(ConvertersButton);
+
+        MenuBar.add(FileMenu);
+        
+        setJMenuBar(MenuBar);
+        setResizable(false);
+        setSize(size);
+        setLocation(getScreenCenter(this));
+    }
+}
