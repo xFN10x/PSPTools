@@ -4,8 +4,13 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SpringLayout;
+import javax.swing.WindowConstants;
+
+import psptools.psp.PSP;
+import psptools.psp.PSPSelectionUI;
 
 import java.awt.Dimension;
 import java.awt.Font;
@@ -46,10 +51,28 @@ public class LaunchPage extends JFrame {
         add(ButtonsPane);
 
         ButtonsPane.setLayout(new GridLayout(0, 3, 10, 10));
+
+        SaveEditor.addActionListener(action -> {
+            if (!PSP.getCurrentPSP().pspActive()) {
+                int option = JOptionPane.showConfirmDialog(this, "No PSP is selected, but is required.\nSelect one?",
+                        "PSP Selection Confirm", JOptionPane.YES_NO_OPTION);
+
+                if (option == JOptionPane.YES_OPTION) {
+                    PSP.setCurrentPSP(PSPSelectionUI.getNewPSP(this));
+                    SaveEditor.doClick();
+                } else
+                    return;
+            } else {
+                setVisible(false);
+                new SFOBasedManager(this,SFOBasedManager.SAVES_MODE,"Save Manager", PSP.getCurrentPSP().getFolder("PSP","SAVEDATA").toFile()).setVisible(true);;
+            }
+        });
+
         // #region we need this cause the r dont fit, wont fit
         Font GameEditorFont = GameEditor.getFont();
-        GameEditorFont.deriveFont(GameEditorFont.getSize() - 1f);
+        GameEditor.setFont(GameEditorFont.deriveFont(GameEditorFont.getSize() - 1f));
         // #endregion
+
         ButtonsPane.add(SaveEditor);
         ButtonsPane.add(GameEditor);
 
@@ -61,5 +84,6 @@ public class LaunchPage extends JFrame {
         setResizable(false);
         setSize(size);
         setLocation(getScreenCenter(this));
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
     }
 }

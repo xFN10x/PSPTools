@@ -11,12 +11,17 @@ plugins {
 }
 
 repositories {
-    // Use Maven Central for resolving dependencies.
+
     mavenCentral()
+
 }
 
 dependencies {
     implementation("com.formdev:flatlaf:3.6")
+    implementation("com.google.code.gson:gson:2.13.1")
+    implementation("com.google.guava:guava:33.4.8-jre")
+    implementation("net.lingala.zip4j:zip4j:2.11.5")
+    implementation("commons-io:commons-io:2.20.0")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
