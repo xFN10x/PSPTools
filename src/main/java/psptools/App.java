@@ -4,9 +4,6 @@ import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import psptools.psp.PSP;
 import psptools.ui.LaunchPage;
 import psptools.util.SavedVariables;
@@ -28,7 +25,7 @@ public class App {
         System.out.println(LastPSP);
 
         if (LastPSP.pspActive())
-            PSP.setCurrentPSP(LastPSP);
+            PSP.setCurrentPSP(LastPSP,false);
         else
             JOptionPane.showMessageDialog(null, "PSP was disconnected.");
         // #endregion

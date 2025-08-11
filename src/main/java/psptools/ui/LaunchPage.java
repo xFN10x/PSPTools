@@ -7,8 +7,6 @@ import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SpringLayout;
-import javax.swing.WindowConstants;
-
 import psptools.psp.PSP;
 import psptools.psp.PSPSelectionUI;
 

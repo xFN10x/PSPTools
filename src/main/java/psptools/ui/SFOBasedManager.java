@@ -4,22 +4,20 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Date;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import net.lingala.zip4j.ZipFile;
-import net.lingala.zip4j.io.outputstream.ZipOutputStream;
 import net.lingala.zip4j.progress.ProgressMonitor;
-import net.lingala.zip4j.util.FileUtils;
-
+import net.lingala.zip4j.progress.ProgressMonitor.State;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -31,6 +29,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.SpringLayout;
+import javax.swing.SwingUtilities;
 
 import com.formdev.flatlaf.ui.FlatLineBorder;
 import com.google.gson.GsonBuilder;
@@ -47,28 +46,33 @@ public class SFOBasedManager extends JFrame {
     public static final int GAMES_MODE = 1;
     public static final int SINGLE = 2;
 
-    public static final Dimension Size = new Dimension(706, 392);
+    private static final Dimension Size = new Dimension(706, 392);
 
     public final JPanel InnerSFOFolderViewer = new JPanel();
     public final JScrollPane SFOFolderViewer = new JScrollPane(InnerSFOFolderViewer,
             JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
-    public final JPanel ViewBG = new JPanel();
-    public final JLabel ViewingIcon = new JLabel();
-    public final JLabel ViewingName = new JLabel("Save Title");
-    public final JLabel ViewingGameName = new JLabel("Save Game");
-    public final JLabel ViewingDesc = new JLabel("Save Description");
-    public final JButton DebugButton = new JButton("Debug");
-    public final JButton BackupButton = new JButton("Backup...");
-    public final JButton RestoreButton = new JButton("Restore...");
+    private final JPanel ViewBG = new JPanel();
+    private final JLabel ViewingIcon = new JLabel();
+    private final JLabel ViewingName = new JLabel("Save Title");
+    private final JLabel ViewingGameName = new JLabel("Save Game");
+    private final JLabel ViewingDesc = new JLabel("Save Description");
+    private final JButton DebugButton = new JButton("Debug");
+    private final JButton BackupButton = new JButton("Backup...");
+    private final JButton RestoreButton = new JButton("Restore...");
 
-    public final SpringLayout Lay = new SpringLayout();
-    public final SpringLayout Lay2 = new SpringLayout();
+    private final SpringLayout Lay = new SpringLayout();
+    private final SpringLayout Lay2 = new SpringLayout();
 
     public ParamSFO selectedSFO = null;
     public File selectedDir = null;
 
-    public final JLabel Background = new JLabel(new ImageIcon(getClass().getResource("/bg.png")));
+    private final JLabel Background = new JLabel(new ImageIcon(getClass().getResource("/bg.png")));
+
+    private String getBackupName() {
+        return (selectedSFO.getParam(Params.SaveTitle).toString() + "-"
+                + selectedSFO.getParam(Params.SaveFolderName).toString()).replace("\u0000", "") + ".zip";
+    }
 
     public SFOBasedManager(LaunchPage parent, int mode, String title, File target) {
         super(title);
@@ -76,6 +80,7 @@ public class SFOBasedManager extends JFrame {
         addWindowListener(new WindowAdapter() {
             public void windowClosed(WindowEvent e) {
                 parent.setVisible(true);
+                System.gc();
             }
         });
 
@@ -145,33 +150,65 @@ public class SFOBasedManager extends JFrame {
         });
 
         BackupButton.addActionListener(ac -> {
-            Path backupPath = Path.of(System.getProperty("user.home"), "PSPSaveBackups",
-                    selectedSFO.getParam(Params.SaveTitle).toString().replace("\u0000", "") + ".zip");
-            int option = JOptionPane.showConfirmDialog(this,
-                    "Backup this save?\nIt will be backed up at " + backupPath.toString(), "Backup save?",
-                    JOptionPane.YES_NO_OPTION);
+            Path backupPath = Path.of(System.getProperty("user.home"), "PSPSaveBackups", getBackupName());
+            int option;
+            if (!backupPath.toFile().exists())
+                option = JOptionPane.showConfirmDialog(this,
+                        "Backup this save?\nIt will be backed up at " + backupPath.toString(), "Backup save?",
+                        JOptionPane.YES_NO_OPTION);
+            else {
+                Calendar cal = Calendar.getInstance();
+                option = JOptionPane.showConfirmDialog(this,
+                        "Override this backup?\nThe last backup was made " + new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date(backupPath.toFile().lastModified())), "Backup save?",
+                        JOptionPane.YES_NO_OPTION);
+            }
             if (option == JOptionPane.YES_OPTION) {
                 try {
                     org.apache.commons.io.FileUtils.createParentDirectories(backupPath.toFile());
                     if (!backupPath.toFile().exists())
-                    backupPath.toFile().createNewFile();
+                        backupPath.toFile().createNewFile();
                     ZipFile zip = new ZipFile(backupPath.toFile());
                     ProgressMonitor promon = zip.getProgressMonitor();
-                    Timer timer = new Timer();
+                    LoadingScreen loading = new LoadingScreen(this);
+                    SwingUtilities.invokeLater(() -> {
+                        loading.setVisible(true);
+                    });
                     zip.setRunInThread(true);
-                    zip.addFolder(selectedDir);
-                    
-                    timer.scheduleAtFixedRate(new TimerTask() {
+                    new Thread(() -> {
+                        Timer timer = new Timer();
+                        timer.scheduleAtFixedRate(new TimerTask() {
+                            private boolean canCancel = false;
 
-                        @Override
-                        public void run() {
-                            System.out.println(promon.getPercentDone());
-                        }
-                        
-                    }, 5, 5);
-                    
-                    zip.close();
-                    timer.cancel();
+                            @Override
+                            public void run() {
+                                if (promon.getState() == State.BUSY) {
+                                    canCancel = true;
+                                }
+                                if (promon.getState() == State.READY && canCancel) {
+                                    try {
+                                        loading.setVisible(false);
+                                        timer.cancel();
+                                        zip.close();
+                                        System.gc();
+                                        FillOutWindow(target);
+                                        return;
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+
+                                SwingUtilities.invokeLater(() -> {
+                                    loading.setProgress(promon.getPercentDone());
+                                });
+                                // System.out.println(promon.getPercentDone());
+
+                            }
+
+                        }, 5, 1);
+                    }).start();
+
+                    zip.addFolder(selectedDir);
+
                 } catch (Exception e) {
                     e.printStackTrace();
                     ErrorShower.showError(this, "Failed to backup save.", e.getMessage(), e);
@@ -207,6 +244,7 @@ public class SFOBasedManager extends JFrame {
     }
 
     public void FillOutWindow(File target) {
+        InnerSFOFolderViewer.removeAll();
         Thread main = new Thread(() -> {
             ParamSFOListElement first = null;
             for (File dir : target.listFiles()) {

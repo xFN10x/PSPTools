@@ -33,14 +33,24 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
     private final JLabel SaveTitle = new JLabel();
     private final JLabel SaveDesc = new JLabel();
     private final JLabel SaveIconTitle = new JLabel();
+    private final JLabel SaveBackedup = new JLabel(new ImageIcon(getClass().getResource("/backed.png")));
 
     private final Runnable selectedFunc;
+
+    private String getBackupName() {
+        return (sfo.getParam(Params.SaveTitle).toString() + "-"
+                + sfo.getParam(Params.SaveFolderName).toString()).replace("\u0000", "") + ".zip";
+    }
 
     public ParamSFOListElement(ParamSFO ParamSFO, File dir, Runnable selectedFunction) throws MalformedURLException {
         super();
 
         this.sfo = ParamSFO;
         this.selectedFunc = selectedFunction;
+
+        Path backupPath = Path.of(System.getProperty("user.home"), "PSPSaveBackups", getBackupName());
+
+
 
         ImageIcon rawIcon = new ImageIcon(Path.of(dir.getAbsolutePath(), "Icon0.png").toUri().toURL());
 
@@ -61,6 +71,9 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         Lay.putConstraint(SpringLayout.NORTH, SaveTitle, 0, SpringLayout.NORTH, this);
         Lay.putConstraint(SpringLayout.EAST, SaveTitle, -4, SpringLayout.EAST, this);
 
+        Lay.putConstraint(SpringLayout.EAST, SaveBackedup, -4, SpringLayout.EAST, this);
+        Lay.putConstraint(SpringLayout.VERTICAL_CENTER, SaveBackedup, 0, SpringLayout.VERTICAL_CENTER, this);
+
         Lay.putConstraint(SpringLayout.EAST, SaveDesc, 0, SpringLayout.EAST, this);
         Lay.putConstraint(SpringLayout.WEST, SaveDesc, 0, SpringLayout.WEST, SaveTitle);
         Lay.putConstraint(SpringLayout.NORTH, SaveDesc, 0, SpringLayout.SOUTH, SaveTitle);
@@ -69,9 +82,11 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         add(SaveTitle);
         add(SaveIconTitle);
         add(SaveDesc);
+        if (backupPath.toFile().exists())
+        add(SaveBackedup);
 
         setToolTipText(
-                (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam(Params.Save_Folder_Name) + ")");
+                (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam(Params.SaveFolderName) + ")");
 
         setLayout(Lay);
         setBorder(border);

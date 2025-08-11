@@ -64,7 +64,7 @@ public class ParamSFO {
         public static final transient String Category = "CATEGORY";
         public static final transient String Parental_Level = "PARENTAL_LEVEL";
         public static final transient String Description = "SAVEDATA_DETAIL";
-        public static final transient String Save_Folder_Name = "SAVEDATA_DIRECTORY";
+        public static final transient String SaveFolderName = "SAVEDATA_DIRECTORY";
         public static final transient String SaveFiles = "SAVEDATA_FILE_LIST";
         public static final transient String SaveParams = "SAVEDATA_PARAMS";
         public static final transient String SaveTitle = "SAVEDATA_TITLE";
@@ -103,8 +103,6 @@ public class ParamSFO {
         paramHeader.data_table_start = Integer.toUnsignedLong(Stream.readInt()); // 4
         paramHeader.table_entries = Integer.toUnsignedLong(Stream.readInt()); // 4
 
-        // System.out.println(paramHeader.table_entries);
-
         currentByte = 20;
 
         for (int i = 0; i < paramHeader.table_entries; i++) { // read all index_table elements
@@ -134,6 +132,7 @@ public class ParamSFO {
             toBuild.dataTypes.put(key, ie.dataFmt);
             currentByte += key_length;
         }
+        
         Stream.skip((4 - (currentByte % 4)) % 4);
 
         for (IndexEntry ie : toBuild.index_table) { // read all data
@@ -142,10 +141,6 @@ public class ParamSFO {
 
             byte[] bytes = Stream.readNBytes((int) ie.dataLength);
             list.get(entryi).setValue(bytes);
-            // System.out
-            // .println(
-            // list.get(entryi).getKey() + "=" + ParamSFO.ParamBytesToValue(bytes,
-            // ie.dataFmt).toString());
 
             list.get(entryi).setValue(bytes);
             Stream.skip(toSkip);
@@ -153,7 +148,6 @@ public class ParamSFO {
         }
 
         for (Map.Entry<String, byte[]> entry : list) {
-            // System.out.println("\""+entry.getKey()+"\"");
             toBuild.data.put(entry.getKey(), entry.getValue());
         }
 
@@ -164,43 +158,43 @@ public class ParamSFO {
     }
 
     public Object getParam(String param) {
-        return paramBytesToValue(data.get(param), dataTypes.get(param),false);
+        return paramBytesToValue(data.get(param), dataTypes.get(param), false);
     }
 
     public Object getParam(String param, boolean htmlText) {
-        return paramBytesToValue(data.get(param), dataTypes.get(param),htmlText);
+        return paramBytesToValue(data.get(param), dataTypes.get(param), htmlText);
     }
 
-    public static Object paramBytesToValue(byte[] val, int fmt,boolean html) {
+    public static Object paramBytesToValue(byte[] val, int fmt, boolean html) {
         if (html)
-        switch (fmt) {
-            case UTF8_S:
-                String notNullTerm = new String(val);
-                return "<html>" + notNullTerm.substring(0, notNullTerm.indexOf("\u0000")).replace("\n", "<br>")
-                        + "</html>";
-            case UTF8:
-                return "<html>" + new String(val).replace("\n", "<br>") + "</html>";
+            switch (fmt) {
+                case UTF8_S:
+                    String notNullTerm = new String(val);
+                    return "<html>" + notNullTerm.substring(0, notNullTerm.indexOf("\u0000")).replace("\n", "<br>")
+                            + "</html>";
+                case UTF8:
+                    return "<html>" + new String(val).replace("\n", "<br>") + "</html>";
 
-            case INT32:
-                return ByteBuffer.wrap(val).order(ByteOrder.LITTLE_ENDIAN).getInt();
+                case INT32:
+                    return ByteBuffer.wrap(val).order(ByteOrder.LITTLE_ENDIAN).getInt();
 
-            default:
-                throw new IllegalAccessError("Format: " + fmt + ", is not valid.");
-        }
-        else 
-        switch (fmt) {
-            case UTF8_S:
-                String notNullTerm = new String(val);
-                return notNullTerm.substring(0, notNullTerm.indexOf("\u0000"));
-            case UTF8:
-                return new String(val);
+                default:
+                    throw new IllegalAccessError("Format: " + fmt + ", is not valid.");
+            }
+        else
+            switch (fmt) {
+                case UTF8_S:
+                    String notNullTerm = new String(val);
+                    return notNullTerm.substring(0, notNullTerm.indexOf("\u0000"));
+                case UTF8:
+                    return new String(val);
 
-            case INT32:
-                return ByteBuffer.wrap(val).order(ByteOrder.LITTLE_ENDIAN).getInt();
+                case INT32:
+                    return ByteBuffer.wrap(val).order(ByteOrder.LITTLE_ENDIAN).getInt();
 
-            default:
-                throw new IllegalAccessError("Format: " + fmt + ", is not valid.");
-        }
+                default:
+                    throw new IllegalAccessError("Format: " + fmt + ", is not valid.");
+            }
     }
 
 }

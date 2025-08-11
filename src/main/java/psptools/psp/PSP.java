@@ -27,9 +27,9 @@ public class PSP {
     public PSP() {
     }
 
-    //public String toString() {
-    //    return path.toString() + ": " + selectionMode.toString();
-    //}
+    // public String toString() {
+    // return path.toString() + ": " + selectionMode.toString();
+    // }
 
     public static PSP getCurrentPSP() {
         if (CurrentPSP == null)
@@ -38,7 +38,12 @@ public class PSP {
     }
 
     public static void setCurrentPSP(PSP psp) {
-        JOptionPane.showMessageDialog(null, "Selected new PSP.");
+        setCurrentPSP(psp, true);
+    }
+
+    public static void setCurrentPSP(PSP psp, boolean showPopup) {
+        if (showPopup)
+            JOptionPane.showMessageDialog(null, "Selected new PSP.");
         var saved = SavedVariables.Load();
         saved.LastSelectedPSP = psp;
         saved.Save();
@@ -48,12 +53,12 @@ public class PSP {
     public boolean pspActive() {
         try {
             switch (selectionMode) {
-            case SelectionMode.PSP_DIR:
-                return Files.exists(path);
+                case SelectionMode.PSP_DIR:
+                    return Files.exists(path);
 
-            default:
-                return false;
-        }
+                default:
+                    return false;
+            }
         } catch (Exception e) {
             return false;
         }
