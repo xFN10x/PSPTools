@@ -12,7 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -31,6 +30,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.SpringLayout;
 import javax.swing.SwingUtilities;
+
+import org.apache.commons.io.FileUtils;
 
 import com.formdev.flatlaf.ui.FlatLineBorder;
 import com.google.gson.GsonBuilder;
@@ -378,9 +379,28 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
     }
 
     @Override
-    public void delete() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'delete'");
+    public void delete(ParamSFOListElement selectedElement) {
+        try {
+            //Path backupPath = Path.of(System.getProperty("user.home"), "PSPSaveBackups", getBackupName());
+            int option = JOptionPane.showConfirmDialog(this,
+                    "Are you sure you want to delete this save? (it will be gone for a LONG time)",
+                    "DELETE SAVE?",
+                    JOptionPane.YES_NO_OPTION);
+
+            if (option == JOptionPane.YES_OPTION) {
+                backup();
+
+                FileUtils.deleteDirectory(selectedElement.dir);
+                SwingUtilities.invokeLater(() -> {
+                    JOptionPane.showMessageDialog(this,
+                        "<html>Deleted save " + selectedElement.sfo.getParam(Params.SaveTitle, true).toString().replace("<html>", ""));
+
+                });
+                FillOutWindow(targets);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

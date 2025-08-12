@@ -70,7 +70,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         RightClickMenu.setLabel(
                 sfo.getParam(Params.Title).toString() + " (" + (String) sfo.getParam(Params.SaveFolderName) + ")");
 
-        RightClickMenu.add("Delete").addActionListener(action -> selectedFunction.delete());
+        RightClickMenu.add("Delete").addActionListener(action -> selectedFunction.delete(this));
         RightClickMenu.add("Backup").addActionListener(action -> selectedFunction.backup());
         if (backupPath.toFile().exists())
             RightClickMenu.add("Restore").addActionListener(action -> selectedFunction.restore());
@@ -124,7 +124,8 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        selectedFunc.selected(this);
+        if (e.getButton() != MouseEvent.BUTTON2)
+            selectedFunc.selected(this);
     }
 
     @Override

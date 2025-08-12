@@ -13,6 +13,6 @@ public interface SFOListElementListiener extends EventListener {
 
     public void restore();
 
-    public void delete();
+    public void delete(ParamSFOListElement selectedElement);
 
 }
