@@ -3,8 +3,10 @@ package psptools.ui.components;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
+import org.apache.commons.io.FileUtils;
 
 import com.formdev.flatlaf.ui.FlatLineBorder;
 
@@ -14,11 +16,13 @@ import java.awt.Insets;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 
 import psptools.psp.sfo.ParamSFO;
 import psptools.psp.sfo.ParamSFO.Params;
+import psptools.ui.interfaces.SFOListElementListiener;
 import psptools.util.ImageUtilites;
 
 public class ParamSFOListElement extends JPanel implements MouseListener {
@@ -27,7 +31,8 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
     private static final FlatLineBorder border = new FlatLineBorder(new Insets(3, 3, 3, 3), Color.white, 2, 8);
     private static final FlatLineBorder selectedBorder = new FlatLineBorder(new Insets(3, 3, 3, 3), Color.white, 4, 8);
 
-    private final ParamSFO sfo;
+    public final ParamSFO sfo;
+    public final File dir;
     private final SpringLayout Lay = new SpringLayout();
 
     private final JLabel SaveTitle = new JLabel();
@@ -35,24 +40,40 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
     private final JLabel SaveIconTitle = new JLabel();
     private final JLabel SaveBackedup = new JLabel(new ImageIcon(getClass().getResource("/backed.png")));
 
-    private final Runnable selectedFunc;
+    private final JPopupMenu RightClickMenu = new JPopupMenu();
+
+    private final SFOListElementListiener selectedFunc;
+
+    public boolean backuped = false;
 
     private String getBackupName() {
         return (sfo.getParam(Params.SaveTitle).toString() + "-"
                 + sfo.getParam(Params.SaveFolderName).toString()).replace("\u0000", "") + ".zip";
     }
 
-    public ParamSFOListElement(ParamSFO ParamSFO, File dir, Runnable selectedFunction) throws MalformedURLException {
+    public void delete() throws IOException {
+        FileUtils.deleteDirectory(dir);
+    }
+
+    public ParamSFOListElement(ParamSFO ParamSFO, File dir, SFOListElementListiener selectedFunction)
+            throws MalformedURLException {
         super();
 
         this.sfo = ParamSFO;
         this.selectedFunc = selectedFunction;
+        this.dir = dir;
 
         Path backupPath = Path.of(System.getProperty("user.home"), "PSPSaveBackups", getBackupName());
 
-
-
         ImageIcon rawIcon = new ImageIcon(Path.of(dir.getAbsolutePath(), "Icon0.png").toUri().toURL());
+
+        RightClickMenu.setLabel(
+                sfo.getParam(Params.Title).toString() + " (" + (String) sfo.getParam(Params.SaveFolderName) + ")");
+
+        RightClickMenu.add("Delete").addActionListener(action -> selectedFunction.delete());
+        RightClickMenu.add("Backup").addActionListener(action -> selectedFunction.backup());
+        if (backupPath.toFile().exists())
+            RightClickMenu.add("Restore").addActionListener(action -> selectedFunction.restore());
 
         SaveIconTitle.setIcon(ImageUtilites.ResizeIcon(rawIcon, 90, 50));
 
@@ -79,11 +100,15 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         Lay.putConstraint(SpringLayout.NORTH, SaveDesc, 0, SpringLayout.SOUTH, SaveTitle);
         Lay.putConstraint(SpringLayout.SOUTH, SaveDesc, 0, SpringLayout.SOUTH, this);
 
+        setComponentPopupMenu(RightClickMenu);
+
         add(SaveTitle);
         add(SaveIconTitle);
         add(SaveDesc);
-        if (backupPath.toFile().exists())
-        add(SaveBackedup);
+        if (backupPath.toFile().exists()) {
+            backuped = true;
+            add(SaveBackedup);
+        }
 
         setToolTipText(
                 (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam(Params.SaveFolderName) + ")");
@@ -99,7 +124,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        selectedFunc.run();
+        selectedFunc.selected(this);
     }
 
     @Override
@@ -121,5 +146,4 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         setBorder(border);
         getParent().repaint();
     }
-
 }

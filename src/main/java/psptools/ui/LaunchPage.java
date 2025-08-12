@@ -66,6 +66,22 @@ public class LaunchPage extends JFrame {
             }
         });
 
+        GameEditor.addActionListener(action -> {
+            if (!PSP.getCurrentPSP().pspActive()) {
+                int option = JOptionPane.showConfirmDialog(this, "No PSP is selected, but is required.\nSelect one?",
+                        "PSP Selection Confirm", JOptionPane.YES_NO_OPTION);
+
+                if (option == JOptionPane.YES_OPTION) {
+                    PSP.setCurrentPSP(PSPSelectionUI.getNewPSP(this));
+                    SaveEditor.doClick();
+                } else
+                    return;
+            } else {
+                setVisible(false);
+                new SFOBasedManager(this,SFOBasedManager.SAVES_MODE,"Save Manager", PSP.getCurrentPSP().getFolder("PSP","GAME").toFile(),PSP.getCurrentPSP().getFolder("PSP","GAME150").toFile(),PSP.getCurrentPSP().getFolder("ISO").toFile(),PSP.getCurrentPSP().getFolder("PSP","GAME303").toFile()).setVisible(true);;
+            }
+        });
+
         // #region we need this cause the r dont fit, wont fit
         Font GameEditorFont = GameEditor.getFont();
         GameEditor.setFont(GameEditorFont.deriveFont(GameEditorFont.getSize() - 1f));

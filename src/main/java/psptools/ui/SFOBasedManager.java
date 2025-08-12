@@ -8,6 +8,7 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
@@ -37,10 +38,11 @@ import com.google.gson.GsonBuilder;
 import psptools.psp.sfo.ParamSFO;
 import psptools.psp.sfo.ParamSFO.Params;
 import psptools.ui.components.ParamSFOListElement;
+import psptools.ui.interfaces.SFOListElementListiener;
 import psptools.util.ErrorShower;
 import psptools.util.ImageUtilites;
 
-public class SFOBasedManager extends JFrame {
+public class SFOBasedManager extends JFrame implements SFOListElementListiener {
 
     public static final int SAVES_MODE = 0;
     public static final int GAMES_MODE = 1;
@@ -66,6 +68,7 @@ public class SFOBasedManager extends JFrame {
 
     public ParamSFO selectedSFO = null;
     public File selectedDir = null;
+    public final File[] targets;
 
     private final JLabel Background = new JLabel(new ImageIcon(getClass().getResource("/bg.png")));
 
@@ -74,7 +77,7 @@ public class SFOBasedManager extends JFrame {
                 + selectedSFO.getParam(Params.SaveFolderName).toString()).replace("\u0000", "") + ".zip";
     }
 
-    public SFOBasedManager(LaunchPage parent, int mode, String title, File target) {
+    public SFOBasedManager(LaunchPage parent, int mode, String title, File... targets) {
         super(title);
 
         addWindowListener(new WindowAdapter() {
@@ -84,11 +87,12 @@ public class SFOBasedManager extends JFrame {
             }
         });
 
+        this.targets = targets;
+
         InnerSFOFolderViewer.setLayout(new BoxLayout(InnerSFOFolderViewer, BoxLayout.Y_AXIS));
         InnerSFOFolderViewer.setBackground(new Color(0.3f, 0.3f, 0.3f));
         SFOFolderViewer.getVerticalScrollBar().setUnitIncrement(18);
         SFOFolderViewer.setBackground(new Color(0, 0, 0));
-        // InnerSFOFolderViewer.setSize(new Dimension(300,0));
 
         Lay.putConstraint(SpringLayout.WEST, SFOFolderViewer, 10, SpringLayout.WEST, getContentPane());
         Lay.putConstraint(SpringLayout.EAST, SFOFolderViewer, 320, SpringLayout.WEST, getContentPane());
@@ -149,72 +153,9 @@ public class SFOBasedManager extends JFrame {
             }
         });
 
-        BackupButton.addActionListener(ac -> {
-            Path backupPath = Path.of(System.getProperty("user.home"), "PSPSaveBackups", getBackupName());
-            int option;
-            if (!backupPath.toFile().exists())
-                option = JOptionPane.showConfirmDialog(this,
-                        "Backup this save?\nIt will be backed up at " + backupPath.toString(), "Backup save?",
-                        JOptionPane.YES_NO_OPTION);
-            else {
-                Calendar cal = Calendar.getInstance();
-                option = JOptionPane.showConfirmDialog(this,
-                        "Override this backup?\nThe last backup was made " + new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date(backupPath.toFile().lastModified())), "Backup save?",
-                        JOptionPane.YES_NO_OPTION);
-            }
-            if (option == JOptionPane.YES_OPTION) {
-                try {
-                    org.apache.commons.io.FileUtils.createParentDirectories(backupPath.toFile());
-                    if (!backupPath.toFile().exists())
-                        backupPath.toFile().createNewFile();
-                    ZipFile zip = new ZipFile(backupPath.toFile());
-                    ProgressMonitor promon = zip.getProgressMonitor();
-                    LoadingScreen loading = new LoadingScreen(this);
-                    SwingUtilities.invokeLater(() -> {
-                        loading.setVisible(true);
-                    });
-                    zip.setRunInThread(true);
-                    new Thread(() -> {
-                        Timer timer = new Timer();
-                        timer.scheduleAtFixedRate(new TimerTask() {
-                            private boolean canCancel = false;
+        RestoreButton.addActionListener(ac -> restore());
 
-                            @Override
-                            public void run() {
-                                if (promon.getState() == State.BUSY) {
-                                    canCancel = true;
-                                }
-                                if (promon.getState() == State.READY && canCancel) {
-                                    try {
-                                        loading.setVisible(false);
-                                        timer.cancel();
-                                        zip.close();
-                                        System.gc();
-                                        FillOutWindow(target);
-                                        return;
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-
-                                SwingUtilities.invokeLater(() -> {
-                                    loading.setProgress(promon.getPercentDone());
-                                });
-                                // System.out.println(promon.getPercentDone());
-
-                            }
-
-                        }, 5, 1);
-                    }).start();
-
-                    zip.addFolder(selectedDir);
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    ErrorShower.showError(this, "Failed to backup save.", e.getMessage(), e);
-                }
-            }
-        });
+        BackupButton.addActionListener(ac -> backup());
 
         BackupButton.setEnabled(false);
 
@@ -240,53 +181,206 @@ public class SFOBasedManager extends JFrame {
         setResizable(false);
         setLocation(LaunchPage.getScreenCenter(this));
 
-        FillOutWindow(target);
+        FillOutWindow(targets);
     }
 
-    public void FillOutWindow(File target) {
+    public void FillOutWindow(File... Target) {
         InnerSFOFolderViewer.removeAll();
         Thread main = new Thread(() -> {
             ParamSFOListElement first = null;
-            for (File dir : target.listFiles()) {
-                try {
-                    ParamSFO sfo = ParamSFO.ofFile(Path.of(dir.toPath().toString(), "PARAM.SFO").toFile());
-                    ParamSFOListElement ToAdd = new ParamSFOListElement(sfo, dir, () -> {
-                        try {
-                            ImageIcon rawIcon = new ImageIcon(
-                                    Path.of(dir.getAbsolutePath(), "Icon0.png").toUri().toURL());
-                            ViewingIcon.setIcon(ImageUtilites.ResizeIcon(rawIcon, 300, 166));
+            for (File target : Target) { // get all target folders
+                for (File dir : target.listFiles()) { // get all folders (saves, games, etc)
+                    try { // try to get param.sfo
+                        ParamSFO sfo = ParamSFO.ofFile(Path.of(dir.toPath().toString(), "PARAM.SFO").toFile());
+                        ParamSFOListElement ToAdd = new ParamSFOListElement(sfo, dir, this);
+                        InnerSFOFolderViewer.add(Box.createRigidArea(new Dimension(0, 10)));
+                        InnerSFOFolderViewer.add(ToAdd);
+                        if (first == null)
+                            first = ToAdd;
 
-                            ImageIcon rawIcon2 = new ImageIcon(
-                                    Path.of(dir.getAbsolutePath(), "pic1.png").toUri().toURL());
-                            Background.setIcon(
-                                    ImageUtilites.ResizeIcon(rawIcon2, (int) Size.getWidth(), (int) Size.getHeight()));
-                            Background.repaint();
-
-                            ViewingName.setText(sfo.getParam(Params.SaveTitle, false).toString());
-                            ViewingDesc.setText(sfo.getParam(Params.Description, true).toString());
-                            ViewingGameName.setText(sfo.getParam(Params.Title, true).toString());
-                            selectedSFO = sfo;
-                            selectedDir = dir;
-                            if (!BackupButton.isEnabled())
-                                BackupButton.setEnabled(true);
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    });
-                    InnerSFOFolderViewer.add(Box.createRigidArea(new Dimension(0, 10)));
-                    InnerSFOFolderViewer.add(ToAdd);
-                    if (first == null)
-                        first = ToAdd;
-
-                } catch (Exception e) {
-                    e.printStackTrace();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
             // first.mouseClicked(null);
             System.gc();
         });
         main.start();
+    }
+
+    @Override
+    public void selected(ParamSFOListElement selectedElement) {
+
+        try {
+            ImageIcon rawIcon = new ImageIcon(
+                    Path.of(selectedElement.dir.getAbsolutePath(), "Icon0.png").toUri().toURL());
+            ViewingIcon.setIcon(ImageUtilites.ResizeIcon(rawIcon, 300, 166));
+
+            ImageIcon rawIcon2 = new ImageIcon(
+                    Path.of(selectedElement.dir.getAbsolutePath(), "pic1.png").toUri().toURL());
+            Background.setIcon(
+                    ImageUtilites.ResizeIcon(rawIcon2, (int) Size.getWidth(),
+                            (int) Size.getHeight()));
+            Background.repaint();
+
+            ViewingName.setText(selectedElement.sfo.getParam(Params.SaveTitle, false).toString());
+            ViewingDesc.setText(selectedElement.sfo.getParam(Params.Description, true).toString());
+            ViewingGameName.setText(selectedElement.sfo.getParam(Params.Title, true).toString());
+            selectedSFO = selectedElement.sfo;
+            selectedDir = selectedElement.dir;
+
+            if (!BackupButton.isEnabled())
+                BackupButton.setEnabled(true);
+            if (selectedElement.backuped)
+                RestoreButton.setEnabled(true);
+            else
+                RestoreButton.setEnabled(false);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+
+        }
+    }
+
+    @Override
+    public void backup() {
+        Path backupPath = Path.of(System.getProperty("user.home"), "PSPSaveBackups", getBackupName());
+        int option;
+        if (!backupPath.toFile().exists())
+            option = JOptionPane.showConfirmDialog(this,
+                    "Backup this save?\nIt will be backed up at " + backupPath.toString(), "Backup save?",
+                    JOptionPane.YES_NO_OPTION);
+        else {
+            option = JOptionPane.showConfirmDialog(this,
+                    "Override this backup?\nThe last backup was made " + new SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
+                            .format(new Date(backupPath.toFile().lastModified())),
+                    "Backup save?",
+                    JOptionPane.YES_NO_OPTION);
+        }
+        if (option == JOptionPane.YES_OPTION) {
+            try {
+                org.apache.commons.io.FileUtils.createParentDirectories(backupPath.toFile());
+                if (!backupPath.toFile().exists())
+                    backupPath.toFile().createNewFile();
+                ZipFile zip = new ZipFile(backupPath.toFile());
+                ProgressMonitor promon = zip.getProgressMonitor();
+                LoadingScreen loading = new LoadingScreen(this);
+                SwingUtilities.invokeLater(() -> {
+                    loading.setVisible(true);
+                });
+                zip.setRunInThread(true);
+                new Thread(() -> {
+                    Timer timer = new Timer();
+                    timer.scheduleAtFixedRate(new TimerTask() {
+                        private boolean canCancel = false;
+
+                        @Override
+                        public void run() {
+                            if (promon.getState() == State.BUSY) {
+                                canCancel = true;
+                            }
+                            if (promon.getState() == State.READY && canCancel) {
+                                try {
+                                    loading.setVisible(false);
+                                    timer.cancel();
+                                    zip.close();
+                                    System.gc();
+                                    FillOutWindow(targets);
+                                    return;
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+
+                            SwingUtilities.invokeLater(() -> {
+                                loading.setProgress(promon.getPercentDone());
+                            });
+                            // System.out.println(promon.getPercentDone());
+
+                        }
+
+                    }, 5, 1);
+                }).start();
+
+                zip.addFolder(selectedDir);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                ErrorShower.showError(this, "Failed to backup save.", e.getMessage(), e);
+            }
+        }
+    }
+
+    @Override
+    public void restore() {
+        Path backupPath = Path.of(System.getProperty("user.home"), "PSPSaveBackups", getBackupName());
+        int option = JOptionPane.showConfirmDialog(this,
+                "Restore & override this save?\nThe backup was made at "
+                        + new SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
+                                .format(new Date(backupPath.toFile().lastModified())),
+                "Restore save?",
+                JOptionPane.YES_NO_OPTION);
+
+        if (option == JOptionPane.YES_OPTION) {
+            try {
+                ZipFile zip = new ZipFile(backupPath.toFile());
+                ProgressMonitor promon = zip.getProgressMonitor();
+                LoadingScreen loading = new LoadingScreen(this);
+                SwingUtilities.invokeLater(() -> {
+                    loading.setVisible(true);
+                });
+                zip.setRunInThread(true);
+                new Thread(() -> {
+                    Timer timer = new Timer();
+                    timer.scheduleAtFixedRate(new TimerTask() {
+                        private boolean canCancel = false;
+
+                        @Override
+                        public void run() {
+                            if (promon.getState() == State.BUSY) {
+                                canCancel = true;
+                            }
+                            if (promon.getState() == State.READY && canCancel) {
+                                try {
+                                    int option = JOptionPane.showConfirmDialog(null,
+                                            "Would you like to delete this backup?",
+                                            "Delete?",
+                                            JOptionPane.YES_NO_OPTION);
+                                    if (option == JOptionPane.YES_OPTION)
+                                        Files.delete(backupPath);
+                                    loading.setVisible(false);
+                                    timer.cancel();
+                                    zip.close();
+                                    System.gc();
+                                    FillOutWindow(targets);
+                                    return;
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+
+                            SwingUtilities.invokeLater(() -> {
+                                loading.setProgress(promon.getPercentDone());
+                            });
+                            // System.out.println(promon.getPercentDone());
+
+                        }
+
+                    }, 5, 1);
+                }).start();
+                zip.extractAll(targets[0].getAbsolutePath());
+            } catch (Exception e) {
+                e.printStackTrace();
+                ErrorShower.showError(this, "Failed to restore save.", e.getMessage(), e);
+            }
+        }
+    }
+
+    @Override
+    public void delete() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'delete'");
     }
 
 }
