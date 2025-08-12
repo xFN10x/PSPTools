@@ -8,12 +8,30 @@
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     application
+    //`cpp-application`
+    id("io.github.krakowski.jextract") version "0.4.1"
+    id("org.panteleyev.jpackageplugin") version "1.7.3"
+     id("com.gradleup.shadow") version "8.3.9"
 }
+
 
 repositories {
 
     mavenCentral()
 
+}
+
+tasks.jextract {
+    toolchain.set("C:/jextract-21")
+        // The header file from which we want to generate the bindings
+	header("${project.projectDir}/src/main/c/include/apollo.h") {
+	// The library name (don't worry about this for now)
+	libraries.set(listOf("apolloLib"))
+        // The package under which all source files will be generated
+        targetPackage = "org.apolloLib"
+        // The generated class name
+        className = "ApolloLib"
+        }
 }
 
 dependencies {
@@ -22,16 +40,58 @@ dependencies {
     implementation("com.google.guava:guava:33.4.8-jre")
     implementation("net.lingala.zip4j:zip4j:2.11.5")
     implementation("commons-io:commons-io:2.20.0")
+    //implementation(project(":common"))
+    implementation( project(":native-c"))
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion.set(JavaLanguageVersion.of(22))
     }
 }
 
 application {
     // Define the main class for the application.
     mainClass = "psptools.App"
+    applicationDefaultJvmArgs = listOf("-Djava.library.path=" + file("${buildDir}/libs/ApolloLib/shared").absolutePath, "--enable-preview")
+}
+
+
+var version = "1.0"
+var winver = "1.0.0"
+tasks.jpackage {
+    dependsOn("build", "shadowJar")
+
+    input = layout.buildDirectory.dir("builtJars")
+    destination = layout.buildDirectory.dir("builtDist")
+    appVersion = winver
+
+    appName = "File2Img"
+    vendor = "_FN10_"
+
+    icon = file("src/main/resources/icon.png")
+
+
+    type = org.panteleyev.jpackage.ImageType.APP_IMAGE
+
+    mainJar = "File2Img-$version-all.jar"
+    mainClass = "file2image.App"
+
+    windows {
+        //type = org.panteleyev.jpackage.ImageType.EXE
+        //winConsole = true
+    }
+
+    linux {
+        //type = org.panteleyev.jpackage.ImageType.DEB
+        linuxPackageName = "File2Img"
+        linuxShortcut = true
+    }
+}
+
+tasks.shadowJar {
+    archiveBaseName.set("File2Img")
+    archiveVersion.set(version)
+    destinationDirectory.set(layout.buildDirectory.dir("builtJars"))
 }
