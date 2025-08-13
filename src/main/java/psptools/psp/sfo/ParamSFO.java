@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.naming.NameNotFoundException;
+
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.gson.GsonBuilder;
 
@@ -44,7 +46,17 @@ public class ParamSFO {
         CATEGORYS.put("2D", "PS2 Data");
         CATEGORYS.put("HG", "HDD Game");
         CATEGORYS.put("SD", "Save Data");
-        CATEGORYS.put("MS", "Memory Stick Game");
+        //psp
+        CATEGORYS.put("MS", "MemoryStick Save");
+        CATEGORYS.put("MG", "MemoryStick Game");
+
+        CATEGORYS.put("WG", "WLAN Game");
+
+        CATEGORYS.put("UG", "UMD Game");
+        CATEGORYS.put("UV", "UMD Video");
+        CATEGORYS.put("UA", "UMD Audio");
+        CATEGORYS.put("UC", "UMD Cleaning Disc");
+
     }
 
     public Header header;
@@ -60,15 +72,32 @@ public class ParamSFO {
         public long table_entries;
     }
 
-    public static class Params {
+    public static class Params { //IVE FOUND THE MOTHER LOAD https://hitmen.c02.at/files/yapspd/psp_doc/chap26.html#sec26.4
         public static final transient String Category = "CATEGORY";
+        public static final transient String Title = "TITLE";
         public static final transient String Parental_Level = "PARENTAL_LEVEL";
+
+        //save specific
         public static final transient String Description = "SAVEDATA_DETAIL";
         public static final transient String SaveFolderName = "SAVEDATA_DIRECTORY";
         public static final transient String SaveFiles = "SAVEDATA_FILE_LIST";
         public static final transient String SaveParams = "SAVEDATA_PARAMS";
         public static final transient String SaveTitle = "SAVEDATA_TITLE";
-        public static final transient String Title = "TITLE";
+
+        //umd game specific
+        public static final transient String AppVersion = "APP_VER";
+        public static final transient String InstantBoot = "BOOTABLE";
+
+        public static final transient String DiscID = "DISC_ID";
+        public static final transient String DiscNumber = "DISC_NUMBER";
+        public static final transient String TotalDiscs = "DISC_TOTAL";
+        public static final transient String DiscVersion = "DISC_VERSION";
+        public static final transient String HRKGMP_VER = "HRKGMP_VER";
+
+        public static final transient String MinimumFirmwareVersion = "PSP_SYSTEM_VER";
+        public static final transient String Region = "REGION";
+        public static final transient String UseUsb = "USE_USB";
+
     }
 
     public static class IndexEntry {
@@ -91,7 +120,7 @@ public class ParamSFO {
     }
 
     public static ParamSFO ofStream(InputStream stream) throws IOException {
-        System.out.println("READING NEW -----------------: ");
+        //System.out.println("READING NEW -----------------: ");
         LittleEndianDataInputStream Stream = new LittleEndianDataInputStream(stream);
         int currentByte = 0;
 
@@ -133,7 +162,7 @@ public class ParamSFO {
             Map.Entry<String, byte[]> Entry = new AbstractMap.SimpleEntry<String, byte[]>(
                     key, null);
             list.add(Entry);
-            System.out.println(ie.dataFmt);
+            //System.out.println(ie.dataFmt);
             toBuild.dataTypes.put(key, ie.dataFmt);
             currentByte += key_length;
         }
@@ -154,7 +183,7 @@ public class ParamSFO {
 
         for (Map.Entry<String, byte[]> entry : list) {
             toBuild.data.put(entry.getKey(), entry.getValue());
-            System.out.println(entry.getKey()+"="+entry.getValue());
+            //System.out.println(entry.getKey()+"="+entry.getValue());
         }
 
         Stream.close();
@@ -163,11 +192,17 @@ public class ParamSFO {
         return toBuild;
     }
 
-    public Object getParam(String param) {
+    public Object getParam(String param) throws NameNotFoundException {
+        if (!data.containsKey(param)) {
+            throw new NameNotFoundException("Param: " + param + ", not found in SFO. Category: " + getParam(Params.Category) );
+        }
         return paramBytesToValue(data.get(param), dataTypes.get(param), false);
     }
 
-    public Object getParam(String param, boolean htmlText) {
+    public Object getParam(String param, boolean htmlText) throws NameNotFoundException {
+        if (!data.containsKey(param)) {
+            throw new NameNotFoundException("Param: " + param + ", not found in SFO. Category: " + getParam(Params.Category) );
+        }
         return paramBytesToValue(data.get(param), dataTypes.get(param), htmlText);
     }
 

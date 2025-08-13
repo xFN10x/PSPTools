@@ -62,7 +62,9 @@ public class LaunchPage extends JFrame {
                     return;
             } else {
                 setVisible(false);
-                new SFOBasedManager(this,SFOBasedManager.SAVES_MODE,"Save Manager", PSP.getCurrentPSP().getFolder("PSP","SAVEDATA").toFile()).setVisible(true);;
+                new SFOBasedManager(this, SFOBasedManager.SAVES_MODE, "Save Manager",
+                        PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA").toFile()).setVisible(true);
+                ;
             }
         });
 
@@ -78,7 +80,12 @@ public class LaunchPage extends JFrame {
                     return;
             } else {
                 setVisible(false);
-                new SFOBasedManager(this,SFOBasedManager.SAVES_MODE,"Save Manager", PSP.getCurrentPSP().getFolder("PSP","GAME").toFile(),PSP.getCurrentPSP().getFolder("PSP","GAME150").toFile(),PSP.getCurrentPSP().getFolder("ISO").toFile(),PSP.getCurrentPSP().getFolder("PSP","GAME303").toFile()).setVisible(true);;
+                new SFOBasedManager(this, SFOBasedManager.GAMES_MODE, "Save Manager",
+                        PSP.getCurrentPSP().getFolder("PSP", "GAME").toFile(),
+                        PSP.getCurrentPSP().getFolder("PSP", "GAME150").toFile(),
+                        PSP.getCurrentPSP().getFolder("ISO").toFile(),
+                        PSP.getCurrentPSP().getFolder("PSP", "GAME303").toFile()).setVisible(true);
+                ;
             }
         });
 

@@ -2,6 +2,7 @@ package psptools.ui;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.HeadlessException;
 import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
@@ -20,6 +21,8 @@ import java.util.TimerTask;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.progress.ProgressMonitor;
 import net.lingala.zip4j.progress.ProgressMonitor.State;
+
+import javax.naming.NameNotFoundException;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -76,8 +79,14 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
     private final JLabel Background = new JLabel(new ImageIcon(getClass().getResource("/bg.png")));
 
     private String getBackupName() {
-        return (selectedSFO.getParam(Params.SaveTitle).toString() + "-"
-                + selectedSFO.getParam(Params.SaveFolderName).toString()).replace("\u0000", "") + ".zip";
+        try {
+            return (selectedSFO.getParam(Params.SaveTitle).toString() + "-"
+                    + selectedSFO.getParam(Params.SaveFolderName).toString()).replace("\u0000", "") + ".zip";
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public SFOBasedManager(LaunchPage parent, int mode, String title, File... targets) {
@@ -188,45 +197,55 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
     }
 
     public void FillOutWindow(File... Target) {
-        InnerSFOFolderViewer.removeAll();
         Thread main = new Thread(() -> {
+            // InnerSFOFolderViewer.removeAll();
             ParamSFOListElement first = null;
             for (File target : List.of(Target)) { // get all target folders
-                if (target.isDirectory())
-                for (File dir : target.listFiles()) { // get all folders (saves, games, etc)
-                    try { // try to get param.sfo
-                        ParamSFO sfo = ParamSFO.ofFile(Path.of(dir.toPath().toString(), "PARAM.SFO").toFile());
-                        ParamSFOListElement ToAdd;
-                        System.out.println(dir.getName());
-                        if (dir.getName().endsWith("iso"))
-                            ToAdd = ParamSFOListElement.ofIso(dir, this);
-                        else
-                            ToAdd = new ParamSFOListElement(sfo, dir, this);
-                        InnerSFOFolderViewer.add(Box.createRigidArea(new Dimension(0, 10)));
-                        InnerSFOFolderViewer.add(ToAdd);
-                        if (first == null)
-                            first = ToAdd;
+                if (target.isDirectory() && target.exists())
+                    for (File dir : target.listFiles()) { // get all folders (saves, games, etc)
+                        // System.out.println(dir.getAbsolutePath());
+                        if (dir.isDirectory())
+                            try { // try to get param.sfo
+                                Boolean valid = false;
+                                for (File file : dir.listFiles()) {
+                                    if (file.getName().endsWith("PBP") || file.getName().endsWith("SFO"))
+                                        valid = true;
+                                }
+                                if (!valid)
+                                    continue;
 
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                                ParamSFO sfo = ParamSFO.ofFile(Path.of(dir.toPath().toString(), "PARAM.SFO").toFile());
+                                ParamSFOListElement ToAdd = new ParamSFOListElement(sfo, dir, this);
+                                InnerSFOFolderViewer.add(Box.createRigidArea(new Dimension(0, 10)));
+                                InnerSFOFolderViewer.add(ToAdd);
+                                if (first == null)
+                                    first = ToAdd;
+
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        else if (dir.getName().endsWith("iso"))
+                            try { // try to get param.sfo
+                                ParamSFOListElement ToAdd = ParamSFOListElement.ofIso(dir, this);
+                                System.out.println(ToAdd);
+                                InnerSFOFolderViewer.add(Box.createRigidArea(new Dimension(0, 10)));
+                                InnerSFOFolderViewer.add(ToAdd);
+                                if (first == null)
+                                    first = ToAdd;
+
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        revalidate();
+                        repaint();
                     }
-                }
-                else if (target.getName().endsWith("iso")) {
-                    try { // try to get param.sfo
-                        ParamSFOListElement ToAdd = ParamSFOListElement.ofIso(target, this);
-
-                        InnerSFOFolderViewer.add(Box.createRigidArea(new Dimension(0, 10)));
-                        InnerSFOFolderViewer.add(ToAdd);
-                        if (first == null)
-                            first = ToAdd;
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                else {
+                    // System.out.println(target.getAbsolutePath());
                 }
             }
             // first.mouseClicked(null);
             System.gc();
+
         });
         main.start();
     }
@@ -414,9 +433,13 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
 
                 FileUtils.deleteDirectory(selectedElement.dir);
                 SwingUtilities.invokeLater(() -> {
-                    JOptionPane.showMessageDialog(this,
-                            "<html>Deleted save " + selectedElement.sfo.getParam(Params.SaveTitle, true).toString()
-                                    .replace("<html>", ""));
+                    try {
+                        JOptionPane.showMessageDialog(this,
+                                "<html>Deleted save " + selectedElement.sfo.getParam(Params.SaveTitle, true).toString()
+                                        .replace("<html>", ""));
+                    } catch (HeadlessException | NameNotFoundException e) {
+                        e.printStackTrace();
+                    }
 
                 });
                 FillOutWindow(targets);

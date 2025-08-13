@@ -18,7 +18,7 @@ plugins {
 repositories {
 
     mavenCentral()
-
+    maven { url = uri("https://jitpack.io") }
 }
 
 tasks.jextract {
@@ -40,10 +40,10 @@ dependencies {
     implementation("com.google.guava:guava:33.4.8-jre")
     implementation("net.lingala.zip4j:zip4j:2.11.5")
     implementation("commons-io:commons-io:2.20.0")
-    //implementation("org.bolet.jgz:jgz:0.2")
-    //implementation(project(":common"))
-    //implementation( project(":native-c"))
-    // https://mvnrepository.com/artifact/com.palantir.isofilereader/isofilereader
+    implementation("org.apache.logging.log4j:log4j-core:2.25.1")
+    //implementation("com.github.umjammer:vavi-sound-atrac:0.0.5")
+    //implementation("com.github.umjammer:vavi-sound:1.0.21")
+    //implementation("com.github.umjammer:vavi-sound-atrac:0.0.5")
     implementation("com.palantir.isofilereader:isofilereader:0.6.1")
 }
 

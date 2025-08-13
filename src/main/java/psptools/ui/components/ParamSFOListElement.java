@@ -1,5 +1,6 @@
 package psptools.ui.components;
 
+import javax.naming.NameNotFoundException;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -9,14 +10,12 @@ import javax.swing.SwingConstants;
 import org.apache.commons.io.FileUtils;
 
 import com.formdev.flatlaf.ui.FlatLineBorder;
-import com.palantir.isofilereader.isofilereader.GenericInternalIsoFile;
-import com.palantir.isofilereader.isofilereader.IsoFileReader;
-
 import jpcsp.filesystems.umdiso.UmdIsoFile;
 import jpcsp.filesystems.umdiso.UmdIsoReader;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Insets;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -26,8 +25,6 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Optional;
-
 import psptools.psp.sfo.ParamSFO;
 import psptools.psp.sfo.ParamSFO.Params;
 import psptools.ui.interfaces.SFOListElementListiener;
@@ -43,10 +40,10 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
     public final File dir;
     private final SpringLayout Lay = new SpringLayout();
 
-    private final JLabel SaveTitle = new JLabel();
-    private final JLabel SaveDesc = new JLabel();
-    private final JLabel SaveIconTitle = new JLabel();
-    private final JLabel SaveBackedup = new JLabel(new ImageIcon(getClass().getResource("/backed.png")));
+    private final JLabel SFOTitle = new JLabel();
+    private final JLabel SFODesc = new JLabel();
+    private final JLabel Icon0 = new JLabel();
+    private final JLabel BackedUp = new JLabel(new ImageIcon(getClass().getResource("/backed.png")));
 
     private final JPopupMenu RightClickMenu = new JPopupMenu();
 
@@ -55,10 +52,24 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
     public boolean backuped = false;
 
     private String getBackupName() {
-        if (sfo == null)
-            return "";
-        return (sfo.getParam(Params.SaveTitle).toString() + "-"
-                + sfo.getParam(Params.SaveFolderName).toString()).replace("\u0000", "") + ".zip";
+        try {
+            if (sfo == null)
+                return "";
+            switch (sfo.getParam(Params.Category).toString()) {
+                case "MS":
+
+                    return (sfo.getParam(Params.SaveTitle).toString() + "-"
+                            + sfo.getParam(Params.SaveFolderName).toString()).replace("\u0000", "").replace(":", "")
+                            + ".zip";
+
+                default:
+                    return sfo.getParam(Params.Title).toString().replace("\u0000", "").replace(":", "") + ".zip";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
     }
 
     public void delete() throws IOException {
@@ -88,10 +99,12 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
             UmdIsoFile icon = reader.getFile("PSP_GAME/ICON0.PNG");
 
             ParamSFO sfo = ParamSFO.ofStream(param);
-
+            // System.out.println("good");
+            // System.out.println(icon.length());
+            // System.out.println(sfo.getParam(Params.Category));
             return new ParamSFOListElement(sfo,
                     null,
-                    icon.readAllBytes(), selectedFunction);
+                    icon.readNBytes((int) icon.length()), selectedFunction);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -99,20 +112,20 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
     }
 
     public ParamSFOListElement(ParamSFO ParamSFO, File dir, SFOListElementListiener selectedFunction)
-            throws MalformedURLException, IOException, URISyntaxException {
+            throws MalformedURLException, IOException, URISyntaxException, NameNotFoundException {
         this(ParamSFO, dir,
                 Files.readAllBytes(Path.of(dir.getAbsolutePath(), "Icon0.png").toFile().exists()
                         ? Path.of(dir.getAbsolutePath(), "Icon0.png")
-                        : Path.of(ParamSFOListElement.class.getResource("/bg.png").toURI())),
+                        : Path.of(ParamSFOListElement.class.getResource("/no_icon0.png").toURI())),
                 selectedFunction);
-                if (ParamSFO != null)
-        System.out.println(ParamSFO.getParam(Params.Title));
+        //if (ParamSFO != null)
+            //System.out.println(ParamSFO.getParam(Params.Title));
     }
 
     public ParamSFOListElement(ParamSFO ParamSFO, File dir, byte[] imageData, SFOListElementListiener selectedFunction)
-            throws MalformedURLException {
+            throws MalformedURLException, NameNotFoundException {
         super();
-
+        // System.out.println("SGIMAS");
         this.sfo = ParamSFO;
         this.selectedFunc = selectedFunction;
         this.dir = dir;
@@ -121,10 +134,6 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
 
         ImageIcon rawIcon = new ImageIcon(imageData);
 
-        if (sfo != null)
-            RightClickMenu.setLabel(
-                    sfo.getParam(Params.Title).toString() + " (" + (String) sfo.getParam(Params.SaveFolderName) + ")");
-
         RightClickMenu.add("Delete").addActionListener(ac -> selectedFunction.delete(this));
         if (sfo != null) {
             RightClickMenu.add("Backup").addActionListener(ac -> selectedFunction.backup());
@@ -132,50 +141,81 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                 RightClickMenu.add("Restore").addActionListener(ac -> selectedFunction.restore());
         }
 
-        SaveIconTitle.setIcon(ImageUtilites.ResizeIcon(rawIcon, 90, 50));
+        Icon0.setIcon(ImageUtilites.ResizeIcon(rawIcon, 90, 50));
 
-        SaveTitle.setFont(SaveTitle.getFont().deriveFont(11f));
-        if (sfo != null)
-            SaveTitle.setText((String) sfo.getParam(Params.SaveTitle));
-        else
-            SaveTitle.setText(dir.getName());
+        SFOTitle.setFont(SFOTitle.getFont().deriveFont(Font.BOLD,12f));
 
-        SaveDesc.setFont(SaveDesc.getFont().deriveFont(10f));
-        if (sfo != null)
-            SaveDesc.setText((String) sfo.getParam(Params.Description, true));
-        else
-            SaveDesc.setText("");
+        if (sfo != null) {
+            System.out.println(sfo.getParam(Params.Category).toString());
+            switch (sfo.getParam(Params.Category).toString().trim()) {
+                case "MS": // memory stick save
 
-        SaveDesc.setHorizontalAlignment(SwingConstants.LEFT);
-        SaveDesc.setVerticalAlignment(SwingConstants.TOP);
+                    RightClickMenu.setLabel(
+                            sfo.getParam(Params.Title).toString() + " (" + (String) sfo.getParam(Params.SaveFolderName)
+                                    + ")");
 
-        Lay.putConstraint(SpringLayout.WEST, SaveIconTitle, 4, SpringLayout.WEST, this);
-        Lay.putConstraint(SpringLayout.VERTICAL_CENTER, SaveIconTitle, 0, SpringLayout.VERTICAL_CENTER, this);
+                    SFOTitle.setText((String) sfo.getParam(Params.SaveTitle));
 
-        Lay.putConstraint(SpringLayout.WEST, SaveTitle, 4, SpringLayout.EAST, SaveIconTitle);
-        Lay.putConstraint(SpringLayout.NORTH, SaveTitle, 0, SpringLayout.NORTH, this);
-        Lay.putConstraint(SpringLayout.EAST, SaveTitle, -4, SpringLayout.EAST, this);
+                    SFODesc.setFont(SFODesc.getFont().deriveFont(10f));
 
-        Lay.putConstraint(SpringLayout.EAST, SaveBackedup, -4, SpringLayout.EAST, this);
-        Lay.putConstraint(SpringLayout.VERTICAL_CENTER, SaveBackedup, 0, SpringLayout.VERTICAL_CENTER, this);
+                    SFODesc.setText((String) sfo.getParam(Params.Description, true));
 
-        Lay.putConstraint(SpringLayout.EAST, SaveDesc, 0, SpringLayout.EAST, this);
-        Lay.putConstraint(SpringLayout.WEST, SaveDesc, 0, SpringLayout.WEST, SaveTitle);
-        Lay.putConstraint(SpringLayout.NORTH, SaveDesc, 0, SpringLayout.SOUTH, SaveTitle);
-        Lay.putConstraint(SpringLayout.SOUTH, SaveDesc, 0, SpringLayout.SOUTH, this);
+                    setToolTipText(
+                            (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam(Params.SaveFolderName)
+                                    + ")");
+                    break;
+
+                case "UG": // umd game
+
+                    SFOTitle.setText((String) sfo.getParam(Params.Title));
+
+                    SFODesc.setFont(SFODesc.getFont().deriveFont(10f));
+
+                    SFODesc.setText((String) sfo.getParam(Params.DiscVersion, true));
+
+                    setToolTipText(
+                            (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam(Params.DiscID)
+                                    + ")");
+                    RightClickMenu.setLabel(
+                            (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam(Params.DiscID)
+                                    + ")");
+                    break;
+
+                default:
+                    break;
+            }
+        } else {
+            SFOTitle.setText(dir.getName());
+            SFODesc.setText("");
+        }
+
+        SFODesc.setHorizontalAlignment(SwingConstants.LEFT);
+        SFODesc.setVerticalAlignment(SwingConstants.TOP);
+
+        Lay.putConstraint(SpringLayout.WEST, Icon0, 4, SpringLayout.WEST, this);
+        Lay.putConstraint(SpringLayout.VERTICAL_CENTER, Icon0, 0, SpringLayout.VERTICAL_CENTER, this);
+
+        Lay.putConstraint(SpringLayout.WEST, SFOTitle, 4, SpringLayout.EAST, Icon0);
+        Lay.putConstraint(SpringLayout.NORTH, SFOTitle, 0, SpringLayout.NORTH, this);
+        Lay.putConstraint(SpringLayout.EAST, SFOTitle, -4, SpringLayout.EAST, this);
+
+        Lay.putConstraint(SpringLayout.EAST, BackedUp, -4, SpringLayout.EAST, this);
+        Lay.putConstraint(SpringLayout.VERTICAL_CENTER, BackedUp, 0, SpringLayout.VERTICAL_CENTER, this);
+
+        Lay.putConstraint(SpringLayout.EAST, SFODesc, 0, SpringLayout.EAST, this);
+        Lay.putConstraint(SpringLayout.WEST, SFODesc, 0, SpringLayout.WEST, SFOTitle);
+        Lay.putConstraint(SpringLayout.NORTH, SFODesc, 0, SpringLayout.SOUTH, SFOTitle);
+        Lay.putConstraint(SpringLayout.SOUTH, SFODesc, 0, SpringLayout.SOUTH, this);
 
         setComponentPopupMenu(RightClickMenu);
 
-        add(SaveTitle);
-        add(SaveIconTitle);
-        add(SaveDesc);
+        add(SFOTitle);
+        add(Icon0);
+        add(SFODesc);
         if (backupPath.toFile().exists()) {
             backuped = true;
-            add(SaveBackedup);
+            add(BackedUp);
         }
-        if (sfo != null)
-            setToolTipText(
-                    (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam(Params.SaveFolderName) + ")");
 
         setLayout(Lay);
         setBorder(border);
