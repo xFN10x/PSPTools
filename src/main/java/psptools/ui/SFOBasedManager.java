@@ -12,6 +12,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -146,7 +148,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
         ViewingGameName.setFont(ViewingGameName.getFont().deriveFont(10f));
         ViewingGameName.setForeground(new Color(0.8f, 0.8f, 0.8f));
 
-        DebugButton.addActionListener(_ -> {
+        DebugButton.addActionListener(ac -> {
             if (selectedSFO != null) {
                 String json = new GsonBuilder().setPrettyPrinting().create().toJson(selectedSFO);
                 System.out.println(json);
@@ -154,9 +156,9 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
             }
         });
 
-        RestoreButton.addActionListener(_ -> restore());
+        RestoreButton.addActionListener(ac -> restore());
 
-        BackupButton.addActionListener(_ -> backup());
+        BackupButton.addActionListener(ac -> backup());
 
         BackupButton.setEnabled(false);
 
@@ -189,15 +191,30 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
         InnerSFOFolderViewer.removeAll();
         Thread main = new Thread(() -> {
             ParamSFOListElement first = null;
-            for (File target : Target) { // get all target folders
+            for (File target : List.of(Target)) { // get all target folders
+                if (target.isDirectory())
                 for (File dir : target.listFiles()) { // get all folders (saves, games, etc)
                     try { // try to get param.sfo
                         ParamSFO sfo = ParamSFO.ofFile(Path.of(dir.toPath().toString(), "PARAM.SFO").toFile());
                         ParamSFOListElement ToAdd;
-                        if (target.getName().endsWith("iso"))
-                        ToAdd = ParamSFOListElement.ofIso(target, this);
+                        System.out.println(dir.getName());
+                        if (dir.getName().endsWith("iso"))
+                            ToAdd = ParamSFOListElement.ofIso(dir, this);
                         else
-                        ToAdd = new ParamSFOListElement(sfo, dir, this);
+                            ToAdd = new ParamSFOListElement(sfo, dir, this);
+                        InnerSFOFolderViewer.add(Box.createRigidArea(new Dimension(0, 10)));
+                        InnerSFOFolderViewer.add(ToAdd);
+                        if (first == null)
+                            first = ToAdd;
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                else if (target.getName().endsWith("iso")) {
+                    try { // try to get param.sfo
+                        ParamSFOListElement ToAdd = ParamSFOListElement.ofIso(target, this);
+
                         InnerSFOFolderViewer.add(Box.createRigidArea(new Dimension(0, 10)));
                         InnerSFOFolderViewer.add(ToAdd);
                         if (first == null)
@@ -385,7 +402,8 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
     @Override
     public void delete(ParamSFOListElement selectedElement) {
         try {
-            //Path backupPath = Path.of(System.getProperty("user.home"), "PSPSaveBackups", getBackupName());
+            // Path backupPath = Path.of(System.getProperty("user.home"), "PSPSaveBackups",
+            // getBackupName());
             int option = JOptionPane.showConfirmDialog(this,
                     "Are you sure you want to delete this save? (it will be gone for a LONG time)",
                     "DELETE SAVE?",
@@ -397,7 +415,8 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
                 FileUtils.deleteDirectory(selectedElement.dir);
                 SwingUtilities.invokeLater(() -> {
                     JOptionPane.showMessageDialog(this,
-                        "<html>Deleted save " + selectedElement.sfo.getParam(Params.SaveTitle, true).toString().replace("<html>", ""));
+                            "<html>Deleted save " + selectedElement.sfo.getParam(Params.SaveTitle, true).toString()
+                                    .replace("<html>", ""));
 
                 });
                 FillOutWindow(targets);

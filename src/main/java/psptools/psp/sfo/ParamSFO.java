@@ -91,7 +91,7 @@ public class ParamSFO {
     }
 
     public static ParamSFO ofStream(InputStream stream) throws IOException {
-        // System.out.println("READING NEW -----------------: " + of.getAbsolutePath());
+        System.out.println("READING NEW -----------------: ");
         LittleEndianDataInputStream Stream = new LittleEndianDataInputStream(stream);
         int currentByte = 0;
 
@@ -133,7 +133,7 @@ public class ParamSFO {
             Map.Entry<String, byte[]> Entry = new AbstractMap.SimpleEntry<String, byte[]>(
                     key, null);
             list.add(Entry);
-            // System.out.println(ie.dataFmt);
+            System.out.println(ie.dataFmt);
             toBuild.dataTypes.put(key, ie.dataFmt);
             currentByte += key_length;
         }
@@ -154,6 +154,7 @@ public class ParamSFO {
 
         for (Map.Entry<String, byte[]> entry : list) {
             toBuild.data.put(entry.getKey(), entry.getValue());
+            System.out.println(entry.getKey()+"="+entry.getValue());
         }
 
         Stream.close();

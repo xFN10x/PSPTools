@@ -40,6 +40,7 @@ dependencies {
     implementation("com.google.guava:guava:33.4.8-jre")
     implementation("net.lingala.zip4j:zip4j:2.11.5")
     implementation("commons-io:commons-io:2.20.0")
+    //implementation("org.bolet.jgz:jgz:0.2")
     //implementation(project(":common"))
     //implementation( project(":native-c"))
     // https://mvnrepository.com/artifact/com.palantir.isofilereader/isofilereader

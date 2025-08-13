@@ -12,6 +12,9 @@ import com.formdev.flatlaf.ui.FlatLineBorder;
 import com.palantir.isofilereader.isofilereader.GenericInternalIsoFile;
 import com.palantir.isofilereader.isofilereader.IsoFileReader;
 
+import jpcsp.filesystems.umdiso.UmdIsoFile;
+import jpcsp.filesystems.umdiso.UmdIsoReader;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Insets;
@@ -20,6 +23,7 @@ import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -51,6 +55,8 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
     public boolean backuped = false;
 
     private String getBackupName() {
+        if (sfo == null)
+            return "";
         return (sfo.getParam(Params.SaveTitle).toString() + "-"
                 + sfo.getParam(Params.SaveFolderName).toString()).replace("\u0000", "") + ".zip";
     }
@@ -60,22 +66,47 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
     }
 
     public static ParamSFOListElement ofIso(File iso, SFOListElementListiener selectedFunction) {
-        try (IsoFileReader reader = new IsoFileReader(iso)) {
-            GenericInternalIsoFile[] files = reader.getAllFiles();
-            Optional<GenericInternalIsoFile> param = reader.getSpecificFileByName(files, "/PSP_GAME/PARAM.SFO");
-            Optional<GenericInternalIsoFile> icon = reader.getSpecificFileByName(files, "/PSP_GAME/ICON0.PNG");
+        // try (IsoFileReader reader = new IsoFileReader(iso)) {
+        // GenericInternalIsoFile[] files = reader.getAllFiles();
+        // Optional<GenericInternalIsoFile> param = reader.getSpecificFileByName(files,
+        // "/PSP_GAME/PARAM.SFO");
+        // Optional<GenericInternalIsoFile> icon = reader.getSpecificFileByName(files,
+        // "/PSP_GAME/ICON0.PNG");
+        //
+        // return new
+        // ParamSFOListElement(ParamSFO.ofStream(reader.getFileStream(param.get())),
+        // null,
+        // reader.getFileBytes(icon.get()), selectedFunction);
+        // } catch (Exception e) {
+        // e.printStackTrace();
+        // return null;
+        // }
+        try {
 
-            return new ParamSFOListElement(ParamSFO.ofStream(reader.getFileStream(param.get())), null, reader.getFileBytes(icon.get()), selectedFunction);
+            UmdIsoReader reader = new UmdIsoReader(iso.getAbsolutePath());
+            UmdIsoFile param = reader.getFile("PSP_GAME/PARAM.SFO");
+            UmdIsoFile icon = reader.getFile("PSP_GAME/ICON0.PNG");
+
+            ParamSFO sfo = ParamSFO.ofStream(param);
+
+            return new ParamSFOListElement(sfo,
+                    null,
+                    icon.readAllBytes(), selectedFunction);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
 
-    public ParamSFOListElement(ParamSFO ParamSFO, File dir, SFOListElementListiener selectedFunction) throws MalformedURLException, IOException
-
-    {
-        this(ParamSFO, dir, Files.readAllBytes(Path.of(dir.getAbsolutePath(), "Icon0.png")), selectedFunction);
+    public ParamSFOListElement(ParamSFO ParamSFO, File dir, SFOListElementListiener selectedFunction)
+            throws MalformedURLException, IOException, URISyntaxException {
+        this(ParamSFO, dir,
+                Files.readAllBytes(Path.of(dir.getAbsolutePath(), "Icon0.png").toFile().exists()
+                        ? Path.of(dir.getAbsolutePath(), "Icon0.png")
+                        : Path.of(ParamSFOListElement.class.getResource("/bg.png").toURI())),
+                selectedFunction);
+                if (ParamSFO != null)
+        System.out.println(ParamSFO.getParam(Params.Title));
     }
 
     public ParamSFOListElement(ParamSFO ParamSFO, File dir, byte[] imageData, SFOListElementListiener selectedFunction)
@@ -87,24 +118,34 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         this.dir = dir;
 
         Path backupPath = Path.of(System.getProperty("user.home"), "PSPSaveBackups", getBackupName());
-        
-        ImageIcon rawIcon = new ImageIcon(imageData);
-        
-        RightClickMenu.setLabel(
-                sfo.getParam(Params.Title).toString() + " (" + (String) sfo.getParam(Params.SaveFolderName) + ")");
 
-        RightClickMenu.add("Delete").addActionListener(_ -> selectedFunction.delete(this));
-        RightClickMenu.add("Backup").addActionListener(_ -> selectedFunction.backup());
-        if (backupPath.toFile().exists())
-            RightClickMenu.add("Restore").addActionListener(_ -> selectedFunction.restore());
+        ImageIcon rawIcon = new ImageIcon(imageData);
+
+        if (sfo != null)
+            RightClickMenu.setLabel(
+                    sfo.getParam(Params.Title).toString() + " (" + (String) sfo.getParam(Params.SaveFolderName) + ")");
+
+        RightClickMenu.add("Delete").addActionListener(ac -> selectedFunction.delete(this));
+        if (sfo != null) {
+            RightClickMenu.add("Backup").addActionListener(ac -> selectedFunction.backup());
+            if (backupPath.toFile().exists())
+                RightClickMenu.add("Restore").addActionListener(ac -> selectedFunction.restore());
+        }
 
         SaveIconTitle.setIcon(ImageUtilites.ResizeIcon(rawIcon, 90, 50));
 
         SaveTitle.setFont(SaveTitle.getFont().deriveFont(11f));
-        SaveTitle.setText((String) sfo.getParam(Params.SaveTitle));
+        if (sfo != null)
+            SaveTitle.setText((String) sfo.getParam(Params.SaveTitle));
+        else
+            SaveTitle.setText(dir.getName());
 
         SaveDesc.setFont(SaveDesc.getFont().deriveFont(10f));
-        SaveDesc.setText((String) sfo.getParam(Params.Description, true));
+        if (sfo != null)
+            SaveDesc.setText((String) sfo.getParam(Params.Description, true));
+        else
+            SaveDesc.setText("");
+
         SaveDesc.setHorizontalAlignment(SwingConstants.LEFT);
         SaveDesc.setVerticalAlignment(SwingConstants.TOP);
 
@@ -132,9 +173,9 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
             backuped = true;
             add(SaveBackedup);
         }
-
-        setToolTipText(
-                (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam(Params.SaveFolderName) + ")");
+        if (sfo != null)
+            setToolTipText(
+                    (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam(Params.SaveFolderName) + ")");
 
         setLayout(Lay);
         setBorder(border);
