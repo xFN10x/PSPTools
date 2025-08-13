@@ -1,11 +1,7 @@
 package psptools;
 
-import java.lang.foreign.MemorySegment;
-
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
-
-import org.apolloLib.ApolloLib;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
 import psptools.psp.PSP;

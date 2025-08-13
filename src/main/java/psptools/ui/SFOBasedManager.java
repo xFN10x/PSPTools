@@ -146,7 +146,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
         ViewingGameName.setFont(ViewingGameName.getFont().deriveFont(10f));
         ViewingGameName.setForeground(new Color(0.8f, 0.8f, 0.8f));
 
-        DebugButton.addActionListener(ac -> {
+        DebugButton.addActionListener(_ -> {
             if (selectedSFO != null) {
                 String json = new GsonBuilder().setPrettyPrinting().create().toJson(selectedSFO);
                 System.out.println(json);
@@ -154,9 +154,9 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
             }
         });
 
-        RestoreButton.addActionListener(ac -> restore());
+        RestoreButton.addActionListener(_ -> restore());
 
-        BackupButton.addActionListener(ac -> backup());
+        BackupButton.addActionListener(_ -> backup());
 
         BackupButton.setEnabled(false);
 
@@ -193,7 +193,11 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
                 for (File dir : target.listFiles()) { // get all folders (saves, games, etc)
                     try { // try to get param.sfo
                         ParamSFO sfo = ParamSFO.ofFile(Path.of(dir.toPath().toString(), "PARAM.SFO").toFile());
-                        ParamSFOListElement ToAdd = new ParamSFOListElement(sfo, dir, this);
+                        ParamSFOListElement ToAdd;
+                        if (target.getName().endsWith("iso"))
+                        ToAdd = ParamSFOListElement.ofIso(target, this);
+                        else
+                        ToAdd = new ParamSFOListElement(sfo, dir, this);
                         InnerSFOFolderViewer.add(Box.createRigidArea(new Dimension(0, 10)));
                         InnerSFOFolderViewer.add(ToAdd);
                         if (first == null)

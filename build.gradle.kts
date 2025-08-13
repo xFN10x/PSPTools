@@ -24,7 +24,7 @@ repositories {
 tasks.jextract {
     toolchain.set("C:/jextract-21")
         // The header file from which we want to generate the bindings
-	header("${project.projectDir}/src/main/c/include/apollo.h") {
+	header("${project.projectDir}/native-c/include/apollo.h") {
 	// The library name (don't worry about this for now)
 	libraries.set(listOf("apolloLib"))
         // The package under which all source files will be generated
@@ -41,25 +41,47 @@ dependencies {
     implementation("net.lingala.zip4j:zip4j:2.11.5")
     implementation("commons-io:commons-io:2.20.0")
     //implementation(project(":common"))
-    implementation( project(":native-c"))
+    //implementation( project(":native-c"))
+    // https://mvnrepository.com/artifact/com.palantir.isofilereader/isofilereader
+    implementation("com.palantir.isofilereader:isofilereader:0.6.1")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(22))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
 application {
     // Define the main class for the application.
     mainClass = "psptools.App"
-    applicationDefaultJvmArgs = listOf("-Djava.library.path=" + file("${buildDir}/libs/ApolloLib/shared").absolutePath, "--enable-preview")
+    //applicationDefaultJvmArgs = listOf("-Djava.library.path=" + file("${buildDir}/libs/ApolloLib/shared").absolutePath, "--enable-preview")
 }
 
 
 var version = "1.0"
 var winver = "1.0.0"
+
+
+tasks.register<Copy>("copyNativeLibs") {
+    // Make sure native project is built first
+    dependsOn(":native-c:assemble")
+
+    // Where Gradle stores the native build outputs (adjust path if needed)
+    from(fileTree("${project(":native-c").buildDir}/libs/native-c/shared") {
+        include("*.dll", "*.so", "*.dylib")
+    })
+
+    // Put them in your main resources folder inside the build
+    into("$buildDir/resources/main")
+}
+
+// Ensure resources include the copied native libs
+tasks.named<ProcessResources>("processResources") {
+    dependsOn("copyNativeLibs")
+}
+
 tasks.jpackage {
     dependsOn("build", "shadowJar")
 

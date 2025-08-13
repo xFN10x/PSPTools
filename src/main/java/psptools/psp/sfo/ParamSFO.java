@@ -85,8 +85,13 @@ public class ParamSFO {
     }
 
     public static ParamSFO ofFile(File of) throws IOException {
+        if (!of.exists())
+            return null;
+        return ParamSFO.ofStream(Files.newInputStream(of.toPath()));
+    }
+
+    public static ParamSFO ofStream(InputStream stream) throws IOException {
         // System.out.println("READING NEW -----------------: " + of.getAbsolutePath());
-        InputStream stream = Files.newInputStream(of.toPath());
         LittleEndianDataInputStream Stream = new LittleEndianDataInputStream(stream);
         int currentByte = 0;
 
@@ -95,7 +100,7 @@ public class ParamSFO {
 
         paramHeader.magic = new String(Stream.readNBytes(4), StandardCharsets.UTF_8); // 4
 
-        var versionBytes = Stream.readNBytes(4); // 4
+        byte[] versionBytes = Stream.readNBytes(4); // 4
         float version = versionBytes[0] + (versionBytes[1] / 100f);
         paramHeader.version = String.valueOf(version);
 
@@ -132,7 +137,7 @@ public class ParamSFO {
             toBuild.dataTypes.put(key, ie.dataFmt);
             currentByte += key_length;
         }
-        
+
         Stream.skip((4 - (currentByte % 4)) % 4);
 
         for (IndexEntry ie : toBuild.index_table) { // read all data

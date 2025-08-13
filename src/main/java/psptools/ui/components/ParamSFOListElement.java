@@ -9,6 +9,8 @@ import javax.swing.SwingConstants;
 import org.apache.commons.io.FileUtils;
 
 import com.formdev.flatlaf.ui.FlatLineBorder;
+import com.palantir.isofilereader.isofilereader.GenericInternalIsoFile;
+import com.palantir.isofilereader.isofilereader.IsoFileReader;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -18,7 +20,9 @@ import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 import psptools.psp.sfo.ParamSFO;
 import psptools.psp.sfo.ParamSFO.Params;
@@ -55,7 +59,26 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         FileUtils.deleteDirectory(dir);
     }
 
-    public ParamSFOListElement(ParamSFO ParamSFO, File dir, SFOListElementListiener selectedFunction)
+    public static ParamSFOListElement ofIso(File iso, SFOListElementListiener selectedFunction) {
+        try (IsoFileReader reader = new IsoFileReader(iso)) {
+            GenericInternalIsoFile[] files = reader.getAllFiles();
+            Optional<GenericInternalIsoFile> param = reader.getSpecificFileByName(files, "/PSP_GAME/PARAM.SFO");
+            Optional<GenericInternalIsoFile> icon = reader.getSpecificFileByName(files, "/PSP_GAME/ICON0.PNG");
+
+            return new ParamSFOListElement(ParamSFO.ofStream(reader.getFileStream(param.get())), null, reader.getFileBytes(icon.get()), selectedFunction);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public ParamSFOListElement(ParamSFO ParamSFO, File dir, SFOListElementListiener selectedFunction) throws MalformedURLException, IOException
+
+    {
+        this(ParamSFO, dir, Files.readAllBytes(Path.of(dir.getAbsolutePath(), "Icon0.png")), selectedFunction);
+    }
+
+    public ParamSFOListElement(ParamSFO ParamSFO, File dir, byte[] imageData, SFOListElementListiener selectedFunction)
             throws MalformedURLException {
         super();
 
@@ -64,16 +87,16 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         this.dir = dir;
 
         Path backupPath = Path.of(System.getProperty("user.home"), "PSPSaveBackups", getBackupName());
-
-        ImageIcon rawIcon = new ImageIcon(Path.of(dir.getAbsolutePath(), "Icon0.png").toUri().toURL());
-
+        
+        ImageIcon rawIcon = new ImageIcon(imageData);
+        
         RightClickMenu.setLabel(
                 sfo.getParam(Params.Title).toString() + " (" + (String) sfo.getParam(Params.SaveFolderName) + ")");
 
-        RightClickMenu.add("Delete").addActionListener(action -> selectedFunction.delete(this));
-        RightClickMenu.add("Backup").addActionListener(action -> selectedFunction.backup());
+        RightClickMenu.add("Delete").addActionListener(_ -> selectedFunction.delete(this));
+        RightClickMenu.add("Backup").addActionListener(_ -> selectedFunction.backup());
         if (backupPath.toFile().exists())
-            RightClickMenu.add("Restore").addActionListener(action -> selectedFunction.restore());
+            RightClickMenu.add("Restore").addActionListener(_ -> selectedFunction.restore());
 
         SaveIconTitle.setIcon(ImageUtilites.ResizeIcon(rawIcon, 90, 50));
 

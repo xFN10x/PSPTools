@@ -10,7 +10,7 @@ plugins {
 }
 
 library {
-    linkage = listOf(Linkage.STATIC, Linkage.SHARED)
+    linkage = listOf(Linkage.SHARED)
     targetMachines = listOf(machines.linux.x86_64,
         machines.windows.x86, machines.windows.x86_64)
         source.from(file("src"))
