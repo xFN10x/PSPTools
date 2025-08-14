@@ -183,7 +183,7 @@ public class ParamSFO {
 
         for (Map.Entry<String, byte[]> entry : list) {
             toBuild.data.put(entry.getKey(), entry.getValue());
-            //System.out.println(entry.getKey()+"="+entry.getValue());
+            System.out.println(entry.getKey()+"="+entry.getValue());
         }
 
         Stream.close();

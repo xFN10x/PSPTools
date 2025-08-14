@@ -10,12 +10,14 @@ import javax.swing.SwingConstants;
 import org.apache.commons.io.FileUtils;
 
 import com.formdev.flatlaf.ui.FlatLineBorder;
+
 import jpcsp.filesystems.umdiso.UmdIsoFile;
 import jpcsp.filesystems.umdiso.UmdIsoReader;
 
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -25,9 +27,12 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+
 import psptools.psp.sfo.ParamSFO;
 import psptools.psp.sfo.ParamSFO.Params;
 import psptools.ui.interfaces.SFOListElementListiener;
+import psptools.util.AudioStreamPlayer;
 import psptools.util.ImageUtilites;
 
 public class ParamSFOListElement extends JPanel implements MouseListener {
@@ -37,6 +42,8 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
     private static final FlatLineBorder selectedBorder = new FlatLineBorder(new Insets(3, 3, 3, 3), Color.white, 4, 8);
 
     public final ParamSFO sfo;
+    public final ProcessBuilder playAudioProcess;
+    private final ImageIcon icon0;
     public final File dir;
     private final SpringLayout Lay = new SpringLayout();
 
@@ -63,7 +70,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                             + ".zip";
 
                 default:
-                    return sfo.getParam(Params.Title).toString().replace("\u0000", "").replace(":", "") + ".zip";
+                    return sfo.getParam(Params.Title).toString().replace("\u0000", "").replace(":", "").replace("\n", " ").replace(" ", "-") + ".zip";
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -97,18 +104,59 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
             UmdIsoReader reader = new UmdIsoReader(iso.getAbsolutePath());
             UmdIsoFile param = reader.getFile("PSP_GAME/PARAM.SFO");
             UmdIsoFile icon = reader.getFile("PSP_GAME/ICON0.PNG");
+            UmdIsoFile snd;
+            try {
+                snd = reader.getFile("PSP_GAME/SND0.AT3");
+
+            } catch (Exception e) {
+                snd = null;
+            }
 
             ParamSFO sfo = ParamSFO.ofStream(param);
-            // System.out.println("good");
-            // System.out.println(icon.length());
-            // System.out.println(sfo.getParam(Params.Category));
-            return new ParamSFOListElement(sfo,
-                    null,
-                    icon.readNBytes((int) icon.length()), selectedFunction);
+            if (snd != null) {
+                File tempAudioFile = File.createTempFile("PSPTOOLS", "TEMP.at3");
+                tempAudioFile.deleteOnExit();
+
+                Files.write(tempAudioFile.toPath(), snd.readNBytes((int) snd.length()), StandardOpenOption.CREATE,
+                        StandardOpenOption.TRUNCATE_EXISTING);
+
+                return new ParamSFOListElement(sfo,
+                        null,
+                        icon.readNBytes((int) icon.length()),
+                        // new ProcessBuilder(
+                        // "C:\\Users\\mathd\\Downloads\\ffplay.exe -i " +
+                        // tempAudioFile.getAbsolutePath()
+                        // + " -nodisp -loop 0"),
+                        new ProcessBuilder(
+                                "C:\\Users\\mathd\\Downloads\\ffplay.exe",
+                                "-i",
+                                tempAudioFile.getAbsolutePath(),
+                                "-nodisp",
+                                "-loop",
+                                "0")
+                                .redirectErrorStream(true)
+                                .directory(new File(System.getProperty("user.dir"))),
+                        selectedFunction);
+            } else {
+                return new ParamSFOListElement(sfo,
+                        null,
+                        icon.readNBytes((int) icon.length()),
+                        null,
+                        selectedFunction);
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public ImageIcon getIcon0() {
+        return icon0;
+    }
+
+    public ImageIcon getPic1() {
+        return icon0;
     }
 
     public ParamSFOListElement(ParamSFO ParamSFO, File dir, SFOListElementListiener selectedFunction)
@@ -117,22 +165,26 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                 Files.readAllBytes(Path.of(dir.getAbsolutePath(), "Icon0.png").toFile().exists()
                         ? Path.of(dir.getAbsolutePath(), "Icon0.png")
                         : Path.of(ParamSFOListElement.class.getResource("/no_icon0.png").toURI())),
+                null,
                 selectedFunction);
-        //if (ParamSFO != null)
-            //System.out.println(ParamSFO.getParam(Params.Title));
+        // if (ParamSFO != null)
+        // System.out.println(ParamSFO.getParam(Params.Title));
     }
 
-    public ParamSFOListElement(ParamSFO ParamSFO, File dir, byte[] imageData, SFOListElementListiener selectedFunction)
+    public ParamSFOListElement(ParamSFO ParamSFO, File dir, byte[] icon0Data, ProcessBuilder playAudio,
+            SFOListElementListiener selectedFunction)
             throws MalformedURLException, NameNotFoundException {
         super();
         // System.out.println("SGIMAS");
         this.sfo = ParamSFO;
         this.selectedFunc = selectedFunction;
         this.dir = dir;
+        this.playAudioProcess = playAudio;
 
         Path backupPath = Path.of(System.getProperty("user.home"), "PSPSaveBackups", getBackupName());
 
-        ImageIcon rawIcon = new ImageIcon(imageData);
+        ImageIcon rawIcon = new ImageIcon(icon0Data);
+        this.icon0 = new ImageIcon(icon0Data);
 
         RightClickMenu.add("Delete").addActionListener(ac -> selectedFunction.delete(this));
         if (sfo != null) {
@@ -143,7 +195,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
 
         Icon0.setIcon(ImageUtilites.ResizeIcon(rawIcon, 90, 50));
 
-        SFOTitle.setFont(SFOTitle.getFont().deriveFont(Font.BOLD,12f));
+        SFOTitle.setFont(SFOTitle.getFont().deriveFont(Font.BOLD, 12f));
 
         if (sfo != null) {
             System.out.println(sfo.getParam(Params.Category).toString());

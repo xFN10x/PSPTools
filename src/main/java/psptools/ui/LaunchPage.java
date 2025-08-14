@@ -1,12 +1,17 @@
 package psptools.ui;
 
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SpringLayout;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
+import com.formdev.flatlaf.ui.FlatFileChooserUI;
+
 import psptools.psp.PSP;
 import psptools.psp.PSPSelectionUI;
 
@@ -24,6 +29,7 @@ public class LaunchPage extends JFrame {
     public final JPanel ButtonsPane = new JPanel();
     public final JMenuBar MenuBar = new JMenuBar();
     public final JMenu FileMenu = new JMenu("File");
+    public final JMenu ExtraMenu = new JMenu("Extra");
 
     public final JButton SaveEditor = new JButton("Save Manager");
     public final JButton GameEditor = new JButton("Game Manager");
@@ -85,7 +91,7 @@ public class LaunchPage extends JFrame {
                         PSP.getCurrentPSP().getFolder("PSP", "GAME150").toFile(),
                         PSP.getCurrentPSP().getFolder("ISO").toFile(),
                         PSP.getCurrentPSP().getFolder("PSP", "GAME303").toFile()).setVisible(true);
-                ;
+
             }
         });
 
@@ -99,7 +105,18 @@ public class LaunchPage extends JFrame {
 
         ButtonsPane.add(ConvertersButton);
 
+        ExtraMenu.add("Open Single PARAM.SFO").addActionListener(ac -> {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            fileChooser.setFileFilter(new FileNameExtensionFilter("SFO Files", "sfo"));
+            fileChooser.showOpenDialog(this);
+            new SFOBasedManager(this, SFOBasedManager.GAMES_MODE, fileChooser.getSelectedFile().getParentFile().getName(),
+                    fileChooser.getSelectedFile().getParentFile().getParentFile()).setVisible(true);
+
+        });
+
         MenuBar.add(FileMenu);
+        MenuBar.add(ExtraMenu);
 
         setJMenuBar(MenuBar);
         setResizable(false);

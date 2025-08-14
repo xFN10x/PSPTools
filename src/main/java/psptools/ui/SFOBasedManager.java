@@ -72,16 +72,16 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
     private final SpringLayout Lay = new SpringLayout();
     private final SpringLayout Lay2 = new SpringLayout();
 
-    public ParamSFO selectedSFO = null;
-    public File selectedDir = null;
+    public ParamSFOListElement selected;
+    public Process selectedAudioProcess;
     public final File[] targets;
 
     private final JLabel Background = new JLabel(new ImageIcon(getClass().getResource("/bg.png")));
 
     private String getBackupName() {
         try {
-            return (selectedSFO.getParam(Params.SaveTitle).toString() + "-"
-                    + selectedSFO.getParam(Params.SaveFolderName).toString()).replace("\u0000", "") + ".zip";
+            return (selected.sfo.getParam(Params.SaveTitle).toString() + "-"
+                    + selected.sfo.getParam(Params.SaveFolderName).toString()).replace("\u0000", "") + ".zip";
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -95,8 +95,11 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
         addWindowListener(new WindowAdapter() {
             public void windowClosed(WindowEvent e) {
                 parent.setVisible(true);
+                if (selectedAudioProcess != null)
+                    selectedAudioProcess.destroy();
                 System.gc();
             }
+
         });
 
         this.targets = targets;
@@ -158,8 +161,8 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
         ViewingGameName.setForeground(new Color(0.8f, 0.8f, 0.8f));
 
         DebugButton.addActionListener(ac -> {
-            if (selectedSFO != null) {
-                String json = new GsonBuilder().setPrettyPrinting().create().toJson(selectedSFO);
+            if (selected.sfo != null) {
+                String json = new GsonBuilder().setPrettyPrinting().create().toJson(selected.sfo);
                 System.out.println(json);
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(json), null);
             }
@@ -227,7 +230,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
                         else if (dir.getName().endsWith("iso"))
                             try { // try to get param.sfo
                                 ParamSFOListElement ToAdd = ParamSFOListElement.ofIso(dir, this);
-                                System.out.println(ToAdd);
+                                // System.out.println(ToAdd);
                                 InnerSFOFolderViewer.add(Box.createRigidArea(new Dimension(0, 10)));
                                 InnerSFOFolderViewer.add(ToAdd);
                                 if (first == null)
@@ -254,22 +257,39 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
     public void selected(ParamSFOListElement selectedElement) {
 
         try {
-            ImageIcon rawIcon = new ImageIcon(
-                    Path.of(selectedElement.dir.getAbsolutePath(), "Icon0.png").toUri().toURL());
-            ViewingIcon.setIcon(ImageUtilites.ResizeIcon(rawIcon, 300, 166));
 
-            ImageIcon rawIcon2 = new ImageIcon(
-                    Path.of(selectedElement.dir.getAbsolutePath(), "pic1.png").toUri().toURL());
+            if (selectedAudioProcess != null)
+                selectedAudioProcess.destroy();
+
+            ViewingIcon.setIcon(ImageUtilites.ResizeIcon(selectedElement.getIcon0(), 300, 166));
+
             Background.setIcon(
-                    ImageUtilites.ResizeIcon(rawIcon2, (int) Size.getWidth(),
+                    ImageUtilites.ResizeIcon(selectedElement.getPic1(), (int) Size.getWidth(),
                             (int) Size.getHeight()));
             Background.repaint();
 
-            ViewingName.setText(selectedElement.sfo.getParam(Params.SaveTitle, false).toString());
-            ViewingDesc.setText(selectedElement.sfo.getParam(Params.Description, true).toString());
-            ViewingGameName.setText(selectedElement.sfo.getParam(Params.Title, true).toString());
-            selectedSFO = selectedElement.sfo;
-            selectedDir = selectedElement.dir;
+            switch (selectedElement.sfo.getParam(Params.Category).toString().trim()) {
+                case "MS":
+                    ViewingName.setText(selectedElement.sfo.getParam(Params.SaveTitle, false).toString());
+                    ViewingDesc.setText(selectedElement.sfo.getParam(Params.Description, true).toString());
+                    ViewingGameName.setText(selectedElement.sfo.getParam(Params.Title, true).toString());
+                    break;
+
+                case "UG":
+                    ViewingName.setText(selectedElement.sfo.getParam(Params.Title, false).toString());
+                    ViewingDesc.setText("UMD Game: " + selectedElement.sfo.getParam(Params.DiscID, false).toString());
+                    ViewingGameName.setText("");
+                    break;
+
+                case "DG": //ps3 disc game
+                    ViewingName.setText(selectedElement.sfo.getParam(Params.Title, true).toString());
+                    ViewingDesc.setText("PS3 Disc Game: " + selectedElement.sfo.getParam("TITLE_ID", false).toString());
+                    ViewingGameName.setText("");
+                    break;
+
+                default:
+                    break;
+            }
 
             if (!BackupButton.isEnabled())
                 BackupButton.setEnabled(true);
@@ -277,6 +297,12 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
                 RestoreButton.setEnabled(true);
             else
                 RestoreButton.setEnabled(false);
+
+            if (selectedElement.playAudioProcess != null)
+                selectedAudioProcess = selectedElement.playAudioProcess.start();
+            // System.out.println(selectedElement.playAudioProcess.toString());
+
+            this.selected = selectedElement;
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -344,7 +370,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
                     }, 5, 1);
                 }).start();
 
-                zip.addFolder(selectedDir);
+                zip.addFolder(selected.dir);
 
             } catch (Exception e) {
                 e.printStackTrace();
