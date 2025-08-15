@@ -24,7 +24,7 @@ import java.awt.Toolkit;
 
 public class LaunchPage extends JFrame {
 
-    public final static Dimension size = new Dimension(400, 200);
+    public final static Dimension size = new Dimension(600, 300);
 
     public final JPanel ButtonsPane = new JPanel();
     public final JMenuBar MenuBar = new JMenuBar();
@@ -32,8 +32,10 @@ public class LaunchPage extends JFrame {
     public final JMenu ExtraMenu = new JMenu("Extra");
 
     public final JButton SaveEditor = new JButton("Save Manager");
+    public final JButton SaveTools = new JButton("Save Tools");
     public final JButton GameEditor = new JButton("Game Manager");
-    public final JButton ConvertersButton = new JButton("Converters");
+    public final JButton GameEditor = new JButton("Game Manager");
+    public final JButton AutoPSX = new JButton("AutoPSX");
 
     public final SpringLayout Lay = new SpringLayout();
 
@@ -54,7 +56,7 @@ public class LaunchPage extends JFrame {
 
         add(ButtonsPane);
 
-        ButtonsPane.setLayout(new GridLayout(0, 3, 10, 10));
+        ButtonsPane.setLayout(new GridLayout(2, 3, 10, 10));
 
         SaveEditor.addActionListener(action -> {
             if (!PSP.getCurrentPSP().pspActive()) {
@@ -103,7 +105,7 @@ public class LaunchPage extends JFrame {
         ButtonsPane.add(SaveEditor);
         ButtonsPane.add(GameEditor);
 
-        ButtonsPane.add(ConvertersButton);
+        ButtonsPane.add(AutoPSX);
 
         ExtraMenu.add("Open Single PARAM.SFO").addActionListener(ac -> {
             JFileChooser fileChooser = new JFileChooser();

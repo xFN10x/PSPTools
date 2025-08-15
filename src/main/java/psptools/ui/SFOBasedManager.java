@@ -8,6 +8,7 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,6 +35,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.SpringLayout;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
 import org.apache.commons.io.FileUtils;
@@ -44,11 +46,13 @@ import com.google.gson.GsonBuilder;
 import psptools.psp.sfo.ParamSFO;
 import psptools.psp.sfo.ParamSFO.Params;
 import psptools.ui.components.ParamSFOListElement;
+import psptools.ui.components.MediaPlayer;
 import psptools.ui.interfaces.SFOListElementListiener;
+import psptools.ui.interfaces.VideoPlayingListiener;
 import psptools.util.ErrorShower;
 import psptools.util.ImageUtilites;
 
-public class SFOBasedManager extends JFrame implements SFOListElementListiener {
+public class SFOBasedManager extends JFrame implements SFOListElementListiener, VideoPlayingListiener {
 
     public static final int SAVES_MODE = 0;
     public static final int GAMES_MODE = 1;
@@ -63,7 +67,8 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
     private final JPanel ViewBG = new JPanel();
     private final JLabel ViewingIcon = new JLabel();
     private final JLabel ViewingName = new JLabel("Save Title");
-    private final JLabel ViewingGameName = new JLabel("Save Game");
+    private final JLabel ViewingSubDesc = new JLabel("Save Game");
+    private final JLabel ViewingCategory = new JLabel("MS");
     private final JLabel ViewingDesc = new JLabel("Save Description");
     private final JButton DebugButton = new JButton("Debug");
     private final JButton BackupButton = new JButton("Backup...");
@@ -73,7 +78,8 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
     private final SpringLayout Lay2 = new SpringLayout();
 
     public ParamSFOListElement selected;
-    public Process selectedAudioProcess;
+    public MediaPlayer selectedAudioProcess;
+    public MediaPlayer selectedVideoProcess;
     public final File[] targets;
 
     private final JLabel Background = new JLabel(new ImageIcon(getClass().getResource("/bg.png")));
@@ -93,10 +99,12 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
         super(title);
 
         addWindowListener(new WindowAdapter() {
-            public void windowClosed(WindowEvent e) {
+            public void windowClosing(WindowEvent e) {
                 parent.setVisible(true);
                 if (selectedAudioProcess != null)
-                    selectedAudioProcess.destroy();
+                    selectedAudioProcess.stop();
+                if (selectedVideoProcess != null)
+                    selectedVideoProcess.stop();
                 System.gc();
             }
 
@@ -139,9 +147,13 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
         Lay2.putConstraint(SpringLayout.WEST, ViewingName, 0, SpringLayout.WEST, ViewingIcon);
         Lay2.putConstraint(SpringLayout.NORTH, ViewingName, 5, SpringLayout.SOUTH, sep);
 
-        Lay2.putConstraint(SpringLayout.EAST, ViewingGameName, 3, SpringLayout.EAST, ViewBG);
-        Lay2.putConstraint(SpringLayout.WEST, ViewingGameName, 3, SpringLayout.WEST, ViewBG);
-        Lay2.putConstraint(SpringLayout.SOUTH, ViewingGameName, -3, SpringLayout.SOUTH, ViewBG);
+        Lay2.putConstraint(SpringLayout.EAST, ViewingCategory, -5, SpringLayout.EAST, ViewingIcon);
+        Lay2.putConstraint(SpringLayout.SOUTH, ViewingCategory, 0, SpringLayout.SOUTH, ViewingName);
+        Lay2.putConstraint(SpringLayout.NORTH, ViewingCategory, 0, SpringLayout.NORTH, ViewingName);
+
+        Lay2.putConstraint(SpringLayout.EAST, ViewingSubDesc, 3, SpringLayout.EAST, ViewBG);
+        Lay2.putConstraint(SpringLayout.WEST, ViewingSubDesc, 3, SpringLayout.WEST, ViewBG);
+        Lay2.putConstraint(SpringLayout.SOUTH, ViewingSubDesc, -3, SpringLayout.SOUTH, ViewBG);
 
         Lay2.putConstraint(SpringLayout.EAST, DebugButton, -3, SpringLayout.EAST, ViewBG);
         Lay2.putConstraint(SpringLayout.SOUTH, DebugButton, -3, SpringLayout.SOUTH, ViewBG);
@@ -157,8 +169,12 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
         Lay2.putConstraint(SpringLayout.NORTH, ViewingDesc, 5, SpringLayout.SOUTH, ViewingName);
 
         ViewingName.setFont(ViewingName.getFont().deriveFont(14f));
-        ViewingGameName.setFont(ViewingGameName.getFont().deriveFont(10f));
-        ViewingGameName.setForeground(new Color(0.8f, 0.8f, 0.8f));
+        ViewingCategory.setFont(ViewingCategory.getFont().deriveFont(8f));
+        ViewingSubDesc.setFont(ViewingSubDesc.getFont().deriveFont(10f));
+        ViewingSubDesc.setForeground(new Color(0.8f, 0.8f, 0.8f));
+        ViewingCategory.setForeground(new Color(0.8f, 0.8f, 0.8f));
+        ViewingCategory.setAlignmentY(SwingConstants.BOTTOM);
+        ViewingCategory.setAlignmentX(SwingConstants.RIGHT);
 
         DebugButton.addActionListener(ac -> {
             if (selected.sfo != null) {
@@ -177,9 +193,10 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
         ViewBG.add(ViewingIcon);
         ViewBG.add(sep);
         ViewBG.add(ViewingName);
-        ViewBG.add(ViewingGameName);
+        ViewBG.add(ViewingSubDesc);
         ViewBG.add(ViewingDesc);
         ViewBG.add(DebugButton);
+        ViewBG.add(ViewingCategory);
         if (mode == SAVES_MODE) {
             ViewBG.add(BackupButton);
             ViewBG.add(RestoreButton);
@@ -259,7 +276,9 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
         try {
 
             if (selectedAudioProcess != null)
-                selectedAudioProcess.destroy();
+                selectedAudioProcess.stop();
+            if (selectedVideoProcess != null)
+                selectedVideoProcess.stop();
 
             ViewingIcon.setIcon(ImageUtilites.ResizeIcon(selectedElement.getIcon0(), 300, 166));
 
@@ -268,26 +287,33 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
                             (int) Size.getHeight()));
             Background.repaint();
 
+            ViewingCategory.setText(
+                    ParamSFO.tryToGetCategoryName(selectedElement.sfo.getParam(Params.Category).toString().trim()));
+
             switch (selectedElement.sfo.getParam(Params.Category).toString().trim()) {
                 case "MS":
                     ViewingName.setText(selectedElement.sfo.getParam(Params.SaveTitle, false).toString());
                     ViewingDesc.setText(selectedElement.sfo.getParam(Params.Description, true).toString());
-                    ViewingGameName.setText(selectedElement.sfo.getParam(Params.Title, true).toString());
+                    ViewingSubDesc.setText(selectedElement.sfo.getParam(Params.Title, true).toString());
                     break;
 
                 case "UG":
                     ViewingName.setText(selectedElement.sfo.getParam(Params.Title, false).toString());
                     ViewingDesc.setText("UMD Game: " + selectedElement.sfo.getParam(Params.DiscID, false).toString());
-                    ViewingGameName.setText("");
+                    ViewingSubDesc.setText("");
                     break;
 
-                case "DG": //ps3 disc game
+                case "DG": // ps3 disc game
                     ViewingName.setText(selectedElement.sfo.getParam(Params.Title, true).toString());
                     ViewingDesc.setText("PS3 Disc Game: " + selectedElement.sfo.getParam("TITLE_ID", false).toString());
-                    ViewingGameName.setText("");
+                    ViewingSubDesc.setText("");
                     break;
 
                 default:
+                    ViewingName.setText(selectedElement.sfo.getParam(Params.Title, true).toString());
+                    ViewingDesc.setText("ID: " + selectedElement.sfo.getParam("TITLE_ID", false).toString());
+                    ViewingSubDesc.setText("");
+                    System.err.println("Need handling for " + selectedElement.sfo.getParam(Params.Category).toString());
                     break;
             }
 
@@ -298,9 +324,15 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
             else
                 RestoreButton.setEnabled(false);
 
-            if (selectedElement.playAudioProcess != null)
-                selectedAudioProcess = selectedElement.playAudioProcess.start();
-            // System.out.println(selectedElement.playAudioProcess.toString());
+            // if (selectedElement.playAudioProcess != null)
+            // selectedAudioProcess = selectedElement.playAudioProcess.start();
+
+            if (selectedElement.audioDir != null)
+                selectedAudioProcess = new MediaPlayer(selectedElement.audioDir);
+            if (selectedElement.videoDir != null)
+                selectedVideoProcess = new MediaPlayer(selectedElement.videoDir, this);
+            // selectedVideoProcess = new VideoPlayer(selectedElement.dir.getAbsolutePath()
+            // + "/SND0.AT3", this);
 
             this.selected = selectedElement;
 
@@ -473,6 +505,14 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void frameStepped(BufferedImage frame) {
+        if (frame == null)
+            return;
+        ViewingIcon.getGraphics().drawImage(
+                ImageUtilites.ResizeImage(frame, ViewingIcon.getWidth(), ViewingIcon.getHeight()), 0, 0, null);
     }
 
 }

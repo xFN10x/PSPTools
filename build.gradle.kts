@@ -41,6 +41,7 @@ dependencies {
     implementation("net.lingala.zip4j:zip4j:2.11.5")
     implementation("commons-io:commons-io:2.20.0")
     implementation("org.apache.logging.log4j:log4j-core:2.25.1")
+    implementation("org.bytedeco:javacv-platform:1.5.12")
     // https://mvnrepository.com/artifact/net.bramp.ffmpeg/ffmpeg
 //implementation("net.bramp.ffmpeg:ffmpeg:0.8.0")
     implementation("com.github.goxr3plus:java-stream-player:10.0.2")

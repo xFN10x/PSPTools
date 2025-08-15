@@ -42,8 +42,11 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
     private static final FlatLineBorder selectedBorder = new FlatLineBorder(new Insets(3, 3, 3, 3), Color.white, 4, 8);
 
     public final ParamSFO sfo;
-    public final ProcessBuilder playAudioProcess;
+    // public final ProcessBuilder playAudioProcess;
+    public String videoDir = null;
+    public String audioDir = null;
     private final ImageIcon icon0;
+    private final ImageIcon pic1;
     public final File dir;
     private final SpringLayout Lay = new SpringLayout();
 
@@ -70,7 +73,8 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                             + ".zip";
 
                 default:
-                    return sfo.getParam(Params.Title).toString().replace("\u0000", "").replace(":", "").replace("\n", " ").replace(" ", "-") + ".zip";
+                    return sfo.getParam(Params.Title).toString().replace("\u0000", "").replace(":", "")
+                            .replace("\n", " ").replace(" ", "-") + ".zip";
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -104,6 +108,8 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
             UmdIsoReader reader = new UmdIsoReader(iso.getAbsolutePath());
             UmdIsoFile param = reader.getFile("PSP_GAME/PARAM.SFO");
             UmdIsoFile icon = reader.getFile("PSP_GAME/ICON0.PNG");
+            UmdIsoFile bg = reader.getFile("PSP_GAME/PIC1.PNG");
+            UmdIsoFile icon1;
             UmdIsoFile snd;
             try {
                 snd = reader.getFile("PSP_GAME/SND0.AT3");
@@ -111,10 +117,16 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
             } catch (Exception e) {
                 snd = null;
             }
+            try {
+                icon1 = reader.getFile("PSP_GAME/ICON1.PMF");
+
+            } catch (Exception e) {
+                icon1 = null;
+            }
 
             ParamSFO sfo = ParamSFO.ofStream(param);
             if (snd != null) {
-                File tempAudioFile = File.createTempFile("PSPTOOLS", "TEMP.at3");
+                File tempAudioFile = File.createTempFile("PSPTOOLS", "TEMPMUSIC.at3");
                 tempAudioFile.deleteOnExit();
 
                 Files.write(tempAudioFile.toPath(), snd.readNBytes((int) snd.length()), StandardOpenOption.CREATE,
@@ -123,24 +135,16 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                 return new ParamSFOListElement(sfo,
                         null,
                         icon.readNBytes((int) icon.length()),
-                        // new ProcessBuilder(
-                        // "C:\\Users\\mathd\\Downloads\\ffplay.exe -i " +
-                        // tempAudioFile.getAbsolutePath()
-                        // + " -nodisp -loop 0"),
-                        new ProcessBuilder(
-                                "C:\\Users\\mathd\\Downloads\\ffplay.exe",
-                                "-i",
-                                tempAudioFile.getAbsolutePath(),
-                                "-nodisp",
-                                "-loop",
-                                "0")
-                                .redirectErrorStream(true)
-                                .directory(new File(System.getProperty("user.dir"))),
+                        bg.readNBytes((int) bg.length()),
+                        icon1 != null ? icon1.readNBytes((int) icon1.length()) : null,
+                        tempAudioFile.toPath(),
                         selectedFunction);
             } else {
                 return new ParamSFOListElement(sfo,
                         null,
                         icon.readNBytes((int) icon.length()),
+                        bg.readNBytes((int) bg.length()),
+                        icon1 != null ? icon1.readNBytes((int) icon1.length()) : null,
                         null,
                         selectedFunction);
             }
@@ -156,7 +160,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
     }
 
     public ImageIcon getPic1() {
-        return icon0;
+        return pic1;
     }
 
     public ParamSFOListElement(ParamSFO ParamSFO, File dir, SFOListElementListiener selectedFunction)
@@ -165,26 +169,55 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                 Files.readAllBytes(Path.of(dir.getAbsolutePath(), "Icon0.png").toFile().exists()
                         ? Path.of(dir.getAbsolutePath(), "Icon0.png")
                         : Path.of(ParamSFOListElement.class.getResource("/no_icon0.png").toURI())),
-                null,
+                Files.readAllBytes(Path.of(dir.getAbsolutePath(), "Pic1.png").toFile().exists()
+                        ? Path.of(dir.getAbsolutePath(), "Pic1.png")
+                        : Path.of(ParamSFOListElement.class.getResource("/no_icon0.png").toURI())),
+                ParamSFO != null ? (ParamSFO.getParam(Params.Category).toString().trim().equals("UG") // if its a umd game then icon1 is a
+                                                                                  // pmf
+                        ? (Path.of(dir.getAbsolutePath(), "Icon1.pmf").toFile().exists()
+                                ? Files.readAllBytes(Path.of(dir.getAbsolutePath(), "ICON1.PMF"))
+                                : null)
+                        : (ParamSFO.getParam(Params.Category).toString().trim().equals("DG") // ps3 disc game
+                                ? (Path.of(dir.getAbsolutePath(), "Icon1.pam").toFile().exists()
+                                        ? Files.readAllBytes(Path.of(dir.getAbsolutePath(), "ICON1.pam"))
+                                        : null)
+                                : null)) : null,
+                Path.of(dir.getAbsolutePath(), "SND0.AT3").toFile().exists()
+                        ? Path.of(dir.getAbsolutePath(), "SND0.AT3")
+                        : null,
                 selectedFunction);
         // if (ParamSFO != null)
         // System.out.println(ParamSFO.getParam(Params.Title));
     }
 
-    public ParamSFOListElement(ParamSFO ParamSFO, File dir, byte[] icon0Data, ProcessBuilder playAudio,
+    public ParamSFOListElement(ParamSFO ParamSFO, File dir, byte[] icon0Data, byte[] pic1Data, byte[] icon1Data,
+            Path snd0Dir,
             SFOListElementListiener selectedFunction)
-            throws MalformedURLException, NameNotFoundException {
+            throws NameNotFoundException, IOException {
         super();
         // System.out.println("SGIMAS");
         this.sfo = ParamSFO;
         this.selectedFunc = selectedFunction;
         this.dir = dir;
-        this.playAudioProcess = playAudio;
+        if (snd0Dir != null)
+        this.audioDir = snd0Dir.toString();
 
         Path backupPath = Path.of(System.getProperty("user.home"), "PSPSaveBackups", getBackupName());
 
         ImageIcon rawIcon = new ImageIcon(icon0Data);
         this.icon0 = new ImageIcon(icon0Data);
+        if (icon1Data != null) {
+            File icon1 = File.createTempFile("PSPTOOLS", "TEMPICON1.mp4");
+
+            Files.write(icon1.toPath(), icon1Data, StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING);
+
+            icon1.deleteOnExit();
+
+            this.videoDir = icon1.getAbsolutePath();
+        }
+
+        this.pic1 = new ImageIcon(pic1Data);
 
         RightClickMenu.add("Delete").addActionListener(ac -> selectedFunction.delete(this));
         if (sfo != null) {
@@ -233,7 +266,35 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                                     + ")");
                     break;
 
+                case "DG": // PS3 disc game
+
+                    SFOTitle.setText((String) sfo.getParam(Params.Title, true));
+
+                    SFODesc.setFont(SFODesc.getFont().deriveFont(10f));
+
+                    SFODesc.setText((String) sfo.getParam("TITLE_ID", true));
+
+                    setToolTipText(
+                            (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam("TITLE_ID")
+                                    + ")");
+                    RightClickMenu.setLabel(
+                            (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam("TITLE_ID")
+                                    + ")");
+                    break;
+
                 default:
+                    SFOTitle.setText((String) sfo.getParam(Params.Title, true));
+
+                    SFODesc.setFont(SFODesc.getFont().deriveFont(10f));
+
+                    SFODesc.setText((String) sfo.getParam("TITLE_ID", true));
+
+                    setToolTipText(
+                            (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam("TITLE_ID")
+                                    + ")");
+                    RightClickMenu.setLabel(
+                            (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam("TITLE_ID")
+                                    + ")");
                     break;
             }
         } else {
