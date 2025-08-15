@@ -9,7 +9,7 @@ plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     application
     //`cpp-application`
-    id("io.github.krakowski.jextract") version "0.4.1"
+    //id("io.github.krakowski.jextract") version "0.4.1"
     id("org.panteleyev.jpackageplugin") version "1.7.3"
      id("com.gradleup.shadow") version "8.3.9"
 }
@@ -21,7 +21,7 @@ repositories {
     maven { url = uri("https://jitpack.io") }
 }
 
-tasks.jextract {
+/*tasks.jextract {
     toolchain.set("C:/jextract-21")
         // The header file from which we want to generate the bindings
 	header("${project.projectDir}/native-c/include/apollo.h") {
@@ -32,7 +32,7 @@ tasks.jextract {
         // The generated class name
         className = "ApolloLib"
         }
-}
+}*/
 
 dependencies {
     implementation("com.formdev:flatlaf:3.6.1")
@@ -43,7 +43,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-core:2.25.1")
     implementation("org.bytedeco:javacv-platform:1.5.12")
     // https://mvnrepository.com/artifact/net.bramp.ffmpeg/ffmpeg
-//implementation("net.bramp.ffmpeg:ffmpeg:0.8.0")
+    //implementation("net.bramp.ffmpeg:ffmpeg:0.8.0")
     implementation("com.github.goxr3plus:java-stream-player:10.0.2")
     implementation("com.palantir.isofilereader:isofilereader:0.6.1")
 }
@@ -65,24 +65,6 @@ application {
 var version = "1.0"
 var winver = "1.0.0"
 
-
-tasks.register<Copy>("copyNativeLibs") {
-    // Make sure native project is built first
-    dependsOn(":native-c:assemble")
-
-    // Where Gradle stores the native build outputs (adjust path if needed)
-    from(fileTree("${project(":native-c").buildDir}/libs/native-c/shared") {
-        include("*.dll", "*.so", "*.dylib")
-    })
-
-    // Put them in your main resources folder inside the build
-    into("$buildDir/resources/main")
-}
-
-// Ensure resources include the copied native libs
-tasks.named<ProcessResources>("processResources") {
-    dependsOn("copyNativeLibs")
-}
 
 tasks.jpackage {
     dependsOn("build", "shadowJar")
