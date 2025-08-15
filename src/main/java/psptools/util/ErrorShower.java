@@ -3,6 +3,7 @@ package psptools.util;
 import java.awt.Frame;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Executable;
 
 import javax.swing.JOptionPane;
 
@@ -28,5 +29,9 @@ public class ErrorShower {
                 message,
                 title, JOptionPane.ERROR_MESSAGE);
 
+    }
+
+    public static void showError(Frame parent, String msg, Exception ex) {
+        showError(parent, msg, ex.getMessage(), ex);
     }
 }

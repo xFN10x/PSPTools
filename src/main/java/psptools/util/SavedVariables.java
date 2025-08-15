@@ -1,5 +1,6 @@
 package psptools.util;
 
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -16,6 +17,7 @@ public class SavedVariables {
     public transient static final Path saveLocation = Path.of(System.getProperty("user.home"), "PSPToolsSettings.json");
 
     public PSP LastSelectedPSP;
+    public URL DatabaseUrl;
 
     public void Save() {
         try {

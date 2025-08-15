@@ -34,7 +34,7 @@ public class LaunchPage extends JFrame {
     public final JButton SaveEditor = new JButton("Save Manager");
     public final JButton SaveTools = new JButton("Save Tools");
     public final JButton GameEditor = new JButton("Game Manager");
-    public final JButton GameEditor = new JButton("Game Manager");
+    public final JButton GameTools = new JButton("Game Tools");
     public final JButton AutoPSX = new JButton("AutoPSX");
 
     public final SpringLayout Lay = new SpringLayout();
@@ -76,6 +76,10 @@ public class LaunchPage extends JFrame {
             }
         });
 
+        SaveTools.addActionListener(act -> {
+            new SaveTools(this);
+        });
+
         GameEditor.addActionListener(action -> {
             if (!PSP.getCurrentPSP().pspActive()) {
                 int option = JOptionPane.showConfirmDialog(this, "No PSP is selected, but is required.\nSelect one?",
@@ -103,8 +107,9 @@ public class LaunchPage extends JFrame {
         // #endregion
 
         ButtonsPane.add(SaveEditor);
+        ButtonsPane.add(SaveTools);
         ButtonsPane.add(GameEditor);
-
+        ButtonsPane.add(GameTools);
         ButtonsPane.add(AutoPSX);
 
         ExtraMenu.add("Open Single PARAM.SFO").addActionListener(ac -> {
@@ -112,7 +117,8 @@ public class LaunchPage extends JFrame {
             fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
             fileChooser.setFileFilter(new FileNameExtensionFilter("SFO Files", "sfo"));
             fileChooser.showOpenDialog(this);
-            new SFOBasedManager(this, SFOBasedManager.GAMES_MODE, fileChooser.getSelectedFile().getParentFile().getName(),
+            new SFOBasedManager(this, SFOBasedManager.GAMES_MODE,
+                    fileChooser.getSelectedFile().getParentFile().getName(),
                     fileChooser.getSelectedFile().getParentFile().getParentFile()).setVisible(true);
 
         });

@@ -16,4 +16,8 @@ library {
         source.from(file("src"))
     privateHeaders.from(file("src"))
     publicHeaders.from(file("include"))
+
+    dependencies {
+        implementation(project(":polarssl-1.3.9"))
+    }
 }

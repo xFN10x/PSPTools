@@ -17,7 +17,6 @@ import jpcsp.filesystems.umdiso.UmdIsoReader;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -32,7 +31,6 @@ import java.nio.file.StandardOpenOption;
 import psptools.psp.sfo.ParamSFO;
 import psptools.psp.sfo.ParamSFO.Params;
 import psptools.ui.interfaces.SFOListElementListiener;
-import psptools.util.AudioStreamPlayer;
 import psptools.util.ImageUtilites;
 
 public class ParamSFOListElement extends JPanel implements MouseListener {
@@ -53,6 +51,8 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
     private final JLabel SFOTitle = new JLabel();
     private final JLabel SFODesc = new JLabel();
     private final JLabel Icon0 = new JLabel();
+    private final JLabel HasAudio = new JLabel();
+    private final JLabel HasVideo = new JLabel();
     private final JLabel BackedUp = new JLabel(new ImageIcon(getClass().getResource("/backed.png")));
 
     private final JPopupMenu RightClickMenu = new JPopupMenu();
@@ -172,8 +172,10 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                 Files.readAllBytes(Path.of(dir.getAbsolutePath(), "Pic1.png").toFile().exists()
                         ? Path.of(dir.getAbsolutePath(), "Pic1.png")
                         : Path.of(ParamSFOListElement.class.getResource("/no_icon0.png").toURI())),
-                ParamSFO != null ? (ParamSFO.getParam(Params.Category).toString().trim().equals("UG") // if its a umd game then icon1 is a
-                                                                                  // pmf
+                ParamSFO != null ? (ParamSFO.getParam(Params.Category).toString().trim().equals("UG") // if its a umd
+                                                                                                      // game then icon1
+                                                                                                      // is a
+                        // pmf
                         ? (Path.of(dir.getAbsolutePath(), "Icon1.pmf").toFile().exists()
                                 ? Files.readAllBytes(Path.of(dir.getAbsolutePath(), "ICON1.PMF"))
                                 : null)
@@ -181,13 +183,22 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                                 ? (Path.of(dir.getAbsolutePath(), "Icon1.pam").toFile().exists()
                                         ? Files.readAllBytes(Path.of(dir.getAbsolutePath(), "ICON1.pam"))
                                         : null)
-                                : null)) : null,
+                                : null))
+                        : null,
                 Path.of(dir.getAbsolutePath(), "SND0.AT3").toFile().exists()
                         ? Path.of(dir.getAbsolutePath(), "SND0.AT3")
                         : null,
                 selectedFunction);
         // if (ParamSFO != null)
         // System.out.println(ParamSFO.getParam(Params.Title));
+    }
+
+    public ParamSFOListElement(String Title, String Desc, byte[] IconData) throws NameNotFoundException, IOException {
+        this(null, null,
+                IconData, IconData, null, null, null);
+
+        SFOTitle.setText(Title);
+        SFODesc.setText(Desc);
     }
 
     public ParamSFOListElement(ParamSFO ParamSFO, File dir, byte[] icon0Data, byte[] pic1Data, byte[] icon1Data,
@@ -200,7 +211,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         this.selectedFunc = selectedFunction;
         this.dir = dir;
         if (snd0Dir != null)
-        this.audioDir = snd0Dir.toString();
+            this.audioDir = snd0Dir.toString();
 
         Path backupPath = Path.of(System.getProperty("user.home"), "PSPSaveBackups", getBackupName());
 
@@ -231,73 +242,74 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         SFOTitle.setFont(SFOTitle.getFont().deriveFont(Font.BOLD, 12f));
 
         if (sfo != null) {
-            System.out.println(sfo.getParam(Params.Category).toString());
-            switch (sfo.getParam(Params.Category).toString().trim()) {
-                case "MS": // memory stick save
+                switch (sfo.getParam(Params.Category).toString().trim()) {
+                    case "MS": // memory stick save
 
-                    RightClickMenu.setLabel(
-                            sfo.getParam(Params.Title).toString() + " (" + (String) sfo.getParam(Params.SaveFolderName)
-                                    + ")");
+                        RightClickMenu.setLabel(
+                                sfo.getParam(Params.Title).toString() + " ("
+                                        + (String) sfo.getParam(Params.SaveFolderName)
+                                        + ")");
 
-                    SFOTitle.setText((String) sfo.getParam(Params.SaveTitle));
+                        SFOTitle.setText((String) sfo.getParam(Params.SaveTitle));
 
-                    SFODesc.setFont(SFODesc.getFont().deriveFont(10f));
+                        SFODesc.setFont(SFODesc.getFont().deriveFont(10f));
 
-                    SFODesc.setText((String) sfo.getParam(Params.Description, true));
+                        SFODesc.setText((String) sfo.getParam(Params.Description, true));
 
-                    setToolTipText(
-                            (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam(Params.SaveFolderName)
-                                    + ")");
-                    break;
+                        setToolTipText(
+                                (String) sfo.getParam(Params.Title) + " ("
+                                        + (String) sfo.getParam(Params.SaveFolderName)
+                                        + ")");
+                        break;
 
-                case "UG": // umd game
+                    case "UG": // umd game
 
-                    SFOTitle.setText((String) sfo.getParam(Params.Title));
+                        SFOTitle.setText((String) sfo.getParam(Params.Title));
 
-                    SFODesc.setFont(SFODesc.getFont().deriveFont(10f));
+                        SFODesc.setFont(SFODesc.getFont().deriveFont(10f));
 
-                    SFODesc.setText((String) sfo.getParam(Params.DiscVersion, true));
+                        SFODesc.setText((String) sfo.getParam(Params.DiscVersion, true));
 
-                    setToolTipText(
-                            (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam(Params.DiscID)
-                                    + ")");
-                    RightClickMenu.setLabel(
-                            (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam(Params.DiscID)
-                                    + ")");
-                    break;
+                        setToolTipText(
+                                (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam(Params.DiscID)
+                                        + ")");
+                        RightClickMenu.setLabel(
+                                (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam(Params.DiscID)
+                                        + ")");
+                        break;
 
-                case "DG": // PS3 disc game
+                    case "DG": // PS3 disc game
 
-                    SFOTitle.setText((String) sfo.getParam(Params.Title, true));
+                        SFOTitle.setText((String) sfo.getParam(Params.Title, true));
 
-                    SFODesc.setFont(SFODesc.getFont().deriveFont(10f));
+                        SFODesc.setFont(SFODesc.getFont().deriveFont(10f));
 
-                    SFODesc.setText((String) sfo.getParam("TITLE_ID", true));
+                        SFODesc.setText((String) sfo.getParam("TITLE_ID", true));
 
-                    setToolTipText(
-                            (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam("TITLE_ID")
-                                    + ")");
-                    RightClickMenu.setLabel(
-                            (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam("TITLE_ID")
-                                    + ")");
-                    break;
+                        setToolTipText(
+                                (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam("TITLE_ID")
+                                        + ")");
+                        RightClickMenu.setLabel(
+                                (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam("TITLE_ID")
+                                        + ")");
+                        break;
 
-                default:
-                    SFOTitle.setText((String) sfo.getParam(Params.Title, true));
+                    default:
+                        SFOTitle.setText((String) sfo.getParam(Params.Title, true));
 
-                    SFODesc.setFont(SFODesc.getFont().deriveFont(10f));
+                        SFODesc.setFont(SFODesc.getFont().deriveFont(10f));
 
-                    SFODesc.setText((String) sfo.getParam("TITLE_ID", true));
+                        SFODesc.setText((String) sfo.getParam("TITLE_ID", true));
 
-                    setToolTipText(
-                            (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam("TITLE_ID")
-                                    + ")");
-                    RightClickMenu.setLabel(
-                            (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam("TITLE_ID")
-                                    + ")");
-                    break;
-            }
-        } else {
+                        setToolTipText(
+                                (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam("TITLE_ID")
+                                        + ")");
+                        RightClickMenu.setLabel(
+                                (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam("TITLE_ID")
+                                        + ")");
+                        break;
+                }
+        } else if (dir != null) {
             SFOTitle.setText(dir.getName());
             SFODesc.setText("");
         }
@@ -312,6 +324,12 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         Lay.putConstraint(SpringLayout.NORTH, SFOTitle, 0, SpringLayout.NORTH, this);
         Lay.putConstraint(SpringLayout.EAST, SFOTitle, -4, SpringLayout.EAST, this);
 
+        Lay.putConstraint(SpringLayout.EAST, HasAudio, -4, SpringLayout.EAST, this);
+        Lay.putConstraint(SpringLayout.SOUTH, HasAudio, -4, SpringLayout.SOUTH, this);
+
+        Lay.putConstraint(SpringLayout.EAST, HasVideo, -4, SpringLayout.WEST, HasAudio);
+        Lay.putConstraint(SpringLayout.SOUTH, HasVideo, -4, SpringLayout.SOUTH, this);
+
         Lay.putConstraint(SpringLayout.EAST, BackedUp, -4, SpringLayout.EAST, this);
         Lay.putConstraint(SpringLayout.VERTICAL_CENTER, BackedUp, 0, SpringLayout.VERTICAL_CENTER, this);
 
@@ -322,12 +340,21 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
 
         setComponentPopupMenu(RightClickMenu);
 
+        HasVideo.setIcon(new ImageIcon(getClass().getResource("/hasVideo.png")));
+        HasAudio.setIcon(new ImageIcon(getClass().getResource("/hasAudio.png")));
+
         add(SFOTitle);
         add(Icon0);
         add(SFODesc);
         if (backupPath.toFile().exists()) {
             backuped = true;
             add(BackedUp);
+        }
+        if (icon1Data != null) {
+            add(HasVideo);
+        }
+        if (snd0Dir != null) {
+            add(HasAudio);
         }
 
         setLayout(Lay);
