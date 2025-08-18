@@ -1,5 +1,6 @@
 package psptools.ui;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -40,9 +41,14 @@ public class LaunchPage extends JFrame {
     public final SpringLayout Lay = new SpringLayout();
 
     public static Point getScreenCenter(Component target) {
+        // fuck it, if something needs this function, it need the icon
+        if (target instanceof JFrame)
+            ((JFrame) target).setIconImage(new ImageIcon(target.getClass().getResource("/icon.png")).getImage());
+
         var size = Toolkit.getDefaultToolkit().getScreenSize();
         return new Point(((int) ((size.getWidth() - target.getWidth()) * 0.5)),
                 ((int) ((size.getHeight() - target.getHeight()) * 0.5)));
+
     }
 
     public LaunchPage() {

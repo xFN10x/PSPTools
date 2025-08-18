@@ -8,7 +8,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -18,7 +17,6 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.Buffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
@@ -49,8 +47,6 @@ import javax.swing.event.DocumentListener;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.bytedeco.flycapture.FlyCapture2_C.fc2JPG2Option;
-
 import psptools.psp.sfo.ParamSFO.Params;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.progress.ProgressMonitor;
@@ -89,16 +85,19 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
     private final JLabel SaveIcon = new JLabel();
     private final JLabel SaveName = new JLabel("Save Name");
     private final JLabel SaveGameName = new JLabel("Game Name");
-    private final JPanel PatchSeletingPanel = new JPanel();
-    private final JScrollPane PatchSeletingScroll = new JScrollPane(PatchSeletingPanel,
+    private final JPanel PSPPatchSeletingPanel = new JPanel();
+    private final JScrollPane PSPPatchSeletingScroll = new JScrollPane(PSPPatchSeletingPanel,
             JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+    private final JButton SelectAllPSPPatches = new JButton("Select All");
+    private final JButton SelectNonePSPPatches = new JButton("Select None");
+    private final JButton PatchPSPSave = new JButton("Patch");
     // #endregion
     private final SpringLayout Lay = new SpringLayout();
     private final SpringLayout Lay2 = new SpringLayout();
     private final SpringLayout Lay3 = new SpringLayout();
     private final BoxLayout Lay4 = new BoxLayout(SetupPanel, BoxLayout.Y_AXIS);
     private final SpringLayout Lay5 = new SpringLayout();
-    private final BoxLayout Lay6 = new BoxLayout(PatchSeletingPanel, BoxLayout.Y_AXIS);
+    private final BoxLayout Lay6 = new BoxLayout(PSPPatchSeletingPanel, BoxLayout.Y_AXIS);
 
     private Future<?> currentThread;
     private BufferedReader currentReader;
@@ -138,9 +137,22 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
                 parent.setVisible(true);
-                if (currentThread != null)
-                    currentThread.cancel(true);
-                System.gc();
+                if (currentThread != null) {
+                    // System.out.println(currentThread.cancel(true));
+                    try {
+                        currentReader.close();
+                    } catch (Exception e1) {
+                        e1.printStackTrace();
+                    }
+                }
+                new Thread(() -> {
+                    try {
+                        wait(1000);
+                        System.gc();
+                    } catch (Exception e2) {
+                        e2.printStackTrace();
+                    }
+                }).start();
             }
 
             public void windowOpened(WindowEvent e) {
@@ -151,7 +163,7 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
 
         setResizable(false);
         setLayout(Lay);
-        setSize(new Dimension(350, 500));
+        setSize(new Dimension(450, 500));
 
         tabbedPane.addTab("Save Database", databasePanel);
         tabbedPane.addTab("Save Patching", PatchPanel);
@@ -195,7 +207,7 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
         Lay2.putConstraint(SpringLayout.SOUTH, databaseBack, -5, SpringLayout.SOUTH, databasePanel);
         Lay2.putConstraint(SpringLayout.EAST, databaseBack, -10, SpringLayout.EAST, databasePanel);
         Lay2.putConstraint(SpringLayout.WEST, databaseBack, 10, SpringLayout.WEST, databasePanel);
-
+        databaseListingPanel.getVerticalScrollBar().setUnitIncrement(18);
         databaseListingInnerPanel.add(new JLabel("Search by ID (e.g. ULUS03410) or by name (e.g. METAL GEAR SOLID)"));
 
         databaseSearch.getDocument().addDocumentListener(new DocumentListener() {
@@ -393,16 +405,30 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
         // #endregion
         // #region setup PSP patching tab
         PSPPatchPanel.setLayout(Lay5);
-        PatchSeletingPanel.setLayout(Lay6);
+        PSPPatchSeletingPanel.setLayout(Lay6);
+
+        PSPPatchSeletingScroll.getVerticalScrollBar().setUnitIncrement(18);
 
         Lay5.putConstraint(SpringLayout.NORTH, SelectPSPSave, 5, SpringLayout.NORTH, PSPPatchPanel);
         Lay5.putConstraint(SpringLayout.EAST, SelectPSPSave, -5, SpringLayout.EAST, PSPPatchPanel);
         Lay5.putConstraint(SpringLayout.WEST, SelectPSPSave, 5, SpringLayout.WEST, PSPPatchPanel);
 
-        Lay5.putConstraint(SpringLayout.NORTH, PatchSeletingScroll, 5, SpringLayout.SOUTH, SaveIcon);
-        Lay5.putConstraint(SpringLayout.SOUTH, PatchSeletingScroll, -5, SpringLayout.SOUTH, PSPPatchPanel);
-        Lay5.putConstraint(SpringLayout.EAST, PatchSeletingScroll, -5, SpringLayout.EAST, PSPPatchPanel);
-        Lay5.putConstraint(SpringLayout.WEST, PatchSeletingScroll, 5, SpringLayout.WEST, PSPPatchPanel);
+        Lay5.putConstraint(SpringLayout.SOUTH, PatchPSPSave, -5, SpringLayout.SOUTH, PSPPatchPanel);
+        Lay5.putConstraint(SpringLayout.EAST, PatchPSPSave, -5, SpringLayout.EAST, PSPPatchPanel);
+        Lay5.putConstraint(SpringLayout.WEST, PatchPSPSave, 5, SpringLayout.WEST, PSPPatchPanel);
+
+        Lay5.putConstraint(SpringLayout.SOUTH, SelectAllPSPPatches, -5, SpringLayout.NORTH, PatchPSPSave);
+        Lay5.putConstraint(SpringLayout.EAST, SelectAllPSPPatches, -5, SpringLayout.HORIZONTAL_CENTER, PatchPSPSave);
+        Lay5.putConstraint(SpringLayout.WEST, SelectAllPSPPatches, 5, SpringLayout.WEST, PSPPatchPanel);
+
+        Lay5.putConstraint(SpringLayout.SOUTH, SelectNonePSPPatches, -5, SpringLayout.NORTH, PatchPSPSave);
+        Lay5.putConstraint(SpringLayout.WEST, SelectNonePSPPatches, -5, SpringLayout.HORIZONTAL_CENTER, PatchPSPSave);
+        Lay5.putConstraint(SpringLayout.EAST, SelectNonePSPPatches, -5, SpringLayout.EAST, PSPPatchPanel);
+
+        Lay5.putConstraint(SpringLayout.NORTH, PSPPatchSeletingScroll, 5, SpringLayout.SOUTH, SaveIcon);
+        Lay5.putConstraint(SpringLayout.SOUTH, PSPPatchSeletingScroll, -5, SpringLayout.NORTH, SelectAllPSPPatches);
+        Lay5.putConstraint(SpringLayout.EAST, PSPPatchSeletingScroll, -5, SpringLayout.EAST, PSPPatchPanel);
+        Lay5.putConstraint(SpringLayout.WEST, PSPPatchSeletingScroll, 5, SpringLayout.WEST, PSPPatchPanel);
 
         Lay5.putConstraint(SpringLayout.WEST, SaveIcon, 0, SpringLayout.WEST, SelectPSPSave);
         Lay5.putConstraint(SpringLayout.NORTH, SaveIcon, 5, SpringLayout.SOUTH, SelectPSPSave);
@@ -414,6 +440,24 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
         Lay5.putConstraint(SpringLayout.SOUTH, SaveGameName, 0, SpringLayout.SOUTH, SaveIcon);
 
         SaveIcon.setIcon(new ImageIcon(getClass().getResource("/no_icon0.png")));
+
+        SelectAllPSPPatches.addActionListener(ac -> {
+            for (Component component : PSPPatchSeletingPanel.getComponents()) {
+                if (component instanceof JCheckBox) {
+                    if (component.isEnabled())
+                        ((JCheckBox) component).setSelected(true);
+                }
+            }
+        });
+
+        SelectNonePSPPatches.addActionListener(ac -> {
+            for (Component component : PSPPatchSeletingPanel.getComponents()) {
+                if (component instanceof JCheckBox) {
+                    if (component.isEnabled())
+                        ((JCheckBox) component).setSelected(false);
+                }
+            }
+        });
 
         SelectPSPSave.addActionListener(ac -> {
             if (canPatch()) {
@@ -441,7 +485,7 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                             System.out.println(stream.readLine());
                             System.out.println(stream.readLine());
 
-                            PatchSeletingPanel.removeAll();
+                            PSPPatchSeletingPanel.removeAll();
 
                             boolean done = false;
                             int i = 1;
@@ -458,11 +502,11 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                                     currentFile = line.replace(":", "").trim();
                                     JLabel toAdd = new JLabel(currentFile);
 
-                                    //make text darker if the save doesnt have that file
+                                    // make text darker if the save doesnt have that file
                                     if (!Path.of(selected.dir.getAbsolutePath(), currentFile).toFile().exists())
                                         toAdd.setForeground(new Color(0.5f, 0.5f, 0.5f));
 
-                                    PatchSeletingPanel.add(toAdd);
+                                    PSPPatchSeletingPanel.add(toAdd);
                                 }
                                 if (line.startsWith("[")) { // its a patch
                                     String patchName = line.replace("[", "").replace("]", "");
@@ -471,6 +515,7 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                                     i++;
 
                                     JCheckBox check = new JCheckBox(patchName);
+                                    check.setName(String.valueOf(i));
 
                                     // if the save doesnt have the file specified, it must be
                                     // for another save type from the game
@@ -483,7 +528,7 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                                         check.setEnabled(false);
                                     }
 
-                                    PatchSeletingPanel.add(check);
+                                    PSPPatchSeletingPanel.add(check);
                                 }
 
                             }
@@ -504,7 +549,10 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
         PSPPatchPanel.add(SaveIcon);
         PSPPatchPanel.add(SaveName);
         PSPPatchPanel.add(SaveGameName);
-        PSPPatchPanel.add(PatchSeletingScroll);
+        PSPPatchPanel.add(PSPPatchSeletingScroll);
+        PSPPatchPanel.add(SelectAllPSPPatches);
+        PSPPatchPanel.add(SelectNonePSPPatches);
+        PSPPatchPanel.add(PatchPSPSave);
         // #endregion
         Lay4.layoutContainer(SetupPanel);
 
@@ -554,7 +602,6 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
         System.gc();
 
         if (currentThread != null) {
-            System.out.println(currentThread.cancel(true));
             try {
                 currentReader.close();
             } catch (Exception e) {
@@ -569,6 +616,7 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
             case "root":
                 currentThread = executorService.submit(
                         () -> {
+                            Component comp = null;
                             if (searchTerm.trim().equals(""))
                                 return;
                             try (BufferedReader buff = new BufferedReader(
@@ -593,7 +641,7 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                                     if (Thread.currentThread().isInterrupted())
                                         break;
 
-                                    Component comp = databaseListingInnerPanel.add(new ParamSFOListElement(
+                                    comp = databaseListingInnerPanel.add(new ParamSFOListElement(
                                             keyandval[1],
                                             keyandval[0],
                                             GameIconUrl.openStream().readAllBytes(),
@@ -604,8 +652,11 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                                     databaseListingInnerPanel.add(Box.createRigidArea(new Dimension(0, 10)));
                                 }
                             } catch (Exception e) {
-                                if (e instanceof IOException)
+                                if (e instanceof IOException) {
+                                    if (Thread.currentThread().isInterrupted())
+                                        databaseListingInnerPanel.remove(comp);
                                     return;
+                                }
 
                                 e.printStackTrace();
                             }
@@ -615,6 +666,7 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
             default:
                 currentThread = executorService.submit(
                         () -> {
+                            Component comp = null;
                             try (BufferedReader buff = new BufferedReader(
                                     new InputStreamReader(new URI(url.toString() + "/PSP/" + currentMenu + "/saves.txt")
                                             .toURL().openStream()))) {
@@ -636,17 +688,23 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                                     if (Thread.currentThread().isInterrupted())
                                         break;
 
-                                    databaseListingInnerPanel.add(new ParamSFOListElement(
+                                    comp = databaseListingInnerPanel.add(new ParamSFOListElement(
                                             keyandval[1],
                                             keyandval[0],
                                             GameIconUrl.openStream().readAllBytes(),
                                             this));
 
+                                    if (Thread.currentThread().isInterrupted())
+                                        databaseListingInnerPanel.remove(comp);
+
                                     databaseListingInnerPanel.add(Box.createRigidArea(new Dimension(0, 10)));
                                 }
                             } catch (Exception e) {
-                                if (e instanceof IOException)
+                                if (e instanceof IOException) {
+                                    if (Thread.currentThread().isInterrupted())
+                                        databaseListingInnerPanel.remove(comp);
                                     return;
+                                }
                                 e.printStackTrace();
                             }
                         });

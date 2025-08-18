@@ -2,14 +2,15 @@
 
 ![hackatime](https://hackatime-badge.hackclub.com/U0923KXMGUR/PSPTools)
 
-Various tools for managing your Playstation®  Portable.
+Various tools for managing your Playstation®  Portable, with support for PS3
 
 Features include:
 
 - **Save Manager** - View normal, and possibly corrupted saves.
-- **Save Importer/Downloader** (WIP) -  Import saves from zip, and folder. Download saves from a [Save Database](https://github.com/bucanero/apollo-saves), or a URL.
-- **Game Manager/Adder** (WIP) - Add games/ISOs/homebrew from a URL, or zip. No need for manual extracting.
-- **PS1 Eboot Creater** (WIP) - Create PS1 EBOOTS from BIN/CUE, m3u, zip, 7z and more, without the need of anything else.
+- **Save Importer/Downloader** -  Import saves from zip, and folder. Download saves from a [Save Database](https://github.com/bucanero/apollo-saves), or a URL.
+- **Save Patcher** - Patch save files for PSP, (and ps3!) with Apollo Save Tool.
+- **Game Manager/Adder** (Planned: 1.2) - Add games/ISOs/homebrew from a URL, or zip. No need for manual extracting.
+- **AutoPSX (PS1 EBOOT Creator)** (Planned: 2.0) - Create PS1 EBOOTS from BIN/CUE, m3u, zip, 7z and more, without the need of anything else.
 
 ## Special Thanks
 
