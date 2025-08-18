@@ -2,6 +2,7 @@ package psptools.ui;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.event.WindowAdapter;
@@ -20,8 +21,10 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
@@ -104,6 +107,10 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
     private String currentMenu = "root";
     // private volatile Future<?> currentThread;
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+    private File currentSavePatch;
+    private ParamSFOListElement currentSfoListElement;
+    private String currentPatchFile;
 
     public boolean canPatch() {
         if (!PSP.getCurrentPSP().pspActive()) {
@@ -462,6 +469,7 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
         SelectPSPSave.addActionListener(ac -> {
             if (canPatch()) {
                 ParamSFOListElement selected = SFOBasedSelector.openSaveSelector(this);
+                currentSfoListElement = selected;
 
                 SaveIcon.setIcon(ImageUtilites.ResizeIcon(selected.getIcon0(), 117, 65));
                 try {
@@ -478,6 +486,7 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                         if (selected.sfo.getParam(Params.SaveFolderName).toString()
                                 .contains(file.getName().substring(0, file.getName().indexOf(".")))) {
                             foundPatch = true;
+                            currentSavePatch = file;
                             BufferedReader stream = new BufferedReader(new FileReader(file));
                             // first 4 lines are info about patch
                             System.out.println(stream.readLine());
@@ -491,7 +500,7 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                             int i = 1;
                             String currentFile = "*";
 
-                            while (!done) {
+                            while (!done) { // read each line
                                 String line = stream.readLine();
                                 if (line == null) {
                                     done = true;
@@ -505,6 +514,8 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                                     // make text darker if the save doesnt have that file
                                     if (!Path.of(selected.dir.getAbsolutePath(), currentFile).toFile().exists())
                                         toAdd.setForeground(new Color(0.5f, 0.5f, 0.5f));
+                                    else // if it does have the file, (it should only have one) set the current file
+                                        currentPatchFile = currentFile;
 
                                     PSPPatchSeletingPanel.add(toAdd);
                                 }
@@ -512,7 +523,6 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                                     String patchName = line.replace("[", "").replace("]", "");
                                     System.out.println("(" + currentFile + ") Patch " + i + ": "
                                             + patchName);
-                                    i++;
 
                                     JCheckBox check = new JCheckBox(patchName);
                                     check.setName(String.valueOf(i));
@@ -520,7 +530,7 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                                     // if the save doesnt have the file specified, it must be
                                     // for another save type from the game
                                     if (!Path.of(selected.dir.getAbsolutePath(), currentFile).toFile().exists()) {
-                                        check.setEnabled(false);
+                                        // check.setEnabled(false);
                                     }
 
                                     if (patchName.contains("Required")) {
@@ -529,6 +539,7 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                                     }
 
                                     PSPPatchSeletingPanel.add(check);
+                                    i++;
                                 }
 
                             }
@@ -542,6 +553,72 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+            }
+        });
+
+        PatchPSPSave.addActionListener(ac -> {
+            List<String> patchNames = new ArrayList<String>();
+
+            for (Component comp : PSPPatchSeletingPanel.getComponents()) {
+                if (comp instanceof JCheckBox) {
+                    if (((JCheckBox) comp).isSelected()) {
+                        patchNames.add(((JCheckBox) comp).getText());
+                    }
+                }
+            }
+
+            int option = JOptionPane.showConfirmDialog(this,
+                    "<html>Apply the current patches?<br><b>" + String.join("<br>", patchNames) + "</html>", "Apply?",
+                    JOptionPane.YES_NO_OPTION);
+
+            if (option != JOptionPane.YES_OPTION)
+                return;
+
+            try {
+                LoadingScreen loading = new LoadingScreen(this);
+
+                SwingUtilities.invokeLater(() -> {
+                    loading.setVisible(true);
+                });
+
+                List<String> patchNumbers = new ArrayList<String>();
+
+                for (Component comp : PSPPatchSeletingPanel.getComponents()) {
+                    if (comp instanceof JCheckBox) {
+                        if (((JCheckBox) comp).isSelected()) {
+                            patchNumbers.add(((JCheckBox) comp).getName());
+                        }
+                    }
+                }
+
+                ProcessBuilder procBuilder = new ProcessBuilder(
+                        Path.of(SavedVariables.DataFolder.toString(), "tools", "patcher").toString(),
+                        currentSavePatch.getAbsolutePath(), String.join(", ", patchNumbers),
+                        Path.of(currentSfoListElement.dir.toString(), currentPatchFile).toString());
+                File file = File.createTempFile("PSPTOOLS", "TEMPTEST.log");
+                procBuilder.redirectOutput(file);
+                //System.out.println(file.getAbsolutePath());
+
+                Process proc = procBuilder.start();
+                new Thread(() -> {
+                    try {
+                        proc.waitFor();
+                        loading.setVisible(false);
+
+                        int Option = JOptionPane.showConfirmDialog(this, "The save has been patched. View log?",
+                                "Save Patched", JOptionPane.YES_NO_OPTION);
+
+                        if (Option == JOptionPane.YES_OPTION)
+                            Desktop.getDesktop().open(file);
+                        else
+                            file.delete();
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }).start();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         });
 
@@ -653,7 +730,7 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                                 }
                             } catch (Exception e) {
                                 if (e instanceof IOException) {
-                                    if (Thread.currentThread().isInterrupted())
+                                    if (comp != null)
                                         databaseListingInnerPanel.remove(comp);
                                     return;
                                 }
@@ -701,7 +778,7 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                                 }
                             } catch (Exception e) {
                                 if (e instanceof IOException) {
-                                    if (Thread.currentThread().isInterrupted())
+                                    if (comp != null)
                                         databaseListingInnerPanel.remove(comp);
                                     return;
                                 }

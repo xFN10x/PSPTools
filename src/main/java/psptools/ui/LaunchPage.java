@@ -41,7 +41,7 @@ public class LaunchPage extends JFrame {
     public final SpringLayout Lay = new SpringLayout();
 
     public static Point getScreenCenter(Component target) {
-        // fuck it, if something needs this function, it need the icon
+        // fuck it, if something needs this function, it needs the icon
         if (target instanceof JFrame)
             ((JFrame) target).setIconImage(new ImageIcon(target.getClass().getResource("/icon.png")).getImage());
 
@@ -54,6 +54,9 @@ public class LaunchPage extends JFrame {
     public LaunchPage() {
         super("PSPTools");
         setLayout(Lay);
+
+        AutoPSX.setEnabled(false);
+        GameTools.setEnabled(false);
 
         Lay.putConstraint(SpringLayout.EAST, ButtonsPane, -10, SpringLayout.EAST, getContentPane());
         Lay.putConstraint(SpringLayout.WEST, ButtonsPane, 10, SpringLayout.WEST, getContentPane());
