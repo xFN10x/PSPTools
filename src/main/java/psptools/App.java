@@ -10,7 +10,8 @@ import psptools.util.SavedVariables;
 
 public class App {
     public static void main(String[] args) {
-        System.out.println("Args: " + String.join(", ", args));
+        if (args != null)
+            System.out.println("Args: " + String.join(", ", args));
 
         try {
             UIManager.setLookAndFeel(new FlatDarculaLaf());
@@ -24,13 +25,13 @@ public class App {
 
         System.out.println(LastPSP);
 
-        if (LastPSP.pspActive())
-            PSP.setCurrentPSP(LastPSP,false);
-        else
-            JOptionPane.showMessageDialog(null, "PSP was disconnected.");
+        if (LastPSP != null) {
+            if (LastPSP.pspActive())
+                PSP.setCurrentPSP(LastPSP, false);
+            else
+                JOptionPane.showMessageDialog(null, "PSP was disconnected.");
+        }
         // #endregion
-
-        
 
         new LaunchPage().setVisible(true);
     }

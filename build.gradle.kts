@@ -45,7 +45,7 @@ dependencies {
     // https://mvnrepository.com/artifact/net.bramp.ffmpeg/ffmpeg
     //implementation("net.bramp.ffmpeg:ffmpeg:0.8.0")
     implementation("com.github.goxr3plus:java-stream-player:10.0.2")
-    implementation("com.palantir.isofilereader:isofilereader:0.6.1")
+    //implementation("com.palantir.isofilereader:isofilereader:0.6.1")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

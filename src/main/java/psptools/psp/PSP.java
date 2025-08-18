@@ -1,5 +1,6 @@
 package psptools.psp;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -54,7 +55,13 @@ public class PSP {
         try {
             switch (selectionMode) {
                 case SelectionMode.PSP_DIR:
-                    return Files.exists(path);
+                    File PSPFolder = new File(Path.of(path.toString(), "PSP").toString());
+                    File ISOFolder = new File(Path.of(path.toString(), "ISO").toString());
+                    File PSPGameFolder = new File(Path.of(path.toString(), "PSP", "Game").toString());
+                    File PSPSaveFolder = new File(Path.of(path.toString(), "PSP", "Savedata").toString());
+
+                    return (PSPFolder.exists() && ISOFolder.exists() && PSPGameFolder.exists()
+                            && PSPSaveFolder.exists());
 
                 default:
                     return false;

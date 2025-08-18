@@ -1,6 +1,7 @@
 package psptools.ui;
 
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JProgressBar;
 import javax.swing.SpringLayout;
@@ -72,7 +73,7 @@ public class LoadingScreen extends JDialog {
 
         setModal(true);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-        setSize(new Dimension(300, 200));
+        setSize(new Dimension(300, 100));
         setResizable(false);
         setLayout(Lay);
 
@@ -83,13 +84,13 @@ public class LoadingScreen extends JDialog {
         MainBar.setIndeterminate(true);
 
         // progress bar
-        Lay.putConstraint(SpringLayout.SOUTH, MainBar, 5, SpringLayout.SOUTH, getContentPane());
-        Lay.putConstraint(SpringLayout.NORTH, MainBar, 20, SpringLayout.NORTH, getContentPane());
-        Lay.putConstraint(SpringLayout.EAST, MainBar, 5, SpringLayout.EAST, getContentPane());
-        Lay.putConstraint(SpringLayout.WEST, MainBar, -5, SpringLayout.WEST, getContentPane());
+        Lay.putConstraint(SpringLayout.SOUTH, MainBar, -5, SpringLayout.SOUTH, getContentPane());
+        Lay.putConstraint(SpringLayout.NORTH, MainBar, -30, SpringLayout.SOUTH, getContentPane());
+        Lay.putConstraint(SpringLayout.EAST, MainBar, -5, SpringLayout.EAST, getContentPane());
+        Lay.putConstraint(SpringLayout.WEST, MainBar, 5, SpringLayout.WEST, getContentPane());
         // progress text
-        Lay.putConstraint(SpringLayout.SOUTH, MainText, 5, SpringLayout.NORTH, getContentPane());
-        Lay.putConstraint(SpringLayout.WEST, MainText, 5, SpringLayout.WEST, getContentPane());
+        Lay.putConstraint(SpringLayout.SOUTH, MainText, -3, SpringLayout.NORTH, MainBar);
+        Lay.putConstraint(SpringLayout.WEST, MainText, 0, SpringLayout.WEST, MainBar);
 
         add(MainText);
         add(MainBar);

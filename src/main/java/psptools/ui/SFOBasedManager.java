@@ -14,7 +14,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -51,6 +50,7 @@ import psptools.ui.interfaces.SFOListElementListiener;
 import psptools.ui.interfaces.VideoPlayingListiener;
 import psptools.util.ErrorShower;
 import psptools.util.ImageUtilites;
+import psptools.util.SavedVariables;
 
 public class SFOBasedManager extends JFrame implements SFOListElementListiener, VideoPlayingListiener {
 
@@ -344,7 +344,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
 
     @Override
     public void backup() {
-        Path backupPath = Path.of(System.getProperty("user.home"), "PSPSaveBackups", getBackupName());
+        Path backupPath = Path.of(SavedVariables.DataFolder.toString(), "PSPSaveBackups", getBackupName());
         int option;
         if (!backupPath.toFile().exists())
             option = JOptionPane.showConfirmDialog(this,

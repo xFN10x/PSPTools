@@ -1,9 +1,12 @@
 package psptools.util;
 
+import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Date;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -12,12 +15,25 @@ import psptools.psp.PSP;
 
 public class SavedVariables {
 
-    public transient static final Gson gson = new GsonBuilder().registerTypeHierarchyAdapter(Path.class, new PathTypeAdapter())
+    private transient static final Gson gson = new GsonBuilder()
+            .registerTypeHierarchyAdapter(Path.class, new PathTypeAdapter())
             .setPrettyPrinting().create();
-    public transient static final Path saveLocation = Path.of(System.getProperty("user.home"), "PSPToolsSettings.json");
+            public static transient final Path DataFolder = Path.of(System.getProperty("user.home"), "/PSPTools/");
+    static {
+        if (!DataFolder.toFile().exists())
+            try {
+                Files.createDirectory(DataFolder);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+    }
+    public transient static final Path saveLocation = Path.of(DataFolder.toString(), "PSPToolsSettings.json");
 
     public PSP LastSelectedPSP;
     public URL DatabaseUrl;
+    public Date SinceLastPatchUpdate;
+
+    
 
     public void Save() {
         try {

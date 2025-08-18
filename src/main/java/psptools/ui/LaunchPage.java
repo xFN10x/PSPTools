@@ -72,7 +72,7 @@ public class LaunchPage extends JFrame {
                 setVisible(false);
                 new SFOBasedManager(this, SFOBasedManager.SAVES_MODE, "Save Manager",
                         PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA").toFile()).setVisible(true);
-                ;
+
             }
         });
 
@@ -111,6 +111,10 @@ public class LaunchPage extends JFrame {
         ButtonsPane.add(GameEditor);
         ButtonsPane.add(GameTools);
         ButtonsPane.add(AutoPSX);
+
+        FileMenu.add("Selected PSP").addActionListener(ac -> {
+            PSP.setCurrentPSP(PSPSelectionUI.getNewPSP(this));
+        });
 
         ExtraMenu.add("Open Single PARAM.SFO").addActionListener(ac -> {
             JFileChooser fileChooser = new JFileChooser();
