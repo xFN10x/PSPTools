@@ -2,6 +2,7 @@ package psptools.ui;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Frame;
 import java.awt.HeadlessException;
 import java.awt.Insets;
 import java.awt.Toolkit;
@@ -42,6 +43,7 @@ import org.apache.commons.io.FileUtils;
 import com.formdev.flatlaf.ui.FlatLineBorder;
 import com.google.gson.GsonBuilder;
 
+import psptools.psp.PSP;
 import psptools.psp.sfo.ParamSFO;
 import psptools.psp.sfo.ParamSFO.Params;
 import psptools.ui.components.ParamSFOListElement;
@@ -60,8 +62,8 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
 
     private static final Dimension Size = new Dimension(706, 392);
 
-    public final JPanel InnerSFOFolderViewer = new JPanel();
-    public final JScrollPane SFOFolderViewer = new JScrollPane(InnerSFOFolderViewer,
+    protected final JPanel InnerSFOFolderViewer = new JPanel();
+    protected final JScrollPane SFOFolderViewer = new JScrollPane(InnerSFOFolderViewer,
             JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
     private final JPanel ViewBG = new JPanel();
@@ -77,10 +79,10 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
     private final SpringLayout Lay = new SpringLayout();
     private final SpringLayout Lay2 = new SpringLayout();
 
-    public ParamSFOListElement selected;
-    public MediaPlayer selectedAudioProcess;
-    public MediaPlayer selectedVideoProcess;
-    public final File[] targets;
+    private ParamSFOListElement selected;
+    private MediaPlayer selectedAudioProcess;
+    private MediaPlayer selectedVideoProcess;
+    private final File[] targets;
 
     private final JLabel Background = new JLabel(new ImageIcon(getClass().getResource("/bg.png")));
 
@@ -95,12 +97,15 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
         }
     }
 
-    public SFOBasedManager(LaunchPage parent, int mode, String title, File... targets) {
+    
+
+    public SFOBasedManager(Frame parent, int mode, String title, File... targets) {
         super(title);
 
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
-                parent.setVisible(true);
+                if (parent instanceof LaunchPage)
+                    parent.setVisible(true);
                 if (selectedAudioProcess != null)
                     selectedAudioProcess.stop();
                 if (selectedVideoProcess != null)
@@ -324,15 +329,10 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
             else
                 RestoreButton.setEnabled(false);
 
-            // if (selectedElement.playAudioProcess != null)
-            // selectedAudioProcess = selectedElement.playAudioProcess.start();
-
             if (selectedElement.audioDir != null)
                 selectedAudioProcess = new MediaPlayer(selectedElement.audioDir);
             if (selectedElement.videoDir != null)
                 selectedVideoProcess = new MediaPlayer(selectedElement.videoDir, this);
-            // selectedVideoProcess = new VideoPlayer(selectedElement.dir.getAbsolutePath()
-            // + "/SND0.AT3", this);
 
             this.selected = selectedElement;
 

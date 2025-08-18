@@ -1,5 +1,6 @@
 package psptools.ui;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Frame;
@@ -7,7 +8,9 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -15,6 +18,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.Buffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
@@ -28,7 +32,9 @@ import java.util.concurrent.Future;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -43,26 +49,33 @@ import javax.swing.event.DocumentListener;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.bytedeco.flycapture.FlyCapture2_C.fc2JPG2Option;
+
+import psptools.psp.sfo.ParamSFO.Params;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.progress.ProgressMonitor;
 import net.lingala.zip4j.progress.ProgressMonitor.State;
 import psptools.psp.PSP;
 import psptools.psp.PSPSelectionUI;
+import psptools.psp.sfo.ParamSFO;
 import psptools.ui.components.ParamSFOListElement;
 import psptools.ui.interfaces.SFOListElementListiener;
+import psptools.util.ImageUtilites;
 import psptools.util.SavedVariables;
 
 public class SaveTools extends JFrame implements SFOListElementListiener {
 
     private final JTabbedPane tabbedPane = new JTabbedPane();
 
+    // #region database stuff
     private final JTextField databaseSearch = new JTextField();
     private final JPanel databasePanel = new JPanel();
     private final JButton databaseBack = new JButton("< Back");
     private final JPanel databaseListingInnerPanel = new JPanel();
     private final JScrollPane databaseListingPanel = new JScrollPane(databaseListingInnerPanel,
             JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-
+    // #endregion
+    // #region patching
     private final JPanel PatchPanel = new JPanel();
     private final JTabbedPane PatchTabs = new JTabbedPane();
 
@@ -74,20 +87,48 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
     private final JPanel PSPPatchPanel = new JPanel();
     private final JButton SelectPSPSave = new JButton("Select...");
     private final JLabel SaveIcon = new JLabel();
-    private final JButton SaveName = new JButton("Save Name");
-    private final JButton SaveGameName = new JButton("Game Name");
-
+    private final JLabel SaveName = new JLabel("Save Name");
+    private final JLabel SaveGameName = new JLabel("Game Name");
+    private final JPanel PatchSeletingPanel = new JPanel();
+    private final JScrollPane PatchSeletingScroll = new JScrollPane(PatchSeletingPanel,
+            JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+    // #endregion
     private final SpringLayout Lay = new SpringLayout();
     private final SpringLayout Lay2 = new SpringLayout();
     private final SpringLayout Lay3 = new SpringLayout();
     private final BoxLayout Lay4 = new BoxLayout(SetupPanel, BoxLayout.Y_AXIS);
     private final SpringLayout Lay5 = new SpringLayout();
+    private final BoxLayout Lay6 = new BoxLayout(PatchSeletingPanel, BoxLayout.Y_AXIS);
 
     private Future<?> currentThread;
     private BufferedReader currentReader;
     private String currentMenu = "root";
     // private volatile Future<?> currentThread;
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+    public boolean canPatch() {
+        if (!PSP.getCurrentPSP().pspActive()) {
+            int option = JOptionPane.showConfirmDialog(this, "No PSP is selected, but is required.\nSelect one?",
+                    "PSP Selection Confirm", JOptionPane.YES_NO_OPTION);
+
+            if (option == JOptionPane.YES_OPTION) {
+                PSP.setCurrentPSP(PSPSelectionUI.getNewPSP(this));
+                return canPatch();
+            } else
+                return false;
+        } else if (!SavedVariables.hasApolloToolsInstalled()) {
+            int option = JOptionPane.showConfirmDialog(this,
+                    "Apollo tools are not installed. These are required for patching.\nInstall Apollo tools?",
+                    "Install Apollo CLI Tools", JOptionPane.YES_NO_OPTION);
+
+            if (option == JOptionPane.YES_OPTION) {
+                SavedVariables.installApolloTools(this);
+                return canPatch();
+            } else
+                return false;
+        }
+        return true;
+    }
 
     public SaveTools(Frame parent) {
         super("Save Manager");
@@ -100,6 +141,10 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                 if (currentThread != null)
                     currentThread.cancel(true);
                 System.gc();
+            }
+
+            public void windowOpened(WindowEvent e) {
+                setupButton.setEnabled(!SavedVariables.hasApolloToolsInstalled());
             }
 
         });
@@ -188,7 +233,9 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
         databasePanel.add(databaseBack);
         // #endregion
         // #region patch panel
+
         // #region setup setup tab
+
         SetupPanel.setLayout(Lay4);
 
         SetupPanel.add(Box.createVerticalStrut(180));
@@ -333,15 +380,131 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
         SetupPanel.add(setupButton);
         setupButton.setAlignmentX(0.5f);
         setupButton.setAlignmentY(0.5f);
+
+        setupButton.addActionListener(ac -> {
+            if (!SavedVariables.hasApolloToolsInstalled()) {
+                SavedVariables.installApolloTools(this);
+                setupButton.setEnabled(false);
+            } else {
+                setupButton.setEnabled(false);
+            }
+        });
+
         // #endregion
         // #region setup PSP patching tab
         PSPPatchPanel.setLayout(Lay5);
+        PatchSeletingPanel.setLayout(Lay6);
 
         Lay5.putConstraint(SpringLayout.NORTH, SelectPSPSave, 5, SpringLayout.NORTH, PSPPatchPanel);
         Lay5.putConstraint(SpringLayout.EAST, SelectPSPSave, -5, SpringLayout.EAST, PSPPatchPanel);
         Lay5.putConstraint(SpringLayout.WEST, SelectPSPSave, 5, SpringLayout.WEST, PSPPatchPanel);
 
+        Lay5.putConstraint(SpringLayout.NORTH, PatchSeletingScroll, 5, SpringLayout.SOUTH, SaveIcon);
+        Lay5.putConstraint(SpringLayout.SOUTH, PatchSeletingScroll, -5, SpringLayout.SOUTH, PSPPatchPanel);
+        Lay5.putConstraint(SpringLayout.EAST, PatchSeletingScroll, -5, SpringLayout.EAST, PSPPatchPanel);
+        Lay5.putConstraint(SpringLayout.WEST, PatchSeletingScroll, 5, SpringLayout.WEST, PSPPatchPanel);
+
+        Lay5.putConstraint(SpringLayout.WEST, SaveIcon, 0, SpringLayout.WEST, SelectPSPSave);
+        Lay5.putConstraint(SpringLayout.NORTH, SaveIcon, 5, SpringLayout.SOUTH, SelectPSPSave);
+
+        Lay5.putConstraint(SpringLayout.WEST, SaveName, 3, SpringLayout.EAST, SaveIcon);
+        Lay5.putConstraint(SpringLayout.NORTH, SaveName, 0, SpringLayout.NORTH, SaveIcon);
+
+        Lay5.putConstraint(SpringLayout.WEST, SaveGameName, 3, SpringLayout.EAST, SaveIcon);
+        Lay5.putConstraint(SpringLayout.SOUTH, SaveGameName, 0, SpringLayout.SOUTH, SaveIcon);
+
+        SaveIcon.setIcon(new ImageIcon(getClass().getResource("/no_icon0.png")));
+
+        SelectPSPSave.addActionListener(ac -> {
+            if (canPatch()) {
+                ParamSFOListElement selected = SFOBasedSelector.openSaveSelector(this);
+
+                SaveIcon.setIcon(ImageUtilites.ResizeIcon(selected.getIcon0(), 117, 65));
+                try {
+                    SaveName.setText(selected.sfo.getParam(ParamSFO.Params.SaveTitle, true).toString());
+                    SaveGameName.setText(selected.sfo.getParam(ParamSFO.Params.Title, true).toString());
+
+                    File PSPPatchDir = Path.of(SavedVariables.DataFolder.toString(), "Patches", "PSP").toFile();
+                    boolean foundPatch = false;
+                    for (File file : PSPPatchDir.listFiles()) {
+                        if (!file.getName().endsWith(".savepatch"))
+                            continue;
+                        // if the name of the savepatch is somewhere in the save
+                        // BEGIN PARSE!!!!
+                        if (selected.sfo.getParam(Params.SaveFolderName).toString()
+                                .contains(file.getName().substring(0, file.getName().indexOf(".")))) {
+                            foundPatch = true;
+                            BufferedReader stream = new BufferedReader(new FileReader(file));
+                            // first 4 lines are info about patch
+                            System.out.println(stream.readLine());
+                            System.out.println(stream.readLine());
+                            System.out.println(stream.readLine());
+                            System.out.println(stream.readLine());
+
+                            PatchSeletingPanel.removeAll();
+
+                            boolean done = false;
+                            int i = 1;
+                            String currentFile = "*";
+
+                            while (!done) {
+                                String line = stream.readLine();
+                                if (line == null) {
+                                    done = true;
+                                    break;
+                                }
+
+                                if (line.startsWith(":")) { // change file
+                                    currentFile = line.replace(":", "").trim();
+                                    JLabel toAdd = new JLabel(currentFile);
+
+                                    //make text darker if the save doesnt have that file
+                                    if (!Path.of(selected.dir.getAbsolutePath(), currentFile).toFile().exists())
+                                        toAdd.setForeground(new Color(0.5f, 0.5f, 0.5f));
+
+                                    PatchSeletingPanel.add(toAdd);
+                                }
+                                if (line.startsWith("[")) { // its a patch
+                                    String patchName = line.replace("[", "").replace("]", "");
+                                    System.out.println("(" + currentFile + ") Patch " + i + ": "
+                                            + patchName);
+                                    i++;
+
+                                    JCheckBox check = new JCheckBox(patchName);
+
+                                    // if the save doesnt have the file specified, it must be
+                                    // for another save type from the game
+                                    if (!Path.of(selected.dir.getAbsolutePath(), currentFile).toFile().exists()) {
+                                        check.setEnabled(false);
+                                    }
+
+                                    if (patchName.contains("Required")) {
+                                        check.setSelected(true);
+                                        check.setEnabled(false);
+                                    }
+
+                                    PatchSeletingPanel.add(check);
+                                }
+
+                            }
+
+                            stream.close();
+                        }
+                    }
+                    if (!foundPatch)
+                        JOptionPane.showMessageDialog(this, "No patches were found for this save.", "No Patches found",
+                                JOptionPane.ERROR_MESSAGE);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
         PSPPatchPanel.add(SelectPSPSave);
+        PSPPatchPanel.add(SaveIcon);
+        PSPPatchPanel.add(SaveName);
+        PSPPatchPanel.add(SaveGameName);
+        PSPPatchPanel.add(PatchSeletingScroll);
         // #endregion
         Lay4.layoutContainer(SetupPanel);
 
@@ -359,7 +522,7 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
         Lay3.putConstraint(SpringLayout.EAST, PatchTabs, 0, SpringLayout.EAST, PatchPanel);
 
         PatchPanel.add(PatchTabs);
-         // #endregion
+        // #endregion
 
         setLocation(LaunchPage.getScreenCenter(this));
         setVisible(true);

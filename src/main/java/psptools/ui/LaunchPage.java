@@ -100,10 +100,6 @@ public class LaunchPage extends JFrame {
 
             }
         });
-
-        // #region we need this cause the r dont fit, wont fit
-        Font GameEditorFont = GameEditor.getFont();
-        GameEditor.setFont(GameEditorFont.deriveFont(GameEditorFont.getSize() - 1f));
         // #endregion
 
         ButtonsPane.add(SaveEditor);
