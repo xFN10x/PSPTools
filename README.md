@@ -10,7 +10,7 @@ Features include:
 - **Save Importer/Downloader** -  Import saves from zip and folder. Download saves from a [Save Database](https://github.com/bucanero/apollo-saves), or a URL.
 - **Save Patcher** - Patch save files for PSP, (and ps3!) with Apollo Save Tool.
 - **Game Manager/Adder** (Planned: 1.2) - Add games/ISOs/homebrew from a URL, or zip. No need for manual extracting.
-- **AutoPSX (PS1 EBOOT Creator)** (Planned: 2.0) - Create PS1 EBOOTS from BIN/CUE, m3u, zip, 7z and more, without the need of anything else.
+- **AutoPSX (PS1 EBOOT Creator)** (Planned: 1.3) - Create PS1 EBOOTS from BIN/CUE, m3u, zip, 7z and more, without the need of anything else.
 
 ### Using JAR
 If you don't have a prebuilt version of PSPTools made for your platform, you can use the cross-platform jar. You need to follow these steps to make sure it works properly.
