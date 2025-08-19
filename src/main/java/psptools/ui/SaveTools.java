@@ -25,8 +25,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -111,14 +109,17 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
     private ParamSFOListElement currentSfoListElement;
     private String currentPatchFile;
 
-    public boolean canPatch() {
+    public final static transient int T_PSP = 0;
+    public final static transient int T_PS3 = 1;
+
+    public boolean canPatch(int mode) {
         if (!PSP.getCurrentPSP().pspActive()) {
             int option = JOptionPane.showConfirmDialog(this, "No PSP is selected, but is required.\nSelect one?",
                     "PSP Selection Confirm", JOptionPane.YES_NO_OPTION);
 
             if (option == JOptionPane.YES_OPTION) {
                 PSP.setCurrentPSP(PSPSelectionUI.getNewPSP(this));
-                return canPatch();
+                return canPatch(mode);
             } else
                 return false;
         } else if (!SavedVariables.hasApolloToolsInstalled()) {
@@ -128,9 +129,27 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
 
             if (option == JOptionPane.YES_OPTION) {
                 SavedVariables.installApolloTools(this);
-                return canPatch();
+                return canPatch(mode);
             } else
                 return false;
+        }
+
+        switch (mode) {
+            case 1:
+                if (!Path.of(SavedVariables.DataFolder.toString(), "Patches", "PS3").toFile().exists()) {
+                    JOptionPane.showMessageDialog(this, "You need to download patches first.", "No Patches Found",
+                            JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+                break;
+
+            default:
+                if (!Path.of(SavedVariables.DataFolder.toString(), "Patches", "PSP").toFile().exists()) {
+                    JOptionPane.showMessageDialog(this, "You need to download patches first.", "No Patches Found",
+                            JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+                break;
         }
         return true;
     }
@@ -151,14 +170,9 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                         e1.printStackTrace();
                     }
                 }
-                new Thread(() -> {
-                    try {
-                        wait(1000);
-                        System.gc();
-                    } catch (Exception e2) {
-                        e2.printStackTrace();
-                    }
-                }).start();
+
+                System.gc();
+
             }
 
             public void windowOpened(WindowEvent e) {
@@ -273,9 +287,10 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                     return;
 
                 LoadingScreen loading = new LoadingScreen(this);
-                new Thread(() -> {
+
+                SwingUtilities.invokeLater(() -> {
                     loading.setVisible(true);
-                }).start();
+                });
 
                 loading.changeText("Opening connection...");
 
@@ -302,12 +317,13 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                 loading.changeText("Download patches...");
                 ZipUnArchiver zip = new ZipUnArchiver(tempFile);
 
-                System.out.println(Path.of(SavedVariables.DataFolder.toString(), "Patches", "PSP").toString());
+                // System.out.println(Path.of(SavedVariables.DataFolder.toString(), "Patches",
+                // "PSP").toString());
                 switch (option.toString()) {
                     case "PSP":
                         try {
                             zip.extract("apollo-patches-main/PSP/",
-                                    Path.of(SavedVariables.DataFolder.toString(), "Patches").toFile());
+                                    Path.of(SavedVariables.DataFolder.toString()).toFile());
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -315,7 +331,7 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                     case "PS3":
                         try {
                             zip.extract("apollo-patches-main/PS3/",
-                                    Path.of(SavedVariables.DataFolder.toString(), "Patches").toFile());
+                                    Path.of(SavedVariables.DataFolder.toString()).toFile());
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -324,16 +340,19 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                     default:
                         try {
                             zip.extract("apollo-patches-main/PSP/",
-                                    Path.of(SavedVariables.DataFolder.toString(), "Patches").toFile());
+                                    Path.of(SavedVariables.DataFolder.toString()).toFile());
 
                             zip.extract("apollo-patches-main/PS3/",
-                                    Path.of(SavedVariables.DataFolder.toString(), "Patches").toFile());
+                                    Path.of(SavedVariables.DataFolder.toString()).toFile());
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
                         break;
 
                 }
+
+                Path.of(SavedVariables.DataFolder.toString(), "apollo-patches-main").toFile()
+                        .renameTo(Path.of(SavedVariables.DataFolder.toString(), "Patches").toFile());
 
                 loading.setVisible(false);
                 SavedVariables vars = SavedVariables.Load();
@@ -429,7 +448,7 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
         });
 
         SelectPSPSave.addActionListener(ac -> {
-            if (canPatch()) {
+            if (canPatch(T_PSP)) {
                 ParamSFOListElement selected = SFOBasedSelector.openSaveSelector(this);
                 currentSfoListElement = selected;
 
@@ -440,6 +459,7 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
 
                     File PSPPatchDir = Path.of(SavedVariables.DataFolder.toString(), "Patches", "PSP").toFile();
                     boolean foundPatch = false;
+                    System.out.println(PSPPatchDir.getAbsolutePath());
                     for (File file : PSPPatchDir.listFiles()) {
                         if (!file.getName().endsWith(".savepatch"))
                             continue;
@@ -451,10 +471,10 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                             currentSavePatch = file;
                             BufferedReader stream = new BufferedReader(new FileReader(file));
                             // first 4 lines are info about patch
-                            System.out.println(stream.readLine());
-                            System.out.println(stream.readLine());
-                            System.out.println(stream.readLine());
-                            System.out.println(stream.readLine());
+                            // System.out.println(stream.readLine());
+                            // System.out.println(stream.readLine());
+                            // System.out.println(stream.readLine());
+                            // System.out.println(stream.readLine());
 
                             PSPPatchSeletingPanel.removeAll();
 

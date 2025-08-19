@@ -6,8 +6,6 @@ import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.HeadlessException;
 import java.awt.Insets;
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
@@ -17,9 +15,6 @@ import java.nio.file.Path;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-
 import javax.naming.NameNotFoundException;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -40,9 +35,6 @@ import org.codehaus.plexus.archiver.zip.ZipArchiver;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 
 import com.formdev.flatlaf.ui.FlatLineBorder;
-import com.google.gson.GsonBuilder;
-
-import psptools.psp.PSP;
 import psptools.psp.sfo.ParamSFO;
 import psptools.psp.sfo.ParamSFO.Params;
 import psptools.ui.components.ParamSFOListElement;
@@ -84,18 +76,6 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
     private final File[] targets;
 
     private final JLabel Background = new JLabel(new ImageIcon(getClass().getResource("/bg.png")));
-
-    @Deprecated
-    private String getBackupName() {
-        try {
-            return (selected.sfo.getParam(Params.SaveTitle).toString() + "-"
-                    + selected.sfo.getParam(Params.SaveFolderName).toString()).replace("\u0000", "") + ".zip";
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
 
     public SFOBasedManager(Frame parent, int mode, String title, File... targets) {
         super(title);
@@ -229,7 +209,6 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
             for (File target : List.of(Target)) { // get all target folders
                 if (target.isDirectory() && target.exists())
                     for (File dir : target.listFiles()) { // get all folders (saves, games, etc)
-                        // System.out.println(dir.getAbsolutePath());
                         if (dir.isDirectory())
                             try { // try to get param.sfo
                                 Boolean valid = false;
@@ -265,7 +244,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
                         revalidate();
                         repaint();
                     }
-                
+
             }
 
             System.gc();
@@ -349,7 +328,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
 
     @Override
     public void backup() {
-        Path backupPath = Path.of(SavedVariables.DataFolder.toString(), "PSPSaveBackups", getBackupName());
+        Path backupPath = Path.of(SavedVariables.DataFolder.toString(), "PSPSaveBackups", selected.getBackupName());
         int option;
         if (!backupPath.toFile().exists())
             option = JOptionPane.showConfirmDialog(this,
@@ -396,7 +375,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
 
     @Override
     public void restore() {
-        Path backupPath = Path.of(SavedVariables.DataFolder.toString(), "PSPSaveBackups", getBackupName());
+        Path backupPath = Path.of(SavedVariables.DataFolder.toString(), "PSPSaveBackups", selected.getBackupName());
         int option = JOptionPane.showConfirmDialog(this,
                 "Restore & override this save?\nThe backup was made at "
                         + new SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
@@ -413,7 +392,13 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
                     loading.setVisible(true);
                 });
 
-                zip.setDestDirectory(targets[0]);
+                Path dest = Path.of(targets[0].getAbsolutePath(),
+                        backupPath.toFile().getName().replace(".zip", ""));
+
+                FileUtils.deleteDirectory(dest.toFile());
+                Files.createDirectory(dest);
+
+                zip.setDestDirectory(dest.toFile());
                 zip.extract();
 
                 SwingUtilities.invokeLater(() -> {

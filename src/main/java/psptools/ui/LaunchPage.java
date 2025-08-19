@@ -11,13 +11,10 @@ import javax.swing.JPanel;
 import javax.swing.SpringLayout;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import com.formdev.flatlaf.ui.FlatFileChooserUI;
-
 import psptools.psp.PSP;
 import psptools.psp.PSPSelectionUI;
 
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.Component;

@@ -62,19 +62,23 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
 
     public boolean backuped = false;
 
-    private String getBackupName() {
+    public String getBackupName() {
         try {
             if (sfo == null)
                 return "";
             switch (sfo.getParam(Params.Category).toString().trim()) {
                 case "MS":
 
-                    return (sfo.getParam(Params.SaveTitle).toString() + "-"
-                            + sfo.getParam(Params.SaveFolderName).toString()).replace("\u0000", "").replace(":", " ") + ".zip";
+                    return (sfo.getParam(Params.SaveFolderName).toString()).replace("\u0000", "").replace(":", " ")
+                            + ".zip";
 
                 default:
-                    return sfo.getParam(Params.Title).toString().replace("\u0000", "").replace(":", "")
-                            .replace("\n", " ").replace(" ", "-") + ".zip";
+                    if (sfo != null)
+                        return sfo.getParam(Params.Title).toString().replace("\u0000", "").replace(":", "")
+                                .replace("\n", " ").replace(" ", "-") + ".zip";
+                    else
+                        return dir.getName().replace(":", "")
+                                .replace("\n", " ").replace(" ", "-") + ".zip";
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -236,7 +240,9 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                 RightClickMenu.add("Restore").addActionListener(ac -> selectedFunction.restore());
         }
         System.out.println(backupPath.toString());
-        backuped = backupPath.toFile().exists();
+        System.out.println(dir);
+
+        backuped = backupPath.toFile().exists() && dir != null && sfo != null;
 
         Icon0.setIcon(ImageUtilites.ResizeIcon(rawIcon, 90, 50));
 
