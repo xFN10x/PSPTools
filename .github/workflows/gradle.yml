@@ -41,8 +41,14 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: PSPTools-${{matrix.os}}-1.0
+        name: PSPTools-${{matrix.os}}-1.01
         path: build/builtDist
+
+    - uses: actions/upload-artifact@v4
+      if: matrix.os == 'ubuntu-latest'
+      with:
+        name: PSPTools-jar-1.01
+        path: build/builtJars/PSPTools-1.0-all.jar
 
   dependency-submission:
 
