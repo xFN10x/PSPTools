@@ -10,25 +10,17 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
-
 import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.codehaus.plexus.archiver.tar.TarGZipUnArchiver;
+import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import net.lingala.zip4j.ZipFile;
-import net.lingala.zip4j.progress.ProgressMonitor;
-import net.lingala.zip4j.progress.ProgressMonitor.State;
 import psptools.gson.PathTypeAdapter;
 import psptools.psp.PSP;
 import psptools.ui.LoadingScreen;
@@ -114,52 +106,25 @@ public class SavedVariables {
             stream.close();
 
             loading.changeText("Download tools...");
-            ZipFile zip = new ZipFile(tempFile);
-            ProgressMonitor promon = zip.getProgressMonitor();
-            zip.setRunInThread(true);
-            
-            new Thread(() -> {
-                Timer timer = new Timer();
-                timer.scheduleAtFixedRate(new TimerTask() {
-                    private boolean canCancel = false;
-
-                    @Override
-                    public void run() {
-                        if (promon.getState() == State.BUSY) {
-                            canCancel = true;
-                        }
-                        if (promon.getState() == State.READY && canCancel) {
-
-                            try {
-                                // extract the new tar gz
-                                final TarGZipUnArchiver unarc = new TarGZipUnArchiver(Path.of(tempFile2.getAbsolutePath(), "build.tar.gz").toFile());
-                                unarc.setDestDirectory(SavedVariables.DataFolder.toFile());
-                                unarc.extract();
-
-                                loading.setVisible(false);
-                                timer.cancel();
-                                zip.close();
-                                System.gc();
-
-                                tempFile.delete();
-
-                                JOptionPane.showMessageDialog(null, "Apollo CLI Tools have been downloaded.");
-                                return;
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }
-
-                        SwingUtilities.invokeLater(() -> {
-                            loading.setProgress(promon.getPercentDone());
-                        });
-                    }
-
-                }, 5, 1);
-            }).start();
+            ZipUnArchiver zip = new ZipUnArchiver(tempFile);
 
             // extract tar gz
-            zip.extractAll(tempFile2.getPath());
+            zip.setDestDirectory(tempFile2);
+            zip.extract();
+
+            // extract the new tar gz
+            final TarGZipUnArchiver unarc = new TarGZipUnArchiver(
+                    Path.of(tempFile2.getAbsolutePath(), "build.tar.gz").toFile());
+            unarc.setDestDirectory(SavedVariables.DataFolder.toFile());
+            unarc.extract();
+
+            loading.setVisible(false);
+
+            System.gc();
+
+            tempFile.delete();
+
+            JOptionPane.showMessageDialog(null, "Apollo CLI Tools have been downloaded.");
 
         } catch (Exception e) {
             e.printStackTrace();

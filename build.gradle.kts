@@ -36,13 +36,15 @@ repositories {
 
 dependencies {
     implementation("com.formdev:flatlaf:3.6.1")
+
     implementation("com.google.code.gson:gson:2.13.1")
+
     implementation("com.google.guava:guava:33.4.8-jre")
-    implementation("net.lingala.zip4j:zip4j:2.11.5")
+
     implementation("commons-io:commons-io:2.20.0")
+
     implementation("org.apache.commons:commons-lang3:3.18.0")
-    implementation("org.bytedeco:javacv-platform:1.5.12")
-    // https://mvnrepository.com/artifact/org.codehaus.plexus/plexus-archiver
+
     implementation("org.codehaus.plexus:plexus-archiver:4.10.0")
 }
 

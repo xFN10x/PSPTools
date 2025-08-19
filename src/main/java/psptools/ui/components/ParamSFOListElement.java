@@ -32,6 +32,7 @@ import psptools.psp.sfo.ParamSFO;
 import psptools.psp.sfo.ParamSFO.Params;
 import psptools.ui.interfaces.SFOListElementListiener;
 import psptools.util.ImageUtilites;
+import psptools.util.SavedVariables;
 
 public class ParamSFOListElement extends JPanel implements MouseListener {
 
@@ -65,12 +66,11 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         try {
             if (sfo == null)
                 return "";
-            switch (sfo.getParam(Params.Category).toString()) {
+            switch (sfo.getParam(Params.Category).toString().trim()) {
                 case "MS":
 
                     return (sfo.getParam(Params.SaveTitle).toString() + "-"
-                            + sfo.getParam(Params.SaveFolderName).toString()).replace("\u0000", "").replace(":", "")
-                            + ".zip";
+                            + sfo.getParam(Params.SaveFolderName).toString()).replace("\u0000", "").replace(":", " ") + ".zip";
 
                 default:
                     return sfo.getParam(Params.Title).toString().replace("\u0000", "").replace(":", "")
@@ -211,7 +211,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         if (snd0Dir != null)
             this.audioDir = snd0Dir.toString();
 
-        Path backupPath = Path.of(System.getProperty("user.home"), "PSPSaveBackups", getBackupName());
+        Path backupPath = Path.of(SavedVariables.DataFolder.toString(), "PSPSaveBackups", getBackupName());
 
         ImageIcon rawIcon = new ImageIcon(icon0Data);
         this.icon0 = new ImageIcon(icon0Data);
@@ -235,6 +235,8 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
             if (backupPath.toFile().exists())
                 RightClickMenu.add("Restore").addActionListener(ac -> selectedFunction.restore());
         }
+        System.out.println(backupPath.toString());
+        backuped = backupPath.toFile().exists();
 
         Icon0.setIcon(ImageUtilites.ResizeIcon(rawIcon, 90, 50));
 
@@ -345,8 +347,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         add(SFOTitle);
         add(Icon0);
         add(SFODesc);
-        if (backupPath.toFile().exists()) {
-            backuped = true;
+        if (backuped) {
             add(BackedUp);
         }
         if (icon1Data != null) {

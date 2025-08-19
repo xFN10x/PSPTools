@@ -1,6 +1,7 @@
 package psptools.ui;
 
 import java.awt.Color;
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.HeadlessException;
@@ -19,10 +20,6 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import net.lingala.zip4j.ZipFile;
-import net.lingala.zip4j.progress.ProgressMonitor;
-import net.lingala.zip4j.progress.ProgressMonitor.State;
-
 import javax.naming.NameNotFoundException;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -39,6 +36,8 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
 import org.apache.commons.io.FileUtils;
+import org.codehaus.plexus.archiver.zip.ZipArchiver;
+import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 
 import com.formdev.flatlaf.ui.FlatLineBorder;
 import com.google.gson.GsonBuilder;
@@ -72,7 +71,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
     private final JLabel ViewingSubDesc = new JLabel("Save Game");
     private final JLabel ViewingCategory = new JLabel("MS");
     private final JLabel ViewingDesc = new JLabel("Save Description");
-    private final JButton DebugButton = new JButton("Debug");
+    private final JButton OpenFolderButton = new JButton("Open in Explorer");
     private final JButton BackupButton = new JButton("Backup...");
     private final JButton RestoreButton = new JButton("Restore...");
 
@@ -86,6 +85,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
 
     private final JLabel Background = new JLabel(new ImageIcon(getClass().getResource("/bg.png")));
 
+    @Deprecated
     private String getBackupName() {
         try {
             return (selected.sfo.getParam(Params.SaveTitle).toString() + "-"
@@ -96,8 +96,6 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
             return null;
         }
     }
-
-    
 
     public SFOBasedManager(Frame parent, int mode, String title, File... targets) {
         super(title);
@@ -160,11 +158,11 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
         Lay2.putConstraint(SpringLayout.WEST, ViewingSubDesc, 3, SpringLayout.WEST, ViewBG);
         Lay2.putConstraint(SpringLayout.SOUTH, ViewingSubDesc, -3, SpringLayout.SOUTH, ViewBG);
 
-        Lay2.putConstraint(SpringLayout.EAST, DebugButton, -3, SpringLayout.EAST, ViewBG);
-        Lay2.putConstraint(SpringLayout.SOUTH, DebugButton, -3, SpringLayout.SOUTH, ViewBG);
+        Lay2.putConstraint(SpringLayout.EAST, OpenFolderButton, -3, SpringLayout.EAST, ViewBG);
+        Lay2.putConstraint(SpringLayout.SOUTH, OpenFolderButton, -3, SpringLayout.SOUTH, ViewBG);
 
         Lay2.putConstraint(SpringLayout.EAST, RestoreButton, -3, SpringLayout.EAST, ViewBG);
-        Lay2.putConstraint(SpringLayout.SOUTH, RestoreButton, -3, SpringLayout.NORTH, DebugButton);
+        Lay2.putConstraint(SpringLayout.SOUTH, RestoreButton, -3, SpringLayout.NORTH, OpenFolderButton);
 
         Lay2.putConstraint(SpringLayout.EAST, BackupButton, -3, SpringLayout.EAST, ViewBG);
         Lay2.putConstraint(SpringLayout.SOUTH, BackupButton, -3, SpringLayout.NORTH, RestoreButton);
@@ -181,11 +179,14 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
         ViewingCategory.setAlignmentY(SwingConstants.BOTTOM);
         ViewingCategory.setAlignmentX(SwingConstants.RIGHT);
 
-        DebugButton.addActionListener(ac -> {
-            if (selected.sfo != null) {
-                String json = new GsonBuilder().setPrettyPrinting().create().toJson(selected.sfo);
-                System.out.println(json);
-                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(json), null);
+        OpenFolderButton.addActionListener(ac -> {
+            if (selected.dir != null) {
+                try {
+                    Desktop.getDesktop().open(selected.dir);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    OpenFolderButton.setEnabled(false);
+                }
             }
         });
 
@@ -200,7 +201,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
         ViewBG.add(ViewingName);
         ViewBG.add(ViewingSubDesc);
         ViewBG.add(ViewingDesc);
-        ViewBG.add(DebugButton);
+        ViewBG.add(OpenFolderButton);
         ViewBG.add(ViewingCategory);
         if (mode == SAVES_MODE) {
             ViewBG.add(BackupButton);
@@ -223,7 +224,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
 
     public void FillOutWindow(File... Target) {
         Thread main = new Thread(() -> {
-            // InnerSFOFolderViewer.removeAll();
+            InnerSFOFolderViewer.removeAll();
             ParamSFOListElement first = null;
             for (File target : List.of(Target)) { // get all target folders
                 if (target.isDirectory() && target.exists())
@@ -264,11 +265,9 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
                         revalidate();
                         repaint();
                     }
-                else {
-                    // System.out.println(target.getAbsolutePath());
-                }
+                
             }
-            // first.mouseClicked(null);
+
             System.gc();
 
         });
@@ -324,10 +323,16 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
 
             if (!BackupButton.isEnabled())
                 BackupButton.setEnabled(true);
+
             if (selectedElement.backuped)
                 RestoreButton.setEnabled(true);
             else
                 RestoreButton.setEnabled(false);
+
+            if (selectedElement.dir == null)
+                OpenFolderButton.setEnabled(false);
+            else
+                OpenFolderButton.setEnabled(true);
 
             if (selectedElement.audioDir != null)
                 selectedAudioProcess = new MediaPlayer(selectedElement.audioDir);
@@ -362,47 +367,25 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
                 org.apache.commons.io.FileUtils.createParentDirectories(backupPath.toFile());
                 if (!backupPath.toFile().exists())
                     backupPath.toFile().createNewFile();
-                ZipFile zip = new ZipFile(backupPath.toFile());
-                ProgressMonitor promon = zip.getProgressMonitor();
+
+                // backup save
+                ZipArchiver zip = new ZipArchiver();
+                zip.setDestFile(backupPath.toFile());
+
                 LoadingScreen loading = new LoadingScreen(this);
                 SwingUtilities.invokeLater(() -> {
                     loading.setVisible(true);
                 });
-                zip.setRunInThread(true);
-                new Thread(() -> {
-                    Timer timer = new Timer();
-                    timer.scheduleAtFixedRate(new TimerTask() {
-                        private boolean canCancel = false;
 
-                        @Override
-                        public void run() {
-                            if (promon.getState() == State.BUSY) {
-                                canCancel = true;
-                            }
-                            if (promon.getState() == State.READY && canCancel) {
-                                try {
-                                    loading.setVisible(false);
-                                    timer.cancel();
-                                    zip.close();
-                                    System.gc();
-                                    FillOutWindow(targets);
-                                    return;
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            }
+                zip.addDirectory(selected.dir);
+                zip.createArchive();
 
-                            SwingUtilities.invokeLater(() -> {
-                                loading.setProgress(promon.getPercentDone());
-                            });
-                            // System.out.println(promon.getPercentDone());
+                SwingUtilities.invokeLater(() -> {
+                    loading.setVisible(false);
 
-                        }
-
-                    }, 5, 1);
-                }).start();
-
-                zip.addFolder(selected.dir);
+                    System.gc();
+                    FillOutWindow(targets);
+                });
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -413,7 +396,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
 
     @Override
     public void restore() {
-        Path backupPath = Path.of(System.getProperty("user.home"), "PSPSaveBackups", getBackupName());
+        Path backupPath = Path.of(SavedVariables.DataFolder.toString(), "PSPSaveBackups", getBackupName());
         int option = JOptionPane.showConfirmDialog(this,
                 "Restore & override this save?\nThe backup was made at "
                         + new SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
@@ -423,52 +406,32 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
 
         if (option == JOptionPane.YES_OPTION) {
             try {
-                ZipFile zip = new ZipFile(backupPath.toFile());
-                ProgressMonitor promon = zip.getProgressMonitor();
+                ZipUnArchiver zip = new ZipUnArchiver(backupPath.toFile());
+
                 LoadingScreen loading = new LoadingScreen(this);
                 SwingUtilities.invokeLater(() -> {
                     loading.setVisible(true);
                 });
-                zip.setRunInThread(true);
-                new Thread(() -> {
-                    Timer timer = new Timer();
-                    timer.scheduleAtFixedRate(new TimerTask() {
-                        private boolean canCancel = false;
 
-                        @Override
-                        public void run() {
-                            if (promon.getState() == State.BUSY) {
-                                canCancel = true;
-                            }
-                            if (promon.getState() == State.READY && canCancel) {
-                                try {
-                                    int option = JOptionPane.showConfirmDialog(null,
-                                            "Would you like to delete this backup?",
-                                            "Delete?",
-                                            JOptionPane.YES_NO_OPTION);
-                                    if (option == JOptionPane.YES_OPTION)
-                                        Files.delete(backupPath);
-                                    loading.setVisible(false);
-                                    timer.cancel();
-                                    zip.close();
-                                    System.gc();
-                                    FillOutWindow(targets);
-                                    return;
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            }
+                zip.setDestDirectory(targets[0]);
+                zip.extract();
 
-                            SwingUtilities.invokeLater(() -> {
-                                loading.setProgress(promon.getPercentDone());
-                            });
-                            // System.out.println(promon.getPercentDone());
+                SwingUtilities.invokeLater(() -> {
+                    int Option = JOptionPane.showConfirmDialog(null,
+                            "Would you like to delete this backup?",
+                            "Delete?",
+                            JOptionPane.YES_NO_OPTION);
+                    try {
+                        if (Option == JOptionPane.YES_OPTION)
+                            Files.delete(backupPath);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    loading.setVisible(false);
 
-                        }
-
-                    }, 5, 1);
-                }).start();
-                zip.extractAll(targets[0].getAbsolutePath());
+                    System.gc();
+                    FillOutWindow(targets);
+                });
             } catch (Exception e) {
                 e.printStackTrace();
                 ErrorShower.showError(this, "Failed to restore save.", e.getMessage(), e);

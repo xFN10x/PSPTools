@@ -50,10 +50,9 @@ import javax.swing.event.DocumentListener;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
+
 import psptools.psp.sfo.ParamSFO.Params;
-import net.lingala.zip4j.ZipFile;
-import net.lingala.zip4j.progress.ProgressMonitor;
-import net.lingala.zip4j.progress.ProgressMonitor.State;
 import psptools.psp.PSP;
 import psptools.psp.PSPSelectionUI;
 import psptools.psp.sfo.ParamSFO;
@@ -301,69 +300,22 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                 stream.close();
 
                 loading.changeText("Download patches...");
-                ZipFile zip = new ZipFile(tempFile);
-                ProgressMonitor promon = zip.getProgressMonitor();
-                zip.setRunInThread(true);
-                new Thread(() -> {
-                    Timer timer = new Timer();
-                    timer.scheduleAtFixedRate(new TimerTask() {
-                        private boolean canCancel = false;
-                        private boolean Option = false;
+                ZipUnArchiver zip = new ZipUnArchiver(tempFile);
 
-                        @Override
-                        public void run() {
-                            if (promon.getState() == State.BUSY) {
-                                canCancel = true;
-                            }
-                            if (promon.getState() == State.READY && canCancel) {
-
-                                try {
-                                    if (option.toString().equals("PSP + PS3") && !Option) {
-                                        Option = true;
-                                        zip.extractFile("apollo-patches-main/PS3/",
-                                                Path.of(SavedVariables.DataFolder.toString(), "Patches").toString(),
-                                                "PS3");
-                                        return;
-                                    }
-
-                                    loading.setVisible(false);
-                                    timer.cancel();
-                                    zip.close();
-                                    System.gc();
-                                    SavedVariables vars = SavedVariables.Load();
-                                    vars.SinceLastPatchUpdate = Calendar.getInstance().getTime();
-                                    vars.Save();
-
-                                    tempFile.delete();
-
-                                    JOptionPane.showMessageDialog(null, "Patchs have been downloaded.");
-                                    return;
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            }
-
-                            SwingUtilities.invokeLater(() -> {
-                                loading.setProgress(promon.getPercentDone());
-                            });
-                        }
-
-                    }, 5, 1);
-                }).start();
                 System.out.println(Path.of(SavedVariables.DataFolder.toString(), "Patches", "PSP").toString());
                 switch (option.toString()) {
                     case "PSP":
                         try {
-                            zip.extractFile("apollo-patches-main/PSP/",
-                                    Path.of(SavedVariables.DataFolder.toString(), "Patches").toString(), "PSP");
+                            zip.extract("apollo-patches-main/PSP/",
+                                    Path.of(SavedVariables.DataFolder.toString(), "Patches").toFile());
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
                         break;
                     case "PS3":
                         try {
-                            zip.extractFile("apollo-patches-main/PS3/",
-                                    Path.of(SavedVariables.DataFolder.toString(), "Patches").toString(), "PSP");
+                            zip.extract("apollo-patches-main/PS3/",
+                                    Path.of(SavedVariables.DataFolder.toString(), "Patches").toFile());
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -371,10 +323,11 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
 
                     default:
                         try {
-                            zip.extractFile("apollo-patches-main/PSP/",
-                                    Path.of(SavedVariables.DataFolder.toString(), "Patches").toString(), "PSP");
+                            zip.extract("apollo-patches-main/PSP/",
+                                    Path.of(SavedVariables.DataFolder.toString(), "Patches").toFile());
 
-                            // download psp in the other thread
+                            zip.extract("apollo-patches-main/PS3/",
+                                    Path.of(SavedVariables.DataFolder.toString(), "Patches").toFile());
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -382,6 +335,15 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
 
                 }
 
+                loading.setVisible(false);
+                SavedVariables vars = SavedVariables.Load();
+                vars.SinceLastPatchUpdate = Calendar.getInstance().getTime();
+                vars.Save();
+
+                tempFile.delete();
+
+                JOptionPane.showMessageDialog(null, "Patchs have been downloaded.");
+                System.gc();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -822,46 +784,19 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                                 Files.write(zipFile.toPath(), stream.readAllBytes());
                                 stream.close();
 
-                                ZipFile save = new ZipFile(zipFile);
-                                ProgressMonitor promon = save.getProgressMonitor();
+                                ZipUnArchiver save = new ZipUnArchiver(zipFile);
+
                                 LoadingScreen loading = new LoadingScreen(this);
                                 SwingUtilities.invokeLater(() -> {
                                     loading.setVisible(true);
                                 });
-                                save.setRunInThread(true);
-                                new Thread(() -> {
-                                    Timer timer = new Timer();
-                                    timer.scheduleAtFixedRate(new TimerTask() {
-                                        private boolean canCancel = false;
+                                save.setDestDirectory(PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA").toFile());
+                                save.extract();
 
-                                        @Override
-                                        public void run() {
-                                            if (promon.getState() == State.BUSY) {
-                                                canCancel = true;
-                                            }
-                                            if (promon.getState() == State.READY && canCancel) {
-                                                try {
-                                                    loading.setVisible(false);
-                                                    timer.cancel();
-                                                    save.close();
-                                                    System.gc();
-                                                    JOptionPane.showMessageDialog(null,
-                                                            "The save has been downloaded.");
-                                                    return;
-                                                } catch (Exception e) {
-                                                    e.printStackTrace();
-                                                }
-                                            }
-
-                                            SwingUtilities.invokeLater(() -> {
-                                                loading.setProgress(promon.getPercentDone());
-                                            });
-                                        }
-
-                                    }, 5, 1);
-                                }).start();
-
-                                save.extractAll(PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA").toString());
+                                loading.setVisible(false);
+                                System.gc();
+                                JOptionPane.showMessageDialog(null,
+                                        "The save has been downloaded.");
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -877,45 +812,20 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                             Files.write(zipFile.toPath(), stream.readAllBytes());
                             stream.close();
 
-                            ZipFile save = new ZipFile(zipFile);
-                            ProgressMonitor promon = save.getProgressMonitor();
+                            ZipUnArchiver save = new ZipUnArchiver(zipFile);
+
                             LoadingScreen loading = new LoadingScreen(this);
                             SwingUtilities.invokeLater(() -> {
                                 loading.setVisible(true);
                             });
-                            save.setRunInThread(true);
-                            new Thread(() -> {
-                                Timer timer = new Timer();
-                                timer.scheduleAtFixedRate(new TimerTask() {
-                                    private boolean canCancel = false;
 
-                                    @Override
-                                    public void run() {
-                                        if (promon.getState() == State.BUSY) {
-                                            canCancel = true;
-                                        }
-                                        if (promon.getState() == State.READY && canCancel) {
-                                            try {
-                                                loading.setVisible(false);
-                                                timer.cancel();
-                                                save.close();
-                                                System.gc();
-                                                JOptionPane.showMessageDialog(null, "The save has been downloaded.");
-                                                return;
-                                            } catch (Exception e) {
-                                                e.printStackTrace();
-                                            }
-                                        }
+                            save.setDestDirectory(PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA").toFile());
+                            save.extract();
 
-                                        SwingUtilities.invokeLater(() -> {
-                                            loading.setProgress(promon.getPercentDone());
-                                        });
-                                    }
+                            loading.setVisible(false);
 
-                                }, 5, 1);
-                            }).start();
-
-                            save.extractAll(PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA").toString());
+                            System.gc();
+                            JOptionPane.showMessageDialog(null, "The save has been downloaded.");
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
