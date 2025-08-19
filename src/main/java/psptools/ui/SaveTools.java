@@ -597,7 +597,6 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
                         Path.of(currentSfoListElement.dir.toString(), currentPatchFile).toString());
                 File file = File.createTempFile("PSPTOOLS", "TEMPTEST.log");
                 procBuilder.redirectOutput(file);
-                //System.out.println(file.getAbsolutePath());
 
                 Process proc = procBuilder.start();
                 new Thread(() -> {

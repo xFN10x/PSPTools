@@ -41,11 +41,9 @@ dependencies {
     implementation("net.lingala.zip4j:zip4j:2.11.5")
     implementation("commons-io:commons-io:2.20.0")
     implementation("org.apache.commons:commons-lang3:3.18.0")
-    implementation("org.apache.logging.log4j:log4j-core:2.25.1")
     implementation("org.bytedeco:javacv-platform:1.5.12")
     // https://mvnrepository.com/artifact/org.codehaus.plexus/plexus-archiver
     implementation("org.codehaus.plexus:plexus-archiver:4.10.0")
-    implementation("com.github.goxr3plus:java-stream-player:10.0.2")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -73,31 +71,43 @@ tasks.jpackage {
     destination = layout.buildDirectory.dir("builtDist")
     appVersion = winver
 
-    appName = "File2Img"
+    appName = "PSPTools"
     vendor = "_FN10_"
+
+    javaOptions = listOf("-Xmx64m","-Xms8m")
 
     icon = file("src/main/resources/icon.png")
 
 
     type = org.panteleyev.jpackage.ImageType.APP_IMAGE
 
-    mainJar = "File2Img-$version-all.jar"
-    mainClass = "file2image.App"
+    mainJar = "PSPTools-$version-all.jar"
+    mainClass = "psptools.App"
 
     windows {
+        icon = layout.projectDirectory.file("/src/main/resources/icon.ico")
         //type = org.panteleyev.jpackage.ImageType.EXE
-        //winConsole = true
+        //winDirChooser = true
+        //winShortcutPrompt = true
     }
 
     linux {
         //type = org.panteleyev.jpackage.ImageType.DEB
-        linuxPackageName = "File2Img"
+        icon = layout.projectDirectory.file("/src/main/resources/icon.png")
+        linuxPackageName = "PSPTools"
         linuxShortcut = true
+
+    }
+
+    //I AM never building for mac, have fun
+    mac {
+        icon = layout.projectDirectory.file("/src/main/resources/icon.icns")
+        macPackageName = "PSPTools"
     }
 }
 
 tasks.shadowJar {
-    archiveBaseName.set("File2Img")
+    archiveBaseName.set("PSPTools")
     archiveVersion.set(version)
     destinationDirectory.set(layout.buildDirectory.dir("builtJars"))
 }
