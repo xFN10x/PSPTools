@@ -96,8 +96,8 @@ tasks.jpackage {
     linux {
         //type = org.panteleyev.jpackage.ImageType.DEB
         //icon = layout.projectDirectory.file("/src/main/resources/icon.png")
-        linuxPackageName = "PSPTools"
-        linuxShortcut = true
+        //linuxPackageName = "PSPTools"
+        //linuxShortcut = true
 
     }
 
