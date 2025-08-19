@@ -1,6 +1,6 @@
 # PSPTools
 
-![hackatime](https://hackatime-badge.hackclub.com/U0923KXMGUR/PSPTools)
+![hackatime](https://hackatime-badge.hackclub.com/U0923KXMGUR/PSPTools) [![Java CI with Gradle](https://github.com/xFN10x/PSPTools/actions/workflows/gradle.yml/badge.svg)](https://github.com/xFN10x/PSPTools/actions/workflows/gradle.yml)
 
 Various tools for managing your Playstation®  Portable, with support for PS3
 

@@ -11,4 +11,3 @@ plugins {
 }
 
 rootProject.name = "PSPTools"
-include("native-c")

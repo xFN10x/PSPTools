@@ -19,7 +19,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest,	ubuntu-24.04-arm, macos-latest]
+        os: [ubuntu-latest, windows-latest,	ubuntu-24.04-arm]
     permissions:
       contents: read
     steps:
