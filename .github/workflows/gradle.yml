@@ -18,7 +18,7 @@ jobs:
 
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     steps:
     - uses: actions/checkout@v4
     - name: Set up JDK 21
@@ -27,6 +27,8 @@ jobs:
         java-version: '21'
         distribution: 'microsoft'
 
+    - name: Change wrapper permissions
+      run: chmod +x ./gradlew
     # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
     # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
     - name: Setup Gradle
@@ -37,6 +39,11 @@ jobs:
 
     - name: Distro with Gradle Wrapper
       run: ./gradlew jpackage
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: test
+        path: build/builtDist
 
     # NOTE: The Gradle Wrapper is the default and recommended way to run Gradle (https://docs.gradle.org/current/userguide/gradle_wrapper.html).
     # If your project does not have the Gradle Wrapper configured, you can use the following configuration to run Gradle with a specified version.
@@ -53,7 +60,7 @@ jobs:
 
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     steps:
     - uses: actions/checkout@v4
     - name: Set up JDK 21
