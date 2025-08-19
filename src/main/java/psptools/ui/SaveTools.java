@@ -361,6 +361,10 @@ public class SaveTools extends JFrame implements SFOListElementListiener {
 
                 tempFile.delete();
 
+                SwingUtilities.invokeLater(() -> {
+                    loading.setVisible(false);
+                });
+
                 JOptionPane.showMessageDialog(null, "Patchs have been downloaded.");
                 System.gc();
             } catch (Exception e) {
