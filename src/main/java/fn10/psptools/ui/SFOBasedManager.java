@@ -14,7 +14,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
-import java.util.List;
 import javax.naming.NameNotFoundException;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -36,8 +35,6 @@ import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 
 import com.formdev.flatlaf.ui.FlatLineBorder;
 
-import fn10.psptools.psp.PSP;
-import fn10.psptools.psp.PSPPath;
 import fn10.psptools.psp.sfo.ParamSFO;
 import fn10.psptools.psp.sfo.ParamSFO.Params;
 import fn10.psptools.ui.components.MediaPlayer;
@@ -74,7 +71,6 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
     private final SpringLayout Lay2 = new SpringLayout();
 
     private ParamSFOListElement selected;
-    private MediaPlayer selectedAudioProcess;
     private MediaPlayer selectedVideoProcess;
     private final Path[] targets;
 
@@ -87,8 +83,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
             public void windowClosing(WindowEvent e) {
                 if (parent instanceof LaunchPage)
                     parent.setVisible(true);
-                if (selectedAudioProcess != null)
-                    selectedAudioProcess.stop();
+                    MediaPlayer.stopAllAudio();
                 if (selectedVideoProcess != null)
                     selectedVideoProcess.stop();
                 System.gc();

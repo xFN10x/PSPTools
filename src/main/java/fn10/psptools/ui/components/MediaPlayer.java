@@ -2,8 +2,13 @@ package fn10.psptools.ui.components;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import javax.swing.JOptionPane;
+
+import com.google.common.io.LittleEndianDataInputStream;
 
 import fn10.psptools.ui.interfaces.VideoPlayingListener;
 import fn10.psptools.util.SavedVariables;
@@ -14,8 +19,8 @@ public class MediaPlayer {
 
     private boolean playing = true;
     private boolean loading = true;
-    private static String defaultFFmpegPath = SavedVariables.DataFolder.resolve("ffmpeg.exe").toString();
-    public static FFMPEGProcess ffmpeg = new FFMPEGProcess(defaultFFmpegPath);
+    private static String defaultFFmpegPath = SavedVariables.DataFolder.resolve("ffplay.exe").toString();
+    public static FFMPEGProcess currentFFmpeg = null;
 
     public static boolean checkFFmpeg() {
         if (!new File(defaultFFmpegPath).exists()) {
@@ -37,11 +42,41 @@ public class MediaPlayer {
      * @param file the file path.
      */
     public static void playAudio(String file) {
-        if (!checkFFmpeg()) return;
-        ffmpeg.addArgument(file);
+        if (!checkFFmpeg())
+            return;
+
         try {
-            ffmpeg.execute(true, true);
-        } catch (IOException e) {
+            // Read loop points in samples
+            LittleEndianDataInputStream dis = new LittleEndianDataInputStream(Files.newInputStream(Path.of(file)));
+            while (true) {
+                byte[] read = new byte[4];
+
+                dis.read(read, 0, 4);
+                String magic = new String(read, StandardCharsets.UTF_8);
+                // System.out.println(magic);
+                if (magic.equals("smpl")) {
+                    dis.skip(48);
+                    break;
+                }
+            }
+            int loopStart = dis.readInt();
+            int loopEnd = dis.readInt() - loopStart;
+
+            FFMPEGProcess ffplay = new FFMPEGProcess(defaultFFmpegPath);
+
+            ffplay.addArgument("\"" + file + "\"");
+            ffplay.addArgument("-af");
+            ffplay.addArgument("\"aloop=loop=-1:size=" + loopEnd + ":start=" + loopStart + "\"");
+            ffplay.addArgument("-nodisp");
+
+            if (currentFFmpeg != null)
+                currentFFmpeg.destroy();
+            currentFFmpeg = ffplay;
+            ffplay.execute();
+
+            System.out.println("ffplay.exe " + file + " " + "-af" + " " + "\"aloop=loop=-1:size=" + loopEnd + ":start="
+                    + loopStart + "\"");
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -50,8 +85,10 @@ public class MediaPlayer {
      * Stop all playing audio
      */
     public static void stopAllAudio() {
-        if (!checkFFmpeg()) return;
-        ffmpeg.destroy();
+        if (!checkFFmpeg())
+            return;
+        if (currentFFmpeg != null)
+            currentFFmpeg.destroy();
     }
 
     /**
@@ -66,7 +103,8 @@ public class MediaPlayer {
      *             should work fine.
      */
     public MediaPlayer(String file) { // video
-        if (!checkFFmpeg()) return;
+        if (!checkFFmpeg())
+            return;
         ScreenExtractor extractor = new ScreenExtractor();
     }
 
@@ -76,7 +114,8 @@ public class MediaPlayer {
      * @return a boolean, false meaning its still loading.
      */
     public boolean start(VideoPlayingListener listener) {
-        if (!checkFFmpeg()) return false;
+        if (!checkFFmpeg())
+            return false;
         if (loading)
             return false;
         return true;
@@ -86,7 +125,8 @@ public class MediaPlayer {
      * Release all the resources and stop.
      */
     public void stop() {
-        if (!checkFFmpeg()) return;
+        if (!checkFFmpeg())
+            return;
 
     }
 }
