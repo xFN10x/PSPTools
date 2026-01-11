@@ -8,6 +8,13 @@
             "type": "java",
             "name": "App",
             "request": "launch",
+            "mainClass": "fn10.psptools.App",
+            "projectName": "PSPTools"
+        },
+        {
+            "type": "java",
+            "name": "App",
+            "request": "launch",
             "mainClass": "psptools.App",
             "projectName": "PSPTools",
             "vmArgs": "-Xmx64m -Xms16m"

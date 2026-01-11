@@ -1,4 +1,4 @@
-package psptools.gson;
+package fn10.psptools.gson;
 
 import java.lang.reflect.Type;
 import java.nio.file.Path;

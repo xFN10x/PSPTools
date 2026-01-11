@@ -1,4 +1,4 @@
-package psptools.ui;
+package fn10.psptools.ui;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -16,11 +16,12 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SpringLayout;
 
-import psptools.psp.PSP;
-import psptools.psp.sfo.ParamSFO;
-import psptools.ui.components.ParamSFOListElement;
-import psptools.ui.interfaces.SFOListElementListiener;
-import psptools.util.ImageUtilites;
+import fn10.psptools.psp.PSP;
+import fn10.psptools.psp.sfo.ParamSFO;
+import fn10.psptools.ui.components.MediaPlayer;
+import fn10.psptools.ui.components.ParamSFOListElement;
+import fn10.psptools.ui.interfaces.SFOListElementListiener;
+import fn10.psptools.util.ImageUtilites;
 
 public class SFOBasedSelector extends JDialog implements SFOListElementListiener {
 
@@ -155,6 +156,7 @@ public class SFOBasedSelector extends JDialog implements SFOListElementListiener
                     ImageUtilites.ResizeIcon(selectedElement.getPic1(), (int) Size.getWidth(),
                             (int) Size.getHeight()));
             Background.repaint();
+
 
             this.selected = selectedElement;
 

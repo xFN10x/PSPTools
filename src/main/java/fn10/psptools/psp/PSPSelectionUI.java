@@ -1,4 +1,4 @@
-package psptools.psp;
+package fn10.psptools.psp;
 
 import java.awt.Dimension;
 import java.awt.Frame;
@@ -20,7 +20,8 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
-import psptools.ui.LaunchPage;
+
+import fn10.psptools.ui.LaunchPage;
 
 public class PSPSelectionUI extends JDialog {
 

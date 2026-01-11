@@ -1,4 +1,4 @@
-package psptools.ui;
+package fn10.psptools.ui;
 
 import javax.swing.JDialog;
 import javax.swing.JLabel;

@@ -1,4 +1,4 @@
-package psptools.psp.sfo;
+package fn10.psptools.psp.sfo;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,41 +23,41 @@ public class ParamSFO {
     public static transient final short UTF8_S = 4;
     public static transient final short UTF8 = 516;
     public static transient final short INT32 = 1028;
-    public static transient final Map<String, String> CATEGORYS = new HashMap<String, String>();
+    public static transient final Map<String, String> CATEGORIES = new HashMap<String, String>();
     static {
-        CATEGORYS.put("AP", "App Photo");
-        CATEGORYS.put("AM", "App Music");
-        CATEGORYS.put("AV", "App Video");
-        CATEGORYS.put("BV", "Broadcast Video");
-        CATEGORYS.put("AT", "App TV");
-        CATEGORYS.put("WT", "Web TV");
-        CATEGORYS.put("HG", "PS3 HDD Game");
-        CATEGORYS.put("CB", "CELL BE?");
-        CATEGORYS.put("AS", "Playstation Now");
-        CATEGORYS.put("HM", "Playstation Home");
-        CATEGORYS.put("SF", "Playstation Store");
-        CATEGORYS.put("2G", "PS2 Game");
-        CATEGORYS.put("2P", "PS2 PSN Game");
-        CATEGORYS.put("1P", "PS1 PSN Game");
-        CATEGORYS.put("MN", "PSP Mini");
-        CATEGORYS.put("PE", "PSP Emulator");
-        CATEGORYS.put("PP", "PSP Game");
-        CATEGORYS.put("GD", "PS3 Game Data");
-        CATEGORYS.put("2D", "PS2 Data");
-        CATEGORYS.put("HG", "HDD Game");
+        CATEGORIES.put("AP", "App Photo");
+        CATEGORIES.put("AM", "App Music");
+        CATEGORIES.put("AV", "App Video");
+        CATEGORIES.put("BV", "Broadcast Video");
+        CATEGORIES.put("AT", "App TV");
+        CATEGORIES.put("WT", "Web TV");
+        CATEGORIES.put("HG", "PS3 HDD Game");
+        CATEGORIES.put("CB", "CELL BE?");
+        CATEGORIES.put("AS", "Playstation Now");
+        CATEGORIES.put("HM", "Playstation Home");
+        CATEGORIES.put("SF", "Playstation Store");
+        CATEGORIES.put("2G", "PS2 Game");
+        CATEGORIES.put("2P", "PS2 PSN Game");
+        CATEGORIES.put("1P", "PS1 PSN Game");
+        CATEGORIES.put("MN", "PSP Mini");
+        CATEGORIES.put("PE", "PSP Emulator");
+        CATEGORIES.put("PP", "PSP Game");
+        CATEGORIES.put("GD", "PS3 Game Data");
+        CATEGORIES.put("2D", "PS2 Data");
+        CATEGORIES.put("HG", "HDD Game");
 
-        CATEGORYS.put("DG", "PS3 Disc Game");
-        CATEGORYS.put("SD", "Save Data");
+        CATEGORIES.put("DG", "PS3 Disc Game");
+        CATEGORIES.put("SD", "Save Data");
         // psp
-        CATEGORYS.put("MS", "MemoryStick Save");
-        CATEGORYS.put("MG", "MemoryStick Game");
+        CATEGORIES.put("MS", "MemoryStick Save");
+        CATEGORIES.put("MG", "MemoryStick Game");
 
-        CATEGORYS.put("WG", "WLAN Game");
+        CATEGORIES.put("WG", "WLAN Game");
 
-        CATEGORYS.put("UG", "UMD Game");
-        CATEGORYS.put("UV", "UMD Video");
-        CATEGORYS.put("UA", "UMD Audio");
-        CATEGORYS.put("UC", "UMD Cleaning Disc");
+        CATEGORIES.put("UG", "UMD Game");
+        CATEGORIES.put("UV", "UMD Video");
+        CATEGORIES.put("UA", "UMD Audio");
+        CATEGORIES.put("UC", "UMD Cleaning Disc");
 
     }
 
@@ -75,8 +75,8 @@ public class ParamSFO {
     }
 
     public static String tryToGetCategoryName(String key) {
-        if (CATEGORYS.containsKey(key)) {
-            return CATEGORYS.get(key) + " (" + key + ")";
+        if (CATEGORIES.containsKey(key)) {
+            return CATEGORIES.get(key) + " (" + key + ")";
         } else
             return key;
     }

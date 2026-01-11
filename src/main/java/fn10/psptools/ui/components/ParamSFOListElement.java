@@ -1,4 +1,4 @@
-package psptools.ui.components;
+package fn10.psptools.ui.components;
 
 import javax.naming.NameNotFoundException;
 import javax.swing.ImageIcon;
@@ -11,6 +11,11 @@ import org.apache.commons.io.FileUtils;
 
 import com.formdev.flatlaf.ui.FlatLineBorder;
 
+import fn10.psptools.psp.sfo.ParamSFO;
+import fn10.psptools.psp.sfo.ParamSFO.Params;
+import fn10.psptools.ui.interfaces.SFOListElementListiener;
+import fn10.psptools.util.ImageUtilites;
+import fn10.psptools.util.SavedVariables;
 import jpcsp.filesystems.umdiso.UmdIsoFile;
 import jpcsp.filesystems.umdiso.UmdIsoReader;
 
@@ -27,12 +32,6 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-
-import psptools.psp.sfo.ParamSFO;
-import psptools.psp.sfo.ParamSFO.Params;
-import psptools.ui.interfaces.SFOListElementListiener;
-import psptools.util.ImageUtilites;
-import psptools.util.SavedVariables;
 
 public class ParamSFOListElement extends JPanel implements MouseListener {
 

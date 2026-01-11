@@ -1,4 +1,4 @@
-package psptools.ui;
+package fn10.psptools.ui;
 
 import java.awt.Color;
 import java.awt.Desktop;
@@ -35,17 +35,20 @@ import org.codehaus.plexus.archiver.zip.ZipArchiver;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 
 import com.formdev.flatlaf.ui.FlatLineBorder;
-import psptools.psp.sfo.ParamSFO;
-import psptools.psp.sfo.ParamSFO.Params;
-import psptools.ui.components.ParamSFOListElement;
-import psptools.ui.components.MediaPlayer;
-import psptools.ui.interfaces.SFOListElementListiener;
-import psptools.ui.interfaces.VideoPlayingListiener;
-import psptools.util.ErrorShower;
-import psptools.util.ImageUtilites;
-import psptools.util.SavedVariables;
 
-public class SFOBasedManager extends JFrame implements SFOListElementListiener, VideoPlayingListiener {
+import fn10.psptools.psp.PSP;
+import fn10.psptools.psp.PSPPath;
+import fn10.psptools.psp.sfo.ParamSFO;
+import fn10.psptools.psp.sfo.ParamSFO.Params;
+import fn10.psptools.ui.components.MediaPlayer;
+import fn10.psptools.ui.components.ParamSFOListElement;
+import fn10.psptools.ui.interfaces.SFOListElementListiener;
+import fn10.psptools.ui.interfaces.VideoPlayingListener;
+import fn10.psptools.util.ErrorShower;
+import fn10.psptools.util.ImageUtilites;
+import fn10.psptools.util.SavedVariables;
+
+public class SFOBasedManager extends JFrame implements SFOListElementListiener, VideoPlayingListener {
 
     public static final int SAVES_MODE = 0;
     public static final int GAMES_MODE = 1;
@@ -73,11 +76,11 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
     private ParamSFOListElement selected;
     private MediaPlayer selectedAudioProcess;
     private MediaPlayer selectedVideoProcess;
-    private final File[] targets;
+    private final Path[] targets;
 
     private final JLabel Background = new JLabel(new ImageIcon(getClass().getResource("/bg.png")));
 
-    public SFOBasedManager(Frame parent, int mode, String title, File... targets) {
+    public SFOBasedManager(Frame parent, int mode, String title, Path... targets) {
         super(title);
 
         addWindowListener(new WindowAdapter() {
@@ -202,13 +205,13 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
         FillOutWindow(targets);
     }
 
-    public void FillOutWindow(File... Target) {
+    public void FillOutWindow(Path... Target) {
         Thread main = new Thread(() -> {
             InnerSFOFolderViewer.removeAll();
             ParamSFOListElement first = null;
-            for (File target : List.of(Target)) { // get all target folders
-                if (target.isDirectory() && target.exists())
-                    for (File dir : target.listFiles()) { // get all folders (saves, games, etc)
+            for (Path target : Target) { // get all target folders
+                if (target.toFile().isDirectory() && target.toFile().exists())
+                    for (File dir : target.toFile().listFiles()) { // get all folders (saves, games, etc)
                         if (dir.isDirectory())
                             try { // try to get param.sfo
                                 Boolean valid = false;
@@ -258,8 +261,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
 
         try {
 
-            if (selectedAudioProcess != null)
-                selectedAudioProcess.stop();
+            MediaPlayer.stopAllAudio();
             if (selectedVideoProcess != null)
                 selectedVideoProcess.stop();
 
@@ -314,9 +316,9 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
                 OpenFolderButton.setEnabled(true);
 
             if (selectedElement.audioDir != null)
-                selectedAudioProcess = new MediaPlayer(selectedElement.audioDir);
+                MediaPlayer.playAudio(selectedElement.audioDir);
             if (selectedElement.videoDir != null)
-                selectedVideoProcess = new MediaPlayer(selectedElement.videoDir, this);
+                selectedVideoProcess = new MediaPlayer(selectedElement.videoDir);
 
             this.selected = selectedElement;
 
@@ -392,7 +394,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
                     loading.setVisible(true);
                 });
 
-                Path dest = Path.of(targets[0].getAbsolutePath(),
+                Path dest = Path.of(targets[0].toString(),
                         backupPath.toFile().getName().replace(".zip", ""));
 
                 FileUtils.deleteDirectory(dest.toFile());

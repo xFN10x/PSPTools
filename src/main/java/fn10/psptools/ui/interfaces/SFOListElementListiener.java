@@ -1,8 +1,8 @@
-package psptools.ui.interfaces;
+package fn10.psptools.ui.interfaces;
 
 import java.util.EventListener;
 
-import psptools.ui.components.ParamSFOListElement;
+import fn10.psptools.ui.components.ParamSFOListElement;
 
 public interface SFOListElementListiener extends EventListener {
 

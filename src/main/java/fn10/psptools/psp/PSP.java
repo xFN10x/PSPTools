@@ -1,12 +1,11 @@
-package psptools.psp;
+package fn10.psptools.psp;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 import javax.swing.JOptionPane;
 
-import psptools.util.SavedVariables;
+import fn10.psptools.util.SavedVariables;
 
 public class PSP {
 
@@ -27,11 +26,7 @@ public class PSP {
 
     public PSP() {
     }
-
-    // public String toString() {
-    // return path.toString() + ": " + selectionMode.toString();
-    // }
-
+    
     public static PSP getCurrentPSP() {
         if (CurrentPSP == null)
             return new PSP();
@@ -72,6 +67,7 @@ public class PSP {
     }
 
     public Path getFolder(String... child) {
-        return Path.of(path.toString(), child);
+        return path.resolve(PSPPath.of(child).toString());
     }
+
 }

@@ -1,4 +1,4 @@
-package psptools.ui;
+package fn10.psptools.ui;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -11,8 +11,8 @@ import javax.swing.JPanel;
 import javax.swing.SpringLayout;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import psptools.psp.PSP;
-import psptools.psp.PSPSelectionUI;
+import fn10.psptools.psp.PSP;
+import fn10.psptools.psp.PSPSelectionUI;
 
 import java.awt.Dimension;
 import java.awt.GridLayout;
@@ -77,7 +77,7 @@ public class LaunchPage extends JFrame {
             } else {
                 setVisible(false);
                 new SFOBasedManager(this, SFOBasedManager.SAVES_MODE, "Save Manager",
-                        PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA").toFile()).setVisible(true);
+                        PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA")).setVisible(true);
 
             }
         });
@@ -99,10 +99,10 @@ public class LaunchPage extends JFrame {
             } else {
                 setVisible(false);
                 new SFOBasedManager(this, SFOBasedManager.GAMES_MODE, "Save Manager",
-                        PSP.getCurrentPSP().getFolder("PSP", "GAME").toFile(),
-                        PSP.getCurrentPSP().getFolder("PSP", "GAME150").toFile(),
-                        PSP.getCurrentPSP().getFolder("ISO").toFile(),
-                        PSP.getCurrentPSP().getFolder("PSP", "GAME303").toFile()).setVisible(true);
+                        PSP.getCurrentPSP().getFolder("PSP", "GAME"),
+                        PSP.getCurrentPSP().getFolder("PSP", "GAME150"),
+                        PSP.getCurrentPSP().getFolder("ISO"),
+                        PSP.getCurrentPSP().getFolder("PSP", "GAME303")).setVisible(true);
 
             }
         });
@@ -125,7 +125,7 @@ public class LaunchPage extends JFrame {
             fileChooser.showOpenDialog(this);
             new SFOBasedManager(this, SFOBasedManager.GAMES_MODE,
                     fileChooser.getSelectedFile().getParentFile().getName(),
-                    fileChooser.getSelectedFile().getParentFile().getParentFile()).setVisible(true);
+                    fileChooser.getSelectedFile().getParentFile().getParentFile().toPath()).setVisible(true);
 
         });
 

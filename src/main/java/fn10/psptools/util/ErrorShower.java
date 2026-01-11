@@ -1,4 +1,4 @@
-package psptools.util;
+package fn10.psptools.util;
 
 import java.awt.Frame;
 import java.io.PrintWriter;

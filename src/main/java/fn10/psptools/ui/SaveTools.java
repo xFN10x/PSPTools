@@ -1,4 +1,4 @@
-package psptools.ui;
+package fn10.psptools.ui;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -50,14 +50,14 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 
-import psptools.psp.sfo.ParamSFO.Params;
-import psptools.psp.PSP;
-import psptools.psp.PSPSelectionUI;
-import psptools.psp.sfo.ParamSFO;
-import psptools.ui.components.ParamSFOListElement;
-import psptools.ui.interfaces.SFOListElementListiener;
-import psptools.util.ImageUtilites;
-import psptools.util.SavedVariables;
+import fn10.psptools.psp.PSP;
+import fn10.psptools.psp.PSPSelectionUI;
+import fn10.psptools.psp.sfo.ParamSFO;
+import fn10.psptools.psp.sfo.ParamSFO.Params;
+import fn10.psptools.ui.components.ParamSFOListElement;
+import fn10.psptools.ui.interfaces.SFOListElementListiener;
+import fn10.psptools.util.ImageUtilites;
+import fn10.psptools.util.SavedVariables;
 
 public class SaveTools extends JFrame implements SFOListElementListiener {
 

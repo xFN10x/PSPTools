@@ -1,12 +1,13 @@
-package psptools;
+package fn10.psptools;
 
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
-import psptools.psp.PSP;
-import psptools.ui.LaunchPage;
-import psptools.util.SavedVariables;
+
+import fn10.psptools.psp.PSP;
+import fn10.psptools.ui.LaunchPage;
+import fn10.psptools.util.SavedVariables;
 
 public class App {
     public static void main(String[] args) {

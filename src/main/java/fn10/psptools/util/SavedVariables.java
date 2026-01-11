@@ -1,4 +1,4 @@
-package psptools.util;
+package fn10.psptools.util;
 
 import java.awt.Frame;
 import java.io.File;
@@ -21,9 +21,9 @@ import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import psptools.gson.PathTypeAdapter;
-import psptools.psp.PSP;
-import psptools.ui.LoadingScreen;
+import fn10.psptools.gson.PathTypeAdapter;
+import fn10.psptools.psp.PSP;
+import fn10.psptools.ui.LoadingScreen;
 
 public class SavedVariables {
 

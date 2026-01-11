@@ -1,8 +1,7 @@
 plugins {
-    // Apply the application plugin to add support for building a CLI application in Java.
     application
     id("org.panteleyev.jpackageplugin") version "1.7.3"
-     id("com.gradleup.shadow") version "8.3.9"
+    id("com.gradleup.shadow") version "8.3.9"
 }
 
 
@@ -23,9 +22,13 @@ dependencies {
     implementation("org.apache.commons:commons-lang3:3.18.0")
 
     implementation("org.codehaus.plexus:plexus-archiver:4.10.0")
+
+    //1.1.0
+
+    // https://mvnrepository.com/artifact/ws.schild/jave-all-deps
+    implementation("ws.schild:jave-all-deps:3.5.0")
 }
 
-// Apply a specific Java toolchain to ease working on different environments.
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(25))
@@ -33,13 +36,11 @@ java {
 }
 
 application {
-    // Define the main class for the application.
     mainClass = "psptools.App"
-    //applicationDefaultJvmArgs = listOf("-Djava.library.path=" + file("${buildDir}/libs/ApolloLib/shared").absolutePath, "--enable-preview")
 }
 
 
-var version = "1.0.1"
+var version = "1.1.0s"
 
 tasks.jpackage {
     dependsOn("build", "shadowJar")
@@ -63,12 +64,6 @@ tasks.jpackage {
 
     windows {
         icon = layout.projectDirectory.file("/src/main/resources/icon.ico")
-    }
-
-    //I AM never building for mac, have fun
-    mac {
-        icon = layout.projectDirectory.file("/src/main/resources/icon.icns")
-        macPackageName = "PSPTools"
     }
 }
 
