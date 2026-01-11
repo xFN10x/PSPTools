@@ -1,6 +1,5 @@
 package psptools.ui.interfaces;
 
-import java.awt.event.ActionEvent;
 import java.util.EventListener;
 
 import psptools.ui.components.ParamSFOListElement;
