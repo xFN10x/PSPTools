@@ -13,12 +13,14 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import fn10.psptools.psp.PSP;
 import fn10.psptools.psp.PSPSelectionUI;
+import fn10.psptools.psp.sfo.ParamSFO;
 
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.Component;
 import java.awt.Toolkit;
+import java.io.IOException;
 
 public class LaunchPage extends JFrame {
 
@@ -115,7 +117,9 @@ public class LaunchPage extends JFrame {
         ButtonsPane.add(AutoPSX);
 
         FileMenu.add("Selected PSP").addActionListener(ac -> {
-            PSP.setCurrentPSP(PSPSelectionUI.getNewPSP(this));
+            PSP selected = PSPSelectionUI.getNewPSP(this);
+            if (selected != null)
+                PSP.setCurrentPSP(selected);
         });
 
         ExtraMenu.add("Open Single PARAM.SFO").addActionListener(ac -> {
@@ -124,9 +128,23 @@ public class LaunchPage extends JFrame {
             fileChooser.setFileFilter(new FileNameExtensionFilter("SFO Files", "sfo"));
             fileChooser.showOpenDialog(this);
             if (fileChooser.getSelectedFile() != null)
-            new SFOBasedManager(this, SFOBasedManager.GAMES_MODE,
-                    fileChooser.getSelectedFile().getParentFile().getName(),
-                    fileChooser.getSelectedFile().getParentFile().getParentFile().toPath()).setVisible(true);
+                new SFOBasedManager(this, SFOBasedManager.GAMES_MODE,
+                        fileChooser.getSelectedFile().getParentFile().getName(),
+                        fileChooser.getSelectedFile().getParentFile().getParentFile().toPath()).setVisible(true);
+
+        });
+
+        ExtraMenu.add("View SFO").addActionListener(ac -> {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            fileChooser.setFileFilter(new FileNameExtensionFilter("SFO Files", "sfo"));
+            fileChooser.showOpenDialog(this);
+            if (fileChooser.getSelectedFile() != null)
+                try {
+                    new SFOViewer(getOwner(), ParamSFO.ofFile(fileChooser.getSelectedFile())).setVisible(true);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
         });
 
