@@ -13,7 +13,7 @@ import com.formdev.flatlaf.ui.FlatLineBorder;
 
 import fn10.psptools.psp.sfo.ParamSFO;
 import fn10.psptools.psp.sfo.ParamSFO.Params;
-import fn10.psptools.ui.interfaces.SFOListElementListiener;
+import fn10.psptools.ui.interfaces.SFOListElementListener;
 import fn10.psptools.util.ImageUtilites;
 import fn10.psptools.util.SavedVariables;
 import jpcsp.filesystems.umdiso.UmdIsoFile;
@@ -34,6 +34,15 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
 public class ParamSFOListElement extends JPanel implements MouseListener {
+
+    public static ParamSFOListElement makeEmpty(SFOListElementListener listiener)
+            throws NameNotFoundException, IOException {
+        return new ParamSFOListElement(
+                ParamSFO.ofStream(ParamSFOListElement.class.getResourceAsStream("/EmptyParam/PARAM.SFO")), null,
+                ParamSFOListElement.class.getResourceAsStream("/EmptyParam/ICON0.PNG").readAllBytes(),
+                ParamSFOListElement.class.getResourceAsStream("/EmptyParam/PIC1.PNG").readAllBytes(), null, null,
+                listiener);
+    }
 
     private static final Dimension Size = new Dimension(290, 60);
     private static final FlatLineBorder border = new FlatLineBorder(new Insets(3, 3, 3, 3), Color.white, 2, 8);
@@ -57,7 +66,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
 
     private final JPopupMenu RightClickMenu = new JPopupMenu();
 
-    private final SFOListElementListiener selectedFunc;
+    private final SFOListElementListener selectedFunc;
 
     public boolean backuped = false;
 
@@ -106,7 +115,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         return SFODesc.getText();
     }
 
-    public static ParamSFOListElement ofIso(File iso, SFOListElementListiener selectedFunction) {
+    public static ParamSFOListElement ofIso(File iso, SFOListElementListener selectedFunction) {
         try {
 
             UmdIsoReader reader = new UmdIsoReader(iso.getAbsolutePath());
@@ -159,7 +168,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         }
     }
 
-    public ParamSFOListElement(ParamSFO ParamSFO, File dir, SFOListElementListiener selectedFunction)
+    public ParamSFOListElement(ParamSFO ParamSFO, File dir, SFOListElementListener selectedFunction)
             throws MalformedURLException, IOException, URISyntaxException, NameNotFoundException {
         this(ParamSFO, dir,
                 Files.readAllBytes(Path.of(dir.getAbsolutePath(), "Icon0.png").toFile().exists()
@@ -193,7 +202,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         // System.out.println(ParamSFO.getParam(Params.Title));
     }
 
-    public ParamSFOListElement(String Title, String Desc, byte[] IconData, SFOListElementListiener selectedFunc)
+    public ParamSFOListElement(String Title, String Desc, byte[] IconData, SFOListElementListener selectedFunc)
             throws NameNotFoundException, IOException {
         this(null, null,
                 IconData, IconData, null, null, selectedFunc);
@@ -204,7 +213,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
 
     public ParamSFOListElement(ParamSFO ParamSFO, File dir, byte[] icon0Data, byte[] pic1Data, byte[] icon1Data,
             Path snd0Dir,
-            SFOListElementListiener selectedFunction)
+            SFOListElementListener selectedFunction)
             throws NameNotFoundException, IOException {
         super();
         // System.out.println("SGIMAS");
@@ -298,6 +307,10 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                     RightClickMenu.setLabel(
                             (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam("TITLE_ID")
                                     + ")");
+                    break;
+
+                case "PT": // PSPTools
+                    SFOTitle.setText((String) sfo.getParam(Params.Title, true));
                     break;
 
                 default:

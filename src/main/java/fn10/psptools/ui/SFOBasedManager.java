@@ -10,6 +10,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Date;
@@ -39,13 +40,13 @@ import fn10.psptools.psp.sfo.ParamSFO;
 import fn10.psptools.psp.sfo.ParamSFO.Params;
 import fn10.psptools.ui.components.MediaPlayer;
 import fn10.psptools.ui.components.ParamSFOListElement;
-import fn10.psptools.ui.interfaces.SFOListElementListiener;
+import fn10.psptools.ui.interfaces.SFOListElementListener;
 import fn10.psptools.ui.interfaces.VideoPlayingListener;
 import fn10.psptools.util.ErrorShower;
 import fn10.psptools.util.ImageUtilites;
 import fn10.psptools.util.SavedVariables;
 
-public class SFOBasedManager extends JFrame implements SFOListElementListiener, VideoPlayingListener {
+public class SFOBasedManager extends JFrame implements SFOListElementListener, VideoPlayingListener {
 
     public static final int SAVES_MODE = 0;
     public static final int GAMES_MODE = 1;
@@ -198,6 +199,12 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
         setLocation(LaunchPage.getScreenCenter(this));
 
         FillOutWindow(targets);
+
+        try {
+            selected(ParamSFOListElement.makeEmpty(this));
+        } catch (NameNotFoundException | IOException e1) {
+            e1.printStackTrace();
+        }
     }
 
     public void FillOutWindow(Path... Target) {
@@ -305,6 +312,12 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
 
                         selectedVideoProcess.start(this);
                     }
+                    break;
+
+                case "PT": // psptools
+                    ViewingName.setText(selectedElement.sfo.getParam(Params.Title, true).toString());
+                    ViewingDesc.setText("");
+                    ViewingSubDesc.setText("");
                     break;
 
                 default:

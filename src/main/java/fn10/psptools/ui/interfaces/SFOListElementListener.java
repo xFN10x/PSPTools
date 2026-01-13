@@ -4,7 +4,7 @@ import java.util.EventListener;
 
 import fn10.psptools.ui.components.ParamSFOListElement;
 
-public interface SFOListElementListiener extends EventListener {
+public interface SFOListElementListener extends EventListener {
 
     public void selected(ParamSFOListElement selectedElement);
 

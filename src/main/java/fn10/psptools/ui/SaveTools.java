@@ -55,11 +55,11 @@ import fn10.psptools.psp.PSPSelectionUI;
 import fn10.psptools.psp.sfo.ParamSFO;
 import fn10.psptools.psp.sfo.ParamSFO.Params;
 import fn10.psptools.ui.components.ParamSFOListElement;
-import fn10.psptools.ui.interfaces.SFOListElementListiener;
+import fn10.psptools.ui.interfaces.SFOListElementListener;
 import fn10.psptools.util.ImageUtilites;
 import fn10.psptools.util.SavedVariables;
 
-public class SaveTools extends JFrame implements SFOListElementListiener {
+public class SaveTools extends JFrame implements SFOListElementListener {
 
     private final JTabbedPane tabbedPane = new JTabbedPane();
 

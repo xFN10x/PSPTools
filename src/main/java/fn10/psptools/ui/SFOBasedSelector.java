@@ -20,10 +20,10 @@ import fn10.psptools.psp.PSP;
 import fn10.psptools.psp.sfo.ParamSFO;
 import fn10.psptools.ui.components.MediaPlayer;
 import fn10.psptools.ui.components.ParamSFOListElement;
-import fn10.psptools.ui.interfaces.SFOListElementListiener;
+import fn10.psptools.ui.interfaces.SFOListElementListener;
 import fn10.psptools.util.ImageUtilites;
 
-public class SFOBasedSelector extends JDialog implements SFOListElementListiener {
+public class SFOBasedSelector extends JDialog implements SFOListElementListener {
 
     public static final int SAVES_MODE = 0;
     public static final int GAMES_MODE = 1;
