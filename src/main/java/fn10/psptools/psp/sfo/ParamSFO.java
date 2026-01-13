@@ -63,7 +63,7 @@ public class ParamSFO {
 
     public Header header;
     public List<IndexEntry> index_table = new ArrayList<IndexEntry>();
-    public Map<String, byte[]> data = new HashMap<String, byte[]>();
+    public Map<String, byte[]> paramData = new HashMap<String, byte[]>();
     public Map<String, Integer> dataTypes = new HashMap<String, Integer>();
 
     public static class Header {
@@ -192,8 +192,8 @@ public class ParamSFO {
         }
 
         for (Map.Entry<String, byte[]> entry : list) {
-            toBuild.data.put(entry.getKey(), entry.getValue());
-            //System.out.println(entry.getKey() + "=" + entry.getValue());
+            toBuild.paramData.put(entry.getKey(), entry.getValue());
+            // System.out.println(entry.getKey() + "=" + entry.getValue());
         }
 
         Stream.close();
@@ -203,51 +203,57 @@ public class ParamSFO {
     }
 
     public Object getParam(String param) throws NameNotFoundException {
-        if (!data.containsKey(param)) {
+        if (!paramData.containsKey(param)) {
             throw new NameNotFoundException(
                     "Param: " + param + ", not found in SFO. Category: " + getParam(Params.Category));
         }
-        return paramBytesToValue(data.get(param), dataTypes.get(param), false);
+        return paramBytesToValue(paramData.get(param), dataTypes.get(param), false);
     }
 
     public Object getParam(String param, boolean htmlText) throws NameNotFoundException {
-        if (!data.containsKey(param)) {
+        if (!paramData.containsKey(param)) {
             throw new NameNotFoundException(
                     "Param: " + param + ", not found in SFO. Category: " + getParam(Params.Category));
         }
-        return paramBytesToValue(data.get(param), dataTypes.get(param), htmlText);
+        return paramBytesToValue(paramData.get(param), dataTypes.get(param), htmlText);
     }
 
     public static Object paramBytesToValue(byte[] val, int fmt, boolean html) {
-        if (html)
-            switch (fmt) {
-                case UTF8_S:
-                    String notNullTerm = new String(val);
-                    return "<html>" + notNullTerm.substring(0, notNullTerm.indexOf("\u0000")).replace("\n", "<br>")
-                            + "</html>";
-                case UTF8:
-                    return "<html>" + new String(val).replace("\n", "<br>") + "</html>";
+        {
+            if (val == null)
+                return "null";
+            if (html)
+                switch (fmt) {
+                    case UTF8_S:
+                        String notNullTerm = new String(val);
+                        return "<html>" + notNullTerm.substring(0, notNullTerm.indexOf("\u0000")).replace("\n", "<br>")
+                                + "</html>";
+                    case UTF8:
+                        return "<html>" + new String(val).replace("\n", "<br>") + "</html>";
 
-                case INT32:
-                    return ByteBuffer.wrap(val).order(ByteOrder.LITTLE_ENDIAN).getInt();
+                    case INT32:
+                        return ByteBuffer.wrap(val).order(ByteOrder.LITTLE_ENDIAN).getInt();
 
-                default:
-                    throw new IllegalAccessError("Format: " + fmt + ", is not valid.");
-            }
-        else
-            switch (fmt) {
-                case UTF8_S:
-                    String notNullTerm = new String(val);
-                    return notNullTerm.substring(0, notNullTerm.indexOf("\u0000"));
-                case UTF8:
-                    return new String(val);
+                    default:
+                        throw new IllegalAccessError("Format: " + fmt + ", is not valid.");
+                }
+            else
+                switch (fmt) {
+                    case UTF8_S:
+                        String notNullTerm = new String(val);
+                        if (notNullTerm.indexOf("\u0000") == -1)
+                            return notNullTerm;
+                        return notNullTerm.substring(0, notNullTerm.indexOf("\u0000"));
+                    case UTF8:
+                        return new String(val);
 
-                case INT32:
-                    return ByteBuffer.wrap(val).order(ByteOrder.LITTLE_ENDIAN).getInt();
+                    case INT32:
+                        return ByteBuffer.wrap(val).order(ByteOrder.LITTLE_ENDIAN).getInt();
 
-                default:
-                    throw new IllegalAccessError("Format: " + fmt + ", is not valid.");
-            }
+                    default:
+                        throw new IllegalAccessError("Format: " + fmt + ", is not valid.");
+                }
+        }
     }
 
 }
