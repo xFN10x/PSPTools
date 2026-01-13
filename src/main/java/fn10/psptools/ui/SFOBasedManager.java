@@ -83,7 +83,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
             public void windowClosing(WindowEvent e) {
                 if (parent instanceof LaunchPage)
                     parent.setVisible(true);
-                    MediaPlayer.stopAllAudio();
+                MediaPlayer.stopAllAudio();
                 if (selectedVideoProcess != null)
                     selectedVideoProcess.stop();
                 System.gc();
@@ -253,12 +253,12 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
 
     @Override
     public void selected(ParamSFOListElement selectedElement) {
-
         try {
 
             MediaPlayer.stopAllAudio();
             if (selectedVideoProcess != null)
                 selectedVideoProcess.stop();
+            selectedVideoProcess = null;
 
             ViewingIcon.setIcon(ImageUtilites.ResizeIcon(selectedElement.getIcon0(), 300, 166));
 
@@ -275,18 +275,36 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
                     ViewingName.setText(selectedElement.sfo.getParam(Params.SaveTitle, false).toString());
                     ViewingDesc.setText(selectedElement.sfo.getParam(Params.Description, true).toString());
                     ViewingSubDesc.setText(selectedElement.sfo.getParam(Params.Title, true).toString());
+                    if (selectedElement.videoDir != null) {
+                        selectedVideoProcess = new MediaPlayer(new File(selectedElement.videoDir),
+                                selectedElement.sfo.getParam(Params.SaveFolderName).toString().trim());
+
+                        selectedVideoProcess.start(this);
+                    }
                     break;
 
                 case "UG":
                     ViewingName.setText(selectedElement.sfo.getParam(Params.Title, false).toString());
                     ViewingDesc.setText("UMD Game: " + selectedElement.sfo.getParam(Params.DiscID, false).toString());
                     ViewingSubDesc.setText("");
+                    if (selectedElement.videoDir != null) {
+                        selectedVideoProcess = new MediaPlayer(new File(selectedElement.videoDir),
+                                selectedElement.sfo.getParam(Params.DiscID).toString().trim());
+
+                        selectedVideoProcess.start(this);
+                    }
                     break;
 
                 case "DG": // ps3 disc game
                     ViewingName.setText(selectedElement.sfo.getParam(Params.Title, true).toString());
                     ViewingDesc.setText("PS3 Disc Game: " + selectedElement.sfo.getParam("TITLE_ID", false).toString());
                     ViewingSubDesc.setText("");
+                    if (selectedElement.videoDir != null) {
+                        selectedVideoProcess = new MediaPlayer(new File(selectedElement.videoDir),
+                                selectedElement.sfo.getParam("TITLE_ID").toString().trim());
+
+                        selectedVideoProcess.start(this);
+                    }
                     break;
 
                 default:
@@ -294,6 +312,12 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
                     ViewingDesc.setText("ID: " + selectedElement.sfo.getParam("TITLE_ID", false).toString());
                     ViewingSubDesc.setText("");
                     System.err.println("Need handling for " + selectedElement.sfo.getParam(Params.Category).toString());
+                    if (selectedElement.videoDir != null) {
+                        selectedVideoProcess = new MediaPlayer(new File(selectedElement.videoDir),
+                                selectedElement.sfo.getParam(Params.SaveFolderName).toString().trim());
+
+                        selectedVideoProcess.start(this);
+                    }
                     break;
             }
 
@@ -312,14 +336,11 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
 
             if (selectedElement.audioDir != null)
                 MediaPlayer.playAudio(selectedElement.audioDir);
-            if (selectedElement.videoDir != null)
-                selectedVideoProcess = new MediaPlayer(selectedElement.videoDir);
 
             this.selected = selectedElement;
 
         } catch (Exception e) {
             e.printStackTrace();
-
         }
     }
 
@@ -456,8 +477,10 @@ public class SFOBasedManager extends JFrame implements SFOListElementListiener, 
     public void frameStepped(BufferedImage frame) {
         if (frame == null)
             return;
-        ViewingIcon.getGraphics().drawImage(
-                ImageUtilites.ResizeImage(frame, ViewingIcon.getWidth(), ViewingIcon.getHeight()), 0, 0, null);
+        SwingUtilities.invokeLater(() -> {
+            ViewingIcon.getGraphics().drawImage(
+                    ImageUtilites.ResizeImage(frame, 300, 166), 0, 0, null);
+        });
     }
 
 }
