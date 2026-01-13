@@ -17,8 +17,10 @@ import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.SpringLayout;
 
 import fn10.psptools.ui.LaunchPage;
@@ -46,8 +48,14 @@ public class PSPSelectionUI extends JDialog {
     private final JButton FolderButton = new JButton("...");
     private final JButton DirSelectButton = new JButton("Select");
     // #endregion
-    private final JPanel FTPS = new JPanel();
-
+    // #region ftp selection part
+    private final SpringLayout FtpSLay = new SpringLayout();
+    private final JPanel FTPS = new JPanel(FtpSLay);
+    private final JSpinner FirstIP = new JSpinner(new SpinnerNumberModel(192, 0, 255, 1));
+    private final JSpinner SecondIP = new JSpinner(new SpinnerNumberModel(168, 0, 255, 1));
+    private final JSpinner ThirdIP = new JSpinner(new SpinnerNumberModel(0, 0, 255, 1));
+    private final JSpinner FourthIP = new JSpinner(new SpinnerNumberModel(0, 0, 255, 1));
+    // #endregion
     private File SelectedFolder = null;
     private SelectionMode SelectedMode = null;
 
@@ -218,15 +226,34 @@ public class PSPSelectionUI extends JDialog {
         DIRS.add(FolderButton);
         DIRS.add(DirSelectButton);
         // #endregion
-        
+        // #region FTP Selection Stuff
+
+        Dimension numbersSize = new Dimension(61, 30);
+
+        FirstIP.setPreferredSize(numbersSize);
+        SecondIP.setPreferredSize(numbersSize);
+        ThirdIP.setPreferredSize(numbersSize);
+        FourthIP.setPreferredSize(numbersSize);
+
+        FtpSLay.putConstraint(SpringLayout.WEST, FirstIP, 2, SpringLayout.WEST, FTPS);
+        FtpSLay.putConstraint(SpringLayout.WEST, SecondIP, 1, SpringLayout.EAST, FirstIP);
+        FtpSLay.putConstraint(SpringLayout.WEST, ThirdIP, 1, SpringLayout.EAST, SecondIP);
+        FtpSLay.putConstraint(SpringLayout.WEST, FourthIP, 1, SpringLayout.EAST, ThirdIP);
+
+        FTPS.add(FirstIP);
+        FTPS.add(SecondIP);
+        FTPS.add(ThirdIP);
+        FTPS.add(FourthIP);
+        // #endregion
+
         add(Tabbed);
         Tabbed.add(DS);
         Tabbed.add(DIRS);
         Tabbed.add(FTPS);
 
-        Tabbed.addTab("Drive Selection", DS);
-        Tabbed.addTab("Directory Selection", DIRS);
-        Tabbed.addTab("FTP Selection", FTPS);
+        Tabbed.addTab("Drive", DS);
+        Tabbed.addTab("Directory", DIRS);
+        Tabbed.addTab("FTP", FTPS);
         Tabbed.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 
         addWindowListener(new WindowAdapter() {
@@ -246,16 +273,18 @@ public class PSPSelectionUI extends JDialog {
         PSPSelectionUI ui = new PSPSelectionUI(parent);
 
         ui.setVisible(true);
+        if (ui.SelectedMode != null)
+            switch (ui.SelectedMode) {
+                case SelectionMode.PSP_DIR:
 
-        switch (ui.SelectedMode) {
-            case SelectionMode.PSP_DIR:
+                    return new PSP(SelectionMode.PSP_DIR, ui.SelectedFolder.toPath());
 
-                return new PSP(SelectionMode.PSP_DIR, ui.SelectedFolder.toPath());
+                default:
+                    return null;
 
-            default:
-                return null;
-
-        }
+            }
+        else
+            return null;
 
     }
 }

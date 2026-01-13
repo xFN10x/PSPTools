@@ -27,6 +27,9 @@ dependencies {
 
     // https://mvnrepository.com/artifact/ws.schild/jave-all-deps
     implementation("ws.schild:jave-all-deps:3.5.0")
+
+    // Source: https://mvnrepository.com/artifact/commons-net/commons-net
+    implementation("commons-net:commons-net:3.12.0")
 }
 
 java {
