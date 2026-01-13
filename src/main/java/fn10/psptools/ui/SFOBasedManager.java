@@ -218,7 +218,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                             try { // try to get param.sfo
                                 Boolean valid = false;
                                 for (File file : dir.listFiles()) {
-                                    if (file.getName().endsWith("PBP") || file.getName().endsWith("SFO"))
+                                    if (file.getName().toUpperCase().endsWith("PBP") || file.getName().toUpperCase().endsWith("SFO"))
                                         valid = true;
                                 }
                                 if (!valid)
@@ -234,7 +234,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
-                        else if (dir.getName().endsWith("iso"))
+                        else if (dir.getName().toLowerCase().endsWith("iso"))
                             try { // try to get param.sfo
                                 ParamSFOListElement ToAdd = ParamSFOListElement.ofIso(dir, this);
                                 // System.out.println(ToAdd);
