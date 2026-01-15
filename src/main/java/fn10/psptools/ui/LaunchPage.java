@@ -128,7 +128,7 @@ public class LaunchPage extends JFrame {
             fileChooser.setFileFilter(new FileNameExtensionFilter("SFO Files", "sfo"));
             fileChooser.showOpenDialog(this);
             if (fileChooser.getSelectedFile() != null)
-                new SFOBasedManager(this, SFOBasedManager.GAMES_MODE,
+                new SFOBasedManager(this, SFOBasedManager.SINGLE,
                         fileChooser.getSelectedFile().getParentFile().getName(),
                         fileChooser.getSelectedFile().getParentFile().getParentFile().toPath()).setVisible(true);
 

@@ -218,7 +218,8 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                             try { // try to get param.sfo
                                 Boolean valid = false;
                                 for (File file : dir.listFiles()) {
-                                    if (file.getName().toUpperCase().endsWith("PBP") || file.getName().toUpperCase().endsWith("SFO"))
+                                    if (file.getName().toUpperCase().endsWith("PBP")
+                                            || file.getName().toUpperCase().endsWith("SFO"))
                                         valid = true;
                                 }
                                 if (!valid)
@@ -318,6 +319,19 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                     ViewingName.setText(selectedElement.sfo.getParam(Params.Title, true).toString());
                     ViewingDesc.setText("");
                     ViewingSubDesc.setText("");
+                    break;
+
+                case "sd": // psptools
+                    if (selectedElement.sfo.paramData.containsKey("PARENT_DIRECTORY")) // vita
+                    {
+                        ViewingName.setText(selectedElement.sfo.getParam("PARENT_DIRECTORY", true).toString());
+                        ViewingDesc.setText("PSVita saves do not contain much info about them.");
+                        ViewingSubDesc.setText("(Vita)");
+                    } else {
+                        ViewingName.setText(selectedElement.sfo.getParam("MAINTITLE", true).toString());
+                        ViewingDesc.setText(selectedElement.sfo.getParam("SUBTITLE", true).toString());
+                        ViewingSubDesc.setText(selectedElement.sfo.getParam("TITLE_ID", true).toString());
+                    }
                     break;
 
                 default:

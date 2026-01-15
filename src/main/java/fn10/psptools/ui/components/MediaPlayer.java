@@ -151,7 +151,6 @@ public class MediaPlayer {
                 File framesPath = SavedVariables.DataFolder.resolve("video", id).toFile();
                 for (File file : framesPath.listFiles()) {
                     try {
-                        System.out.println("Loading frame: " + file.getAbsolutePath());
                         frames.add(ImageIO.read(file));
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -165,7 +164,6 @@ public class MediaPlayer {
                             e.printStackTrace();
                         }
                         if (!playing) break;
-                        System.out.println("Frame Stepped " + frames.indexOf(img));
                         listener.frameStepped(img);
                     }
                 }

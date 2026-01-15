@@ -80,6 +80,16 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                     return (sfo.getParam(Params.SaveFolderName).toString()).replace("\u0000", "").replace(":", " ")
                             + ".zip";
 
+                case "sd": // psvita,4,5 save data
+                    if (sfo.paramData.containsKey("PARENT_DIRECTORY")) // vita
+                        return sfo.getParam("PARENT_DIRECTORY").toString().replace("/", "").replace("\u0000", "")
+                                .replace(":", "")
+                                .replace("\n", " ").replace(" ", "-") + ".zip";
+                    else
+                        return sfo.getParam("TITLE_ID").toString().replace("/", "").replace("\u0000", "")
+                                .replace(":", "")
+                                .replace("\n", " ").replace(" ", "-") + ".zip";
+
                 default:
                     if (sfo != null)
                         return sfo.getParam(Params.Title).toString().replace("\u0000", "").replace(":", "")
@@ -311,6 +321,13 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
 
                 case "PT": // PSPTools
                     SFOTitle.setText((String) sfo.getParam(Params.Title, true));
+                    break;
+
+                case "sd": // PSVita, 4, 5
+                    if (sfo.paramData.containsKey("PARENT_DIRECTORY")) // vita
+                        SFOTitle.setText((String) sfo.getParam("PARENT_DIRECTORY", true).toString().replace("/", ""));
+                    else
+                        SFOTitle.setText((String) sfo.getParam("MAINTITLE", true).toString().replace("/", ""));
                     break;
 
                 default:

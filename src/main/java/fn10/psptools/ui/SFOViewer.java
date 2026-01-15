@@ -18,6 +18,7 @@ public class SFOViewer extends JDialog {
         super(parent);
         setSize(500, 500);
         setTitle("Viewing SFO");
+        setLocation(LaunchPage.getScreenCenter(this));
 
         List<String[]> data = new ArrayList<>();
 
