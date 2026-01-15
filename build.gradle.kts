@@ -55,8 +55,6 @@ tasks.jpackage {
     appName = "PSPTools"
     vendor = "_FN10_"
 
-    javaOptions = listOf("-Xmx64m", "-Xms16m")
-
     icon = file("src/main/resources/icon.png")
 
 
