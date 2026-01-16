@@ -12,12 +12,15 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Date;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.codehaus.plexus.archiver.tar.TarGZipUnArchiver;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 
+import com.formdev.flatlaf.util.SwingUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -55,77 +58,84 @@ public class SavedVariables {
                 return;
 
             LoadingScreen loading = new LoadingScreen(parent);
-            new Thread(() -> {
+            SwingUtilities.invokeLater(() -> {
                 loading.setVisible(true);
-            }).start();
+            });
+            new Thread(() -> {
+                try {
+                    loading.changeText("Opening connection...");
 
-            loading.changeText("Opening connection...");
+                    URL patchZip;
 
-            URL patchZip;
+                    if (SystemUtils.IS_OS_WINDOWS) {
+                        if (System.getProperty("sun.arch.data.model") == "64") {
+                            patchZip = new URI(
+                                    "https://github.com/bucanero/apollo-lib/releases/download/v1.3.0/apollo-cli-43bace95-Win64.zip")
+                                    .toURL();
+                        } else {
+                            patchZip = new URI(
+                                    "https://github.com/bucanero/apollo-lib/releases/download/v1.3.0/apollo-cli-43bace95-Win32.zip")
+                                    .toURL();
+                        }
+                    } else if (SystemUtils.IS_OS_LINUX) {
+                        patchZip = new URI(
+                                "https://github.com/bucanero/apollo-lib/releases/download/v1.3.0/apollo-cli-43bace95-ubuntu.zip")
+                                .toURL();
+                    } /*
+                       * else if (SystemUtils.IS_OS_MAC) {
+                       * patchZip = new URI(
+                       * "https://github.com/bucanero/apollo-lib/releases/download/v1.3.0/apollo-cli-43bace95-macos.zip")
+                       * .toURL();
+                       * }
+                       */ else {
+                        JOptionPane.showMessageDialog(parent,
+                                "Sadly, Apollo CLI Tools are not available for this platform.",
+                                "What the hell are you on??", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
 
-            if (SystemUtils.IS_OS_WINDOWS) {
-                if (System.getProperty("sun.arch.data.model") == "64") {
-                    patchZip = new URI(
-                            "https://github.com/bucanero/apollo-lib/releases/download/v1.3.0/apollo-cli-43bace95-Win64.zip")
-                            .toURL();
-                } else {
-                    patchZip = new URI(
-                            "https://github.com/bucanero/apollo-lib/releases/download/v1.3.0/apollo-cli-43bace95-Win32.zip")
-                            .toURL();
+                    InputStream stream = patchZip.openStream();
+                    File tempFile = File.createTempFile("PSPTOOLS", "TEMPTOOLS.zip");
+                    File tempFile2 = Files.createTempDirectory("PSPTOOLS").toFile();
+
+                    FileOutputStream output = new FileOutputStream(tempFile);
+
+                    loading.changeText("Writing to temporary file...");
+                    IOUtils.copy(stream, output);
+
+                    loading.changeText("Deleting old install...");
+                    FileUtils.deleteDirectory(Path.of(SavedVariables.DataFolder.toString(), "tools").toFile()); // remove
+                    // old
+                    // patches
+
+                    // tempFile.deleteOnExit();
+                    System.out.println(tempFile.getPath());
+                    stream.close();
+
+                    loading.changeText("Download tools...");
+                    ZipUnArchiver zip = new ZipUnArchiver(tempFile);
+
+                    // extract tar gz
+                    zip.setDestDirectory(tempFile2);
+                    zip.extract();
+
+                    // extract the new tar gz
+                    final TarGZipUnArchiver unarc = new TarGZipUnArchiver(
+                            Path.of(tempFile2.getAbsolutePath(), "build.tar.gz").toFile());
+                    unarc.setDestDirectory(SavedVariables.DataFolder.toFile());
+                    unarc.extract();
+
+                    System.gc();
+
+                    tempFile.delete();
+
+                    loading.setVisible(false);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } else if (SystemUtils.IS_OS_LINUX) {
-                patchZip = new URI(
-                        "https://github.com/bucanero/apollo-lib/releases/download/v1.3.0/apollo-cli-43bace95-ubuntu.zip")
-                        .toURL();
-            } else if (SystemUtils.IS_OS_MAC) {
-                patchZip = new URI(
-                        "https://github.com/bucanero/apollo-lib/releases/download/v1.3.0/apollo-cli-43bace95-macos.zip")
-                        .toURL();
-            } else {
-                JOptionPane.showMessageDialog(parent, "Sadly, Apollo CLI Tools are not available for this platform.",
-                        "What the hell are you on??", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
 
-            InputStream stream = patchZip.openStream();
-            File tempFile = File.createTempFile("PSPTOOLS", "TEMPTOOLS.zip");
-            File tempFile2 = Files.createTempDirectory("PSPTOOLS").toFile();
-
-            FileOutputStream output = new FileOutputStream(tempFile);
-
-            loading.changeText("Writing to temporary file...");
-            IOUtils.copy(stream, output);
-
-            loading.changeText("Deleting old install...");
-            FileUtils.deleteDirectory(Path.of(SavedVariables.DataFolder.toString(), "tools").toFile()); // remove
-            // old
-            // patches
-
-            // tempFile.deleteOnExit();
-            System.out.println(tempFile.getPath());
-            stream.close();
-
-            loading.changeText("Download tools...");
-            ZipUnArchiver zip = new ZipUnArchiver(tempFile);
-
-            // extract tar gz
-            zip.setDestDirectory(tempFile2);
-            zip.extract();
-
-            // extract the new tar gz
-            final TarGZipUnArchiver unarc = new TarGZipUnArchiver(
-                    Path.of(tempFile2.getAbsolutePath(), "build.tar.gz").toFile());
-            unarc.setDestDirectory(SavedVariables.DataFolder.toFile());
-            unarc.extract();
-
-            loading.setVisible(false);
-
-            System.gc();
-
-            tempFile.delete();
-
-            JOptionPane.showMessageDialog(null, "Apollo CLI Tools have been downloaded.");
-
+                JOptionPane.showMessageDialog(null, "Apollo CLI Tools have been downloaded.");
+            }).start();
         } catch (Exception e) {
             e.printStackTrace();
         }

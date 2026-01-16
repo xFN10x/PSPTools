@@ -50,6 +50,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 
+import com.formdev.flatlaf.util.SystemFileChooser;
 import fn10.psptools.psp.PSP;
 import fn10.psptools.psp.PSPSelectionUI;
 import fn10.psptools.psp.sfo.ParamSFO;
@@ -155,7 +156,7 @@ public class SaveTools extends JFrame implements SFOListElementListener {
     }
 
     public SaveTools(Frame parent) {
-        super("Save Manager");
+        super("Save Tools");
 
         SavedVariables saved = SavedVariables.Load();
 
@@ -291,82 +292,87 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                 SwingUtilities.invokeLater(() -> {
                     loading.setVisible(true);
                 });
+                new Thread(() -> {
+                    try {
+                        loading.changeText("Opening connection...");
 
-                loading.changeText("Opening connection...");
+                        URL patchZip = new URI("https://github.com/bucanero/apollo-patches/archive/refs/heads/main.zip")
+                                .toURL();
 
-                URL patchZip = new URI("https://github.com/bucanero/apollo-patches/archive/refs/heads/main.zip")
-                        .toURL();
+                        InputStream stream = patchZip.openStream();
+                        File tempFile = File.createTempFile("PSPTOOLS", "TEMPPATCHS.zip");
 
-                InputStream stream = patchZip.openStream();
-                File tempFile = File.createTempFile("PSPTOOLS", "TEMPPATCHS.zip");
+                        FileOutputStream output = new FileOutputStream(tempFile);
 
-                FileOutputStream output = new FileOutputStream(tempFile);
+                        loading.changeText("Writing to temporary file...");
+                        IOUtils.copy(stream, output);
 
-                loading.changeText("Writing to temporary file...");
-                IOUtils.copy(stream, output);
+                        loading.changeText("Deleting old patches...");
+                        FileUtils.deleteDirectory(Path.of(SavedVariables.DataFolder.toString(), "Patches").toFile()); // remove
+                                                                                                                      // old
+                                                                                                                      // patches
 
-                loading.changeText("Deleting old patches...");
-                FileUtils.deleteDirectory(Path.of(SavedVariables.DataFolder.toString(), "Patches").toFile()); // remove
-                                                                                                              // old
-                                                                                                              // patches
+                        // tempFile.deleteOnExit();
+                        System.out.println(tempFile.getPath());
+                        stream.close();
 
-                // tempFile.deleteOnExit();
-                System.out.println(tempFile.getPath());
-                stream.close();
+                        loading.changeText("Download patches...");
+                        ZipUnArchiver zip = new ZipUnArchiver(tempFile);
 
-                loading.changeText("Download patches...");
-                ZipUnArchiver zip = new ZipUnArchiver(tempFile);
+                        // System.out.println(Path.of(SavedVariables.DataFolder.toString(), "Patches",
+                        // "PSP").toString());
+                        switch (option.toString()) {
+                            case "PSP":
+                                try {
+                                    zip.extract("apollo-patches-main/PSP/",
+                                            Path.of(SavedVariables.DataFolder.toString()).toFile());
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                                break;
+                            case "PS3":
+                                try {
+                                    zip.extract("apollo-patches-main/PS3/",
+                                            Path.of(SavedVariables.DataFolder.toString()).toFile());
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                                break;
 
-                // System.out.println(Path.of(SavedVariables.DataFolder.toString(), "Patches",
-                // "PSP").toString());
-                switch (option.toString()) {
-                    case "PSP":
-                        try {
-                            zip.extract("apollo-patches-main/PSP/",
-                                    Path.of(SavedVariables.DataFolder.toString()).toFile());
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                            default:
+                                try {
+                                    zip.extract("apollo-patches-main/PSP/",
+                                            Path.of(SavedVariables.DataFolder.toString()).toFile());
+
+                                    zip.extract("apollo-patches-main/PS3/",
+                                            Path.of(SavedVariables.DataFolder.toString()).toFile());
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                                break;
+
                         }
-                        break;
-                    case "PS3":
-                        try {
-                            zip.extract("apollo-patches-main/PS3/",
-                                    Path.of(SavedVariables.DataFolder.toString()).toFile());
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        break;
 
-                    default:
-                        try {
-                            zip.extract("apollo-patches-main/PSP/",
-                                    Path.of(SavedVariables.DataFolder.toString()).toFile());
+                        Path.of(SavedVariables.DataFolder.toString(), "apollo-patches-main").toFile()
+                                .renameTo(Path.of(SavedVariables.DataFolder.toString(), "Patches").toFile());
 
-                            zip.extract("apollo-patches-main/PS3/",
-                                    Path.of(SavedVariables.DataFolder.toString()).toFile());
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        break;
+                        loading.setVisible(false);
+                        SavedVariables vars = SavedVariables.Load();
+                        vars.SinceLastPatchUpdate = Calendar.getInstance().getTime();
+                        vars.Save();
 
-                }
+                        tempFile.delete();
 
-                Path.of(SavedVariables.DataFolder.toString(), "apollo-patches-main").toFile()
-                        .renameTo(Path.of(SavedVariables.DataFolder.toString(), "Patches").toFile());
+                        SwingUtilities.invokeLater(() -> {
+                            loading.setVisible(false);
+                        });
 
-                loading.setVisible(false);
-                SavedVariables vars = SavedVariables.Load();
-                vars.SinceLastPatchUpdate = Calendar.getInstance().getTime();
-                vars.Save();
-
-                tempFile.delete();
-
-                SwingUtilities.invokeLater(() -> {
-                    loading.setVisible(false);
-                });
-
-                JOptionPane.showMessageDialog(null, "Patchs have been downloaded.");
-                System.gc();
+                        JOptionPane.showMessageDialog(null, "Patchs have been downloaded.");
+                        System.gc();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }).start();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -665,6 +671,7 @@ public class SaveTools extends JFrame implements SFOListElementListener {
 
         if (currentThread != null) {
             try {
+                currentThread.cancel(true);
                 currentReader.close();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -673,7 +680,6 @@ public class SaveTools extends JFrame implements SFOListElementListener {
 
         databaseListingInnerPanel.removeAll();
         databaseListingInnerPanel.repaint();
-
         switch (currentMenu) {
             case "root":
                 currentThread = executorService.submit(
@@ -786,79 +792,116 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                     "<html>How would you like to install the save,<br><b>" + selectedElement.getTitle()
                             + "</b>, for game "
                             + currentMenu + "?</html>",
-                    "Install save: " + selectedElement.getTitle(), JOptionPane.INFORMATION_MESSAGE, null,
-                    new String[] { "To PSP", "To Folder", "Select..." }, "To PSP");
+                    "Install save: " + selectedElement.getTitle(), JOptionPane.QUESTION_MESSAGE, null,
+                    new String[] { "To PSP", "To Folder", "To Zip" }, "To PSP");
             if (choice == null)
                 return;
-            switch (choice.toString()) {
-                case "To PSP":
-                    if (!PSP.getCurrentPSP().pspActive()) {
-                        int option2 = JOptionPane.showConfirmDialog(this,
-                                "No PSP is selected, but is required.\nSelect one?",
-                                "PSP Selection Confirm", JOptionPane.YES_NO_OPTION);
+            LoadingScreen loading = new LoadingScreen(this);
+            SwingUtilities.invokeLater(() -> {
+                loading.setVisible(true);
+            });
+            new Thread(() -> {
+                try {
+                    URL zipUrl = new URI(SavedVariables.Load().DatabaseUrl + "/PSP/" + currentMenu + "/"
+                            + selectedElement.getDescription()).toURL();
+                    System.out.println("Downloading save: " + zipUrl);
+                    InputStream stream = zipUrl.openStream();
+                    File zipFile = File.createTempFile("PSPTOOLS", "TEMPSAVE.zip");
+                    zipFile.deleteOnExit();
+                    ZipUnArchiver zipUnArchiver = new ZipUnArchiver(zipFile);
 
-                        if (option2 == JOptionPane.YES_OPTION) {
-                            PSP.setCurrentPSP(PSPSelectionUI.getNewPSP(this));
-                            try {
-                                URL zipUrl = new URI(SavedVariables.Load().DatabaseUrl + "/PSP/" + currentMenu + "/"
-                                        + selectedElement.getDescription()).toURL();
-                                System.out.println(zipUrl);
-                                InputStream stream = zipUrl.openStream();
-                                File zipFile = File.createTempFile("PSPTOOLS", "TEMPSAVE.zip");
-                                Files.write(zipFile.toPath(), stream.readAllBytes());
-                                stream.close();
+                    Files.write(zipFile.toPath(), stream.readAllBytes());
+                    stream.close();
 
-                                ZipUnArchiver save = new ZipUnArchiver(zipFile);
+                    SystemFileChooser chooser = new SystemFileChooser();
+                    switch (choice.toString()) {
+                        case "To Zip":
+                            chooser.setDialogType(SystemFileChooser.SAVE_DIALOG);
+                            chooser.setFileSelectionMode(SystemFileChooser.FILES_ONLY);
+                            chooser.setSelectedFile(new File("test.zip"));
+                            chooser.showOpenDialog(loading);
 
-                                LoadingScreen loading = new LoadingScreen(this);
-                                SwingUtilities.invokeLater(() -> {
-                                    loading.setVisible(true);
-                                });
-                                save.setDestDirectory(PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA").toFile());
-                                save.extract();
+                            File file = chooser.getSelectedFile();
+                            if (file == null) {
+                                loading.setVisible(false);
+                                return;
+                            }
+
+                            FileUtils.copyFile(zipFile, file);
+
+                            loading.setVisible(false);
+                            System.gc();
+                            JOptionPane.showMessageDialog(null,
+                                    "The save has been downloaded.");
+                            break;
+                        case "To Folder":
+                            chooser.setDialogType(SystemFileChooser.SAVE_DIALOG);
+                            chooser.setFileSelectionMode(SystemFileChooser.DIRECTORIES_ONLY);
+                            chooser.showOpenDialog(loading);
+
+                            File directory = chooser.getSelectedFile();
+                            if (directory == null) {
+                                loading.setVisible(false);
+                                return;
+                            }
+
+                            zipUnArchiver.setDestDirectory(directory);
+                            zipUnArchiver.extract();
+                            loading.setVisible(false);
+                            System.gc();
+                            JOptionPane.showMessageDialog(null,
+                                    "The save has been downloaded.");
+
+                            break;
+                        case "To PSP":
+                            if (!PSP.getCurrentPSP().pspActive()) {
+                                int option2 = JOptionPane.showConfirmDialog(loading,
+                                        "No PSP is selected, but is required.\nSelect one?",
+                                        "PSP Selection Confirm", JOptionPane.YES_NO_OPTION);
+
+                                if (option2 == JOptionPane.YES_OPTION) {
+                                    PSP.setCurrentPSP(PSPSelectionUI.getNewPSP(null));
+
+                                    zipUnArchiver.setDestDirectory(
+                                            PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA").toFile());
+                                    zipUnArchiver.extract();
+
+                                    loading.setVisible(false);
+                                    System.gc();
+                                    JOptionPane.showMessageDialog(loading,
+                                            "The save has been downloaded.");
+
+                                } else {
+                                    loading.setVisible(false);
+                                    return;
+                                }
+                            } else {
+
+                                zipUnArchiver
+                                        .setDestDirectory(PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA").toFile());
+                                zipUnArchiver.extract();
 
                                 loading.setVisible(false);
                                 System.gc();
                                 JOptionPane.showMessageDialog(null,
                                         "The save has been downloaded.");
-                            } catch (Exception e) {
-                                e.printStackTrace();
+
                             }
-                        } else
-                            return;
-                    } else {
-                        try {
-                            URL zipUrl = new URI(SavedVariables.Load().DatabaseUrl + "/PSP/" + currentMenu + "/"
-                                    + selectedElement.getDescription()).toURL();
-                            System.out.println(zipUrl);
-                            InputStream stream = zipUrl.openStream();
-                            File zipFile = File.createTempFile("PSPTOOLS", "TEMPSAVE.zip");
-                            Files.write(zipFile.toPath(), stream.readAllBytes());
-                            stream.close();
+                            break;
 
-                            ZipUnArchiver save = new ZipUnArchiver(zipFile);
-
-                            LoadingScreen loading = new LoadingScreen(this);
-                            SwingUtilities.invokeLater(() -> {
-                                loading.setVisible(true);
-                            });
-
-                            save.setDestDirectory(PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA").toFile());
-                            save.extract();
-
-                            loading.setVisible(false);
-
-                            System.gc();
-                            JOptionPane.showMessageDialog(null, "The save has been downloaded.");
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+                        default:
+                            break;
                     }
-                    break;
-
-                default:
-                    break;
-            }
+                    zipFile.delete();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    loading.setVisible(false);
+                    System.gc();
+                    JOptionPane.showMessageDialog(null,
+                            "Failed to download save: " + e.getMessage());
+                    return;
+                }
+            }).start();
         }
     }
 
