@@ -113,13 +113,13 @@ public class PSPSelectionUI extends JDialog {
 
         AutoButton.addActionListener(action -> {
             for (File root : File.listRoots()) {
-                File PSPFolder = new File(Path.of(root.getPath(), "PSP").toString());
-                File ISOFolder = new File(Path.of(root.getPath(), "ISO").toString());
-                File PSPGameFolder = new File(Path.of(root.getPath(), "PSP", "Game").toString());
-                File PSPSaveFolder = new File(Path.of(root.getPath(), "PSP", "Savedata").toString());
+                Path rootPath = root.toPath();
+                File PSPFolder = rootPath.resolve("PSP").toFile();
+                File ISOFolder = rootPath.resolve("ISO").toFile();
+                File PSPGameFolder = rootPath.resolve("PSP", "GAME").toFile();
 
-                if (PSPFolder.exists() && ISOFolder.exists() && PSPGameFolder.exists() && PSPSaveFolder.exists()) {
-                    JOptionPane.showMessageDialog(parent, "Found PSP @ " + root.toString(), "PSP Found",
+                if (PSPFolder.exists() && ISOFolder.exists() && PSPGameFolder.exists()) {
+                    JOptionPane.showMessageDialog(parent, "Found PSP at " + root.toString(), "PSP Found",
                             JOptionPane.INFORMATION_MESSAGE);
                     InputDriveBox.setSelectedItem(root);
                     return;
@@ -205,19 +205,19 @@ public class PSPSelectionUI extends JDialog {
         });
 
         DirSelectButton.addActionListener(action -> {
-            String root = FolderSelection.getText();
-            File PSPFolder = new File(Path.of(root, "PSP").toString());
-            File ISOFolder = new File(Path.of(root, "ISO").toString());
-            File PSPGameFolder = new File(Path.of(root, "PSP", "Game").toString());
+            Path root = Path.of(FolderSelection.getText());
+            File PSPFolder = root.resolve("PSP").toFile();
+            File ISOFolder = root.resolve("ISO").toFile();
+            File PSPGameFolder = root.resolve("PSP", "GAME").toFile();
 
             if (PSPFolder.exists() && ISOFolder.exists() && PSPGameFolder.exists()) {
-                SelectedFolder = new File(root);
+                SelectedFolder = root.toFile();
                 SelectedMode = SelectionMode.PSP_DIR;
                 setVisible(false);
                 dispose();
             } else {
                 JOptionPane.showMessageDialog(this,
-                        "Selected folder doesnt have:\n\"/PSP/\", \"/ISO/\", \"/PSP/GAME/\", or \"/PSP/SAVEDATA/\"",
+                        "Selected folder doesnt have:\n\"/PSP/\", or  \"/ISO/\", \"/PSP/GAME/\"",
                         "Folder is not PSP", JOptionPane.ERROR_MESSAGE);
             }
         });
