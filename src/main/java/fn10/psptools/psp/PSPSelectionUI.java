@@ -27,7 +27,7 @@ import fn10.psptools.ui.LaunchPage;
 
 public class PSPSelectionUI extends JDialog {
 
-    private final static Dimension size = new Dimension(300, 200);
+    private final static Dimension size = new Dimension(400, 200);
     private final SpringLayout Lay = new SpringLayout();
 
     private final JTabbedPane Tabbed = new JTabbedPane(JTabbedPane.TOP);
