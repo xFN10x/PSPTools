@@ -10,6 +10,10 @@ repositories {
     maven { url = uri("https://jitpack.io") }
 }
 
+tasks.test {
+    failOnNoDiscoveredTests = false
+}
+
 dependencies {
     implementation("com.formdev:flatlaf:3.7")
 
