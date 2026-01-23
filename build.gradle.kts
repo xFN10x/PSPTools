@@ -44,7 +44,7 @@ java {
 }
 
 application {
-    mainClass = "psptools.App"
+    mainClass = "fn10.psptools.App"
 }
 
 
@@ -66,7 +66,7 @@ tasks.jpackage {
     type = org.panteleyev.jpackage.ImageType.APP_IMAGE
 
     mainJar = "PSPTools-$version-all.jar"
-    mainClass = "psptools.App"
+    mainClass = "fn10.psptools.App"
 
     windows {
         icon = layout.projectDirectory.file("/src/main/resources/icon.ico")
