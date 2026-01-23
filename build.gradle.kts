@@ -32,6 +32,7 @@ dependencies {
     implementation("commons-net:commons-net:3.12.0")
 }
 
+
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(25))
@@ -43,7 +44,7 @@ application {
 }
 
 
-var version = "1.1.0s"
+var version = "1.1.0"
 
 tasks.jpackage {
     dependsOn("build", "shadowJar")
