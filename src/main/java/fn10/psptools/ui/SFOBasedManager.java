@@ -36,6 +36,7 @@ import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 
 import com.formdev.flatlaf.ui.FlatLineBorder;
 
+import fn10.psptools.psp.PSPDirectory;
 import fn10.psptools.psp.sfo.ParamSFO;
 import fn10.psptools.psp.sfo.ParamSFO.Params;
 import fn10.psptools.ui.components.MediaPlayer;
@@ -73,11 +74,11 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
 
     private ParamSFOListElement selected;
     private MediaPlayer selectedVideoProcess;
-    private final Path[] targets;
+    private final PSPDirectory[] targets;
 
     private final JLabel Background = new JLabel(new ImageIcon(getClass().getResource("/bg.png")));
 
-    public SFOBasedManager(Frame parent, int mode, String title, Path... targets) {
+    public SFOBasedManager(Frame parent, int mode, String title, PSPDirectory... targets) {
         super(title);
 
         addWindowListener(new WindowAdapter() {
@@ -199,6 +200,8 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
         setLocation(LaunchPage.getScreenCenter(this));
 
         FillOutWindow(targets);
+
+        MediaPlayer.downloadFFmpeg();
 
         try {
             selected(ParamSFOListElement.makeEmpty(this));

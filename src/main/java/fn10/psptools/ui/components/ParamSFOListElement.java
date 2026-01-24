@@ -238,7 +238,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         ImageIcon rawIcon = new ImageIcon(icon0Data);
         this.icon0 = new ImageIcon(icon0Data);
         if (icon1Data != null) {
-            File icon1 = File.createTempFile("PSPTOOLS", "TEMPICON1.PMF,");
+            File icon1 = File.createTempFile("PSPTOOLS", "TEMPICON1.PMF");
 
             Files.write(icon1.toPath(), icon1Data, StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING);

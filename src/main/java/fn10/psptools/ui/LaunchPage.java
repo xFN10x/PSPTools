@@ -72,7 +72,9 @@ public class LaunchPage extends JFrame {
                         "PSP Selection Confirm", JOptionPane.YES_NO_OPTION);
 
                 if (option == JOptionPane.YES_OPTION) {
-                    PSP.setCurrentPSP(PSPSelectionUI.getNewPSP(this));
+                    PSP psp = PSPSelectionUI.getNewPSP(this);
+                    if (psp == null) return;
+                    PSP.setCurrentPSP(psp);
                     SaveEditor.doClick();
                 } else
                     return;

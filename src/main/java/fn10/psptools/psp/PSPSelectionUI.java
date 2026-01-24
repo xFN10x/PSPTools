@@ -23,6 +23,7 @@ import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SpringLayout;
 
+import fn10.psptools.psp.psps.RealPSP;
 import fn10.psptools.ui.LaunchPage;
 
 public class PSPSelectionUI extends JDialog {
@@ -277,7 +278,7 @@ public class PSPSelectionUI extends JDialog {
             switch (ui.SelectedMode) {
                 case SelectionMode.PSP_DIR:
 
-                    return new PSP(SelectionMode.PSP_DIR, ui.SelectedFolder.toPath());
+                    return new RealPSP(ui.SelectedFolder.toPath());
 
                 default:
                     return null;

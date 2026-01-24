@@ -1,10 +1,10 @@
 package fn10.psptools.psp;
 
 import java.io.File;
-import java.nio.file.Path;
 
-import org.apache.commons.io.FileUtils;
-
+/**
+ * An abstract path used to get files off of a PSP. This path doesn't need to exist, and its not absolute
+ */
 public class PSPPath {
 
     private final String path;
@@ -50,16 +50,7 @@ public class PSPPath {
     public String[] split() {
         return path.split(File.separator);
     }
-
-    /**
-     * Checks to see if this path exists on a PSP
-     * @param psp the PSP to check the path on
-     * @return {@code true} if the path is real, and {@code false} if it doesn't
-     */
-    public boolean physical(PSP psp) {
-        return psp.getFolder(split()).toFile().exists();
-    }
-
+    
     public String toString() {
         return path;
     }
