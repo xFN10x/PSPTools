@@ -1,7 +1,10 @@
 package fn10.psptools.ui.components;
 
 import java.io.File;
-import java.io.IOException;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,11 +13,16 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.SystemUtils;
+import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 
 import com.google.common.io.LittleEndianDataInputStream;
 
+import fn10.psptools.ui.LoadingScreen;
 import fn10.psptools.ui.interfaces.VideoPlayingListener;
 import fn10.psptools.util.SavedVariables;
 import ws.schild.jave.process.ffmpeg.FFMPEGProcess;
@@ -24,21 +32,129 @@ import java.awt.image.BufferedImage;
 public class MediaPlayer {
 
     private boolean playing = false;
-    private boolean loading = true;
+    private volatile boolean loading = true;
     private Thread videoThread;
     private final String id;
-    private static String defaultFFmpegPath = SavedVariables.DataFolder.resolve("ffmpeg.exe").toString();
-    private static String defaultFFplayPath = SavedVariables.DataFolder.resolve("ffplay.exe").toString();
+    private static String defaultFFmpegPath = SavedVariables.DataFolder.resolve("tools", "ffmpeg.exe").toString();
+    private static String defaultFFplayPath = SavedVariables.DataFolder.resolve("tools", "ffplay.exe").toString();
+    private static String defaultFFmpegPathLinux = SavedVariables.DataFolder.resolve("tools", "ffmpeg").toString();
+    private static String defaultFFplayPathLinux = SavedVariables.DataFolder.resolve("tools", "ffplay").toString();
     public static FFMPEGProcess currentFFmpeg = null;
 
-    public static boolean checkFFmpeg() {
-        if (!new File(defaultFFmpegPath).exists() || !new File(defaultFFplayPath).exists()) {
-            JOptionPane.showConfirmDialog(null,
-                    "FFmpeg is not installed. You cannot view the XMB icons, or hear their music. <br/><br/>Do you want to download it?",
-                    "FFmpeg not found", JOptionPane.YES_NO_OPTION);
-            return false;
-        } else
-            return true;
+    public static String getDefaultFFmpegPath() {
+        if (SystemUtils.IS_OS_WINDOWS) {
+            return defaultFFmpegPath;
+        } else {
+            return defaultFFmpegPathLinux;
+        }
+    }
+
+    public static String getDefaultFFplayPath() {
+        if (SystemUtils.IS_OS_WINDOWS) {
+            return defaultFFplayPath;
+        } else {
+            return defaultFFplayPathLinux;
+        }
+    }
+
+    public static void downloadFFmpeg() {
+        if (checkFFmpeg())
+            return;
+        int option = JOptionPane.showConfirmDialog(null,
+                "<html>FFmpeg is not installed. You cannot view the XMB icons, or hear their music. <br/><br/>Do you want to download it?</html>",
+                "FFmpeg not found", JOptionPane.YES_NO_OPTION);
+        if (option != JOptionPane.YES_OPTION)
+            return;
+        try {
+            LoadingScreen loading = new LoadingScreen(null);
+            SwingUtilities.invokeLater(() -> {
+                loading.setVisible(true);
+            });
+            new Thread(() -> {
+                loading.changeText("Opening connection...");
+                try {
+                    URL patchZip;
+
+                    File tempFile = File.createTempFile("PSPTOOLS", "TEMPFFMPEG");
+                    FileOutputStream output = new FileOutputStream(tempFile);
+                    if (SystemUtils.IS_OS_WINDOWS) {
+                        patchZip = new URI(
+                                "https://github.com/GyanD/codexffmpeg/releases/download/8.0.1/ffmpeg-8.0.1-essentials_build.zip")
+                                .toURL();
+                        InputStream stream = patchZip.openStream();
+                        int totalBytes = 108346640;// stream.available();
+                        loading.changeText("Downloading...");
+                        long count = 0;
+                        byte[] buffer = new byte[2000000];
+                        int n;
+                        while (-1 != (n = stream.read(buffer))) {
+                            output.write(buffer, 0, n);
+                            count += n;
+                            loading.setProgress((int) (((float) count / (float) totalBytes) * 100));
+                        }
+
+                        stream.close();
+
+                        ZipUnArchiver zip = new ZipUnArchiver(tempFile);
+                        zip.extract("ffmpeg-8.0.1-essentials_build/bin/ffmpeg.exe",
+                                new File(getDefaultFFmpegPath()).getParentFile());
+                        zip.extract("ffmpeg-8.0.1-essentials_build/bin/ffplay.exe",
+                                new File(getDefaultFFmpegPath()).getParentFile());
+                        try {
+                            FileUtils.moveFile(Path.of(new File(getDefaultFFmpegPath()).getParentFile().getPath(),
+                                    "ffmpeg-8.0.1-essentials_build", "bin",
+                                    "ffmpeg.exe").toFile(), new File(getDefaultFFmpegPath()));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        try {
+                            FileUtils.moveFile(Path.of(new File(getDefaultFFplayPath()).getParentFile().getPath(),
+                                    "ffmpeg-8.0.1-essentials_build", "bin",
+                                    "ffplay.exe").toFile(), new File(getDefaultFFplayPath()));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                        FileUtils.deleteDirectory(
+                                Path.of(new File(getDefaultFFmpegPath()).getParentFile().getPath(),
+                                        "ffmpeg-8.0.1-essentials_build").toFile());
+                    } else if (SystemUtils.IS_OS_LINUX) {
+                        if (SystemUtils.OS_ARCH.equals("arm64")) {
+                            patchZip = new URI(
+                                    "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n8.0-latest-linuxarm64-gpl-8.0.tar.xz")
+                                    .toURL();
+                        } else {
+                            patchZip = new URI(
+                                    "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n8.0-latest-linux64-gpl-8.0.tar.xz")
+                                    .toURL();
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(null,
+                                "This platform is unsupported.",
+                                "What the hell are you on??", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+
+                    System.gc();
+
+                    tempFile.delete();
+
+                    loading.setVisible(false);
+
+                    JOptionPane.showMessageDialog(null, "FFmpeg has been downloaded.");
+                    return;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+    }
+
+    protected static boolean checkFFmpeg() {
+        return new File(getDefaultFFmpegPath()).exists() && new File(getDefaultFFplayPath()).exists();
     }
 
     /**
@@ -50,6 +166,7 @@ public class MediaPlayer {
      * 
      * @param file the file path.
      */
+    @SuppressWarnings("null")
     public static void playAudio(String file) {
         if (!checkFFmpeg())
             return;
@@ -71,7 +188,7 @@ public class MediaPlayer {
             int loopStart = dis.readInt();
             int loopEnd = dis.readInt() - loopStart;
 
-            FFMPEGProcess ffplay = new FFMPEGProcess(defaultFFplayPath);
+            FFMPEGProcess ffplay = new FFMPEGProcess(getDefaultFFplayPath());
 
             ffplay.addArgument("\"" + file + "\"");
             ffplay.addArgument("-af");
@@ -115,22 +232,25 @@ public class MediaPlayer {
         this.id = gameID;
         if (!checkFFmpeg())
             return;
-        FFMPEGProcess ffmpeg = new FFMPEGProcess(defaultFFmpegPath);
+        FFMPEGProcess ffmpeg = new FFMPEGProcess(getDefaultFFmpegPath());
         Path frameFolderPath = SavedVariables.DataFolder.resolve("video", gameID);
         System.out.println(file.getAbsolutePath());
         if (!frameFolderPath.toFile().exists()) {
-            try {
-                FileUtils.createParentDirectories(frameFolderPath.toFile());
-                Files.createDirectory(frameFolderPath);
-                ffmpeg.addArgument("-i");
-                ffmpeg.addArgument(file.getAbsolutePath());
-                ffmpeg.addArgument("\"" + frameFolderPath.toString() + File.separator + "%03d.jpg\"");
-                ffmpeg.execute();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            new Thread(() -> {
+                try {
+                    FileUtils.createParentDirectories(frameFolderPath.toFile());
+                    Files.createDirectory(frameFolderPath);
+                    ffmpeg.addArgument("-i");
+                    ffmpeg.addArgument(file.getAbsolutePath());
+                    ffmpeg.addArgument("\"" + frameFolderPath.toString() + File.separator + "%03d.jpg\"");
+                    ffmpeg.execute();
+                    ffmpeg.getProcessExitCode();
+                    loading = false;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
         }
-        loading = false;
     }
 
     /**
@@ -141,8 +261,21 @@ public class MediaPlayer {
     public boolean start(VideoPlayingListener listener) {
         if (!checkFFmpeg())
             return false;
-        if (loading)
+        if (loading) {
+            new Thread(() -> {
+                while (loading) {
+                    System.out.println("loading...");
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                System.out.println("done");
+                start(listener);
+            }).start();
             return false;
+        }
         playing = true;
         videoThread = new Thread(() -> {
             try {
@@ -159,11 +292,12 @@ public class MediaPlayer {
                 while (playing) {
                     for (BufferedImage img : frames) {
                         try {
-                            Thread.sleep(1000/30);
+                            Thread.sleep(1000 / 30);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-                        if (!playing) break;
+                        if (!playing)
+                            break;
                         listener.frameStepped(img);
                     }
                 }
@@ -183,8 +317,8 @@ public class MediaPlayer {
     public void stop() {
         if (!checkFFmpeg())
             return;
-
-        videoThread.interrupt();
+        if (videoThread != null)
+            videoThread.interrupt();
         playing = false;
     }
 }
