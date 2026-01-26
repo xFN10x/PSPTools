@@ -17,7 +17,7 @@ tasks.test {
 dependencies {
     implementation("com.formdev:flatlaf:3.7")
 
-    implementation("com.google.code.gson:gson:2.13.1")
+    implementation("com.google.code.gson:gson:2.13.2")
 
     implementation("com.google.guava:guava:33.4.8-jre")
 
