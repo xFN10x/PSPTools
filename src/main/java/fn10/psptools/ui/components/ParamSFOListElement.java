@@ -156,10 +156,10 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
 
                 return new ParamSFOListElement(sfo,
                         null,
-                        icon.readAllBytes(),
-                        bg.readAllBytes(),
-                        icon1 != null ? icon1.readAllBytes() : null,
-                        snd != null ? snd.readAllBytes() : null,
+                        icon.readNBytes((int) icon.length()),
+                        bg.readNBytes((int) bg.length()),
+                        icon1 != null ? icon1.readNBytes((int) icon1.length()) : null,
+                        snd != null ? snd.readNBytes((int) snd.length()) : null,
                         selectedFunction);
             } else {
                 return ParamSFOListElement.makeEmpty(selectedFunction);
