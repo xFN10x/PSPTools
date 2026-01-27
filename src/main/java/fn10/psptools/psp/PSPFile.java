@@ -10,5 +10,6 @@ public interface PSPFile {
 
     public String getName();
     public String getExtension();
+    public boolean actuallyExists();
 
 }

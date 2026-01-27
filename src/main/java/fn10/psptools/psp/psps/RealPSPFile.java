@@ -56,7 +56,12 @@ public class RealPSPFile implements PSPFile {
 
     @Override
     public String getExtension() {
-        return getName().substring(getName().lastIndexOf("."));
+        return getName().substring(getName().lastIndexOf(".")+1);
+    }
+
+    @Override
+    public boolean actuallyExists() {
+        return file.exists();
     }
 
 }

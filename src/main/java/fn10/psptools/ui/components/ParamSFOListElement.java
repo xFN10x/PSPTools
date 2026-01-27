@@ -177,10 +177,11 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
     private final byte[] audioData;
 
     public File getTempAudioFile() throws IOException {
-        if (audioData == null) return null;
+        if (audioData == null)
+            return null;
         if (tempAudioFile == null) {
-            tempAudioFile = File.createTempFile("PSPTOOLS", "TEMPAUDIOFILE");
-            Files.write(tempAudioFile.toPath(), audioData, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+            tempAudioFile = File.createTempFile("PSPTOOLS", "TEMPAUDIOFILE.at3");
+            Files.write(tempAudioFile.toPath(), audioData, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
             return tempAudioFile;
         } else
             return tempAudioFile;
@@ -188,13 +189,15 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
 
     public ParamSFOListElement(ParamSFO ParamSFO, PSPDirectory dir, SFOListElementListener selectedFunction)
             throws MalformedURLException, IOException, URISyntaxException, NameNotFoundException {
+        PSPFile icon1 = dir.getFileStartingWith("icon1");
+        PSPFile snd0 = dir.getFileWithName("snd0.at3");
         this(ParamSFO, dir,
                 readFileWithNameFromPSPFileButIfItDoesntExistReturnTheseBytesInstead(dir, "icon0.png",
                         ParamSFOListElement.class.getResourceAsStream("/no_icon0.png").readAllBytes()),
                 readFileWithNameFromPSPFileButIfItDoesntExistReturnTheseBytesInstead(dir, "pic1.png",
                         ParamSFOListElement.class.getResourceAsStream("/no_icon0.png").readAllBytes()),
-                dir.getFileStartingWith("icon1").readAll(),
-                dir.getFileWithName("snd0.at3").readAll(),
+                icon1 == null ? null : icon1.readAll(),
+                snd0 == null ? null : snd0.readAll(),
                 selectedFunction);
         // if (ParamSFO != null)
         // System.out.println(ParamSFO.getParam(Params.Title));

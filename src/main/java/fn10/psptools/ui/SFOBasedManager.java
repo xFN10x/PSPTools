@@ -225,13 +225,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                     if (dir.isDirectory())
                         try { // try to get param.sfo
                             PSPDirectory actualDirectory = dir.getDirectory();
-                            Boolean valid = false;
-                            for (PSPFile file : actualDirectory.getFiles()) {
-                                if (file.getExtension().equals("PBP")
-                                        || file.getExtension().equals("SFO"))
-                                    valid = true;
-                            }
-                            if (!valid)
+                            if (actualDirectory.getFileWithName("PARAM.SFO") == null || !actualDirectory.getFileWithName("PARAM.SFO").actuallyExists())
                                 continue;
 
                             ParamSFO sfo = ParamSFO.ofPSPFile(actualDirectory.getFileWithName("PARAM.SFO"));

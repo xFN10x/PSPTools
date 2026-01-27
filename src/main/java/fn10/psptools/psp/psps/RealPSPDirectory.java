@@ -46,7 +46,7 @@ public class RealPSPDirectory implements PSPDirectory {
     @Override
     public PSPFile getFileWithName(String name) {
         for (PSPFile file : getFiles()) {
-            if (file.getName().equals(name))
+            if (file.getName().toLowerCase().equals(name.toLowerCase()))
                 return file;
         }
         return null;
@@ -55,7 +55,7 @@ public class RealPSPDirectory implements PSPDirectory {
     @Override
     public PSPFile getFileStartingWith(String prefix) {
         for (PSPFile file : getFiles()) {
-            if (file.getName().startsWith(prefix))
+            if (file.getName().toLowerCase().startsWith(prefix.toLowerCase()))
                 return file;
         }
         return null;
