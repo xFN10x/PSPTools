@@ -98,12 +98,12 @@ public class LaunchPage extends JFrame {
 
                 if (option == JOptionPane.YES_OPTION) {
                     PSP.setCurrentPSP(PSPSelectionUI.getNewPSP(this));
-                    SaveEditor.doClick();
+                    GameEditor.doClick();
                 } else
                     return;
             } else {
                 setVisible(false);
-                new SFOBasedManager(this, SFOBasedManager.GAMES_MODE, "Save Manager",
+                new SFOBasedManager(this, SFOBasedManager.GAMES_MODE, "Game Manager",
                         PSP.getCurrentPSP().getFolder("PSP", "GAME"),
                         PSP.getCurrentPSP().getFolder("PSP", "GAME150"),
                         PSP.getCurrentPSP().getFolder("ISO"),
