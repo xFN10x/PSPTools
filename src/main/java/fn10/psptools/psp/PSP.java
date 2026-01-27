@@ -4,24 +4,16 @@ import java.nio.file.Path;
 
 import javax.swing.JOptionPane;
 
+import fn10.psptools.psp.psps.RealPSP;
 import fn10.psptools.util.SavedVariables;
 
 public abstract class PSP {
 
-    public SelectionMode selectionMode;
+    protected static PSP CurrentPSP = new RealPSP(Path.of(""));
 
-    protected static PSP CurrentPSP;
-
-    public PSP(SelectionMode mode) {
-        this.selectionMode = mode;
-
-        if (mode != SelectionMode.PSP_DIR)
-            throw new IllegalAccessError("Wrong Method for this selection mode.");
+    protected PSP() {
     }
 
-    private PSP() {
-    }
-    
     public static PSP getCurrentPSP() {
         return CurrentPSP;
     }
@@ -30,11 +22,21 @@ public abstract class PSP {
         setCurrentPSP(psp, true);
     }
 
+    public static PSP getPSPFromLastSelectedInfo(LastSelectedPSPInfo info) {
+        switch (info.mode()) {
+            case SelectionMode.PSP_DIR:
+                return new RealPSP(Path.of(info.data()));
+
+            default:
+                return null;
+        }
+    }
+
     public static void setCurrentPSP(PSP psp, boolean showPopup) {
         if (showPopup)
             JOptionPane.showMessageDialog(null, "Selected new PSP.");
         var saved = SavedVariables.Load();
-        saved.LastSelectedPSP = psp;
+        saved.LastSelectedPSP = new LastSelectedPSPInfo(psp.getSelectionMode(), psp.getSelectionData());
         saved.Save();
         CurrentPSP = psp;
     }
@@ -42,5 +44,9 @@ public abstract class PSP {
     public abstract boolean pspActive();
 
     public abstract PSPDirectory getFolder(String child, String... others);
+
+    protected abstract SelectionMode getSelectionMode();
+
+    protected abstract String getSelectionData();
 
 }

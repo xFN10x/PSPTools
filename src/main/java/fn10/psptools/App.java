@@ -33,9 +33,14 @@ public class App {
 
         // #region read settings
         SavedVariables saved = SavedVariables.Load();
-        PSP LastPSP = saved.LastSelectedPSP;
+        PSP LastPSP = null;
+        try {
+            LastPSP = PSP.getPSPFromLastSelectedInfo(saved.LastSelectedPSP);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-        System.out.println(LastPSP);
+        System.out.println("Last PSP: " + LastPSP);
 
         if (LastPSP != null) {
             if (LastPSP.pspActive())

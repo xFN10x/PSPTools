@@ -20,12 +20,11 @@ import org.apache.commons.lang3.SystemUtils;
 import org.codehaus.plexus.archiver.tar.TarGZipUnArchiver;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 
-import com.formdev.flatlaf.util.SwingUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import fn10.psptools.gson.PathTypeAdapter;
-import fn10.psptools.psp.PSP;
+import fn10.psptools.psp.LastSelectedPSPInfo;
 import fn10.psptools.ui.LoadingScreen;
 
 public class SavedVariables {
@@ -44,7 +43,7 @@ public class SavedVariables {
     }
     public transient static final Path saveLocation = Path.of(DataFolder.toString(), "PSPToolsSettings.json");
 
-    public PSP LastSelectedPSP;
+    public LastSelectedPSPInfo LastSelectedPSP;
     public URL DatabaseUrl;
     public Date SinceLastPatchUpdate;
 

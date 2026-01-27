@@ -36,6 +36,7 @@ public class RealPSPDirectory implements PSPDirectory {
     @Override
     public PSPFileDirectory[] getAll() {
         ArrayList<RealPSPFileDirectory> building = new ArrayList<>();
+        if (!dir.exists()) return new RealPSPFileDirectory[0];
         for (File realFile : dir.listFiles()) {
             building.add(new RealPSPFileDirectory(realFile));
         }

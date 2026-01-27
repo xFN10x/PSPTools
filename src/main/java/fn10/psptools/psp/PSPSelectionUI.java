@@ -57,8 +57,7 @@ public class PSPSelectionUI extends JDialog {
     private final JSpinner ThirdIP = new JSpinner(new SpinnerNumberModel(0, 0, 255, 1));
     private final JSpinner FourthIP = new JSpinner(new SpinnerNumberModel(0, 0, 255, 1));
     // #endregion
-    private File SelectedFolder = null;
-    private SelectionMode SelectedMode = null;
+    private PSP SelectedPSP = null;
 
     private PSPSelectionUI(Frame parent) {
         super(parent, "Select PSP", ModalityType.APPLICATION_MODAL);
@@ -164,8 +163,7 @@ public class PSPSelectionUI extends JDialog {
             File PSPGameFolder = new File(Path.of(root, "PSP", "Game").toString());
 
             if (PSPFolder.exists() && ISOFolder.exists() && PSPGameFolder.exists()) {
-                SelectedFolder = new File(root);
-                SelectedMode = SelectionMode.PSP_DIR;
+                SelectedPSP = new RealPSP(Path.of(root));
                 setVisible(false);
                 dispose();
             } else {
@@ -212,8 +210,8 @@ public class PSPSelectionUI extends JDialog {
             File PSPGameFolder = root.resolve("PSP", "GAME").toFile();
 
             if (PSPFolder.exists() && ISOFolder.exists() && PSPGameFolder.exists()) {
-                SelectedFolder = root.toFile();
-                SelectedMode = SelectionMode.PSP_DIR;
+                SelectedPSP = new RealPSP(root);
+
                 setVisible(false);
                 dispose();
             } else {
@@ -274,18 +272,6 @@ public class PSPSelectionUI extends JDialog {
         PSPSelectionUI ui = new PSPSelectionUI(parent);
 
         ui.setVisible(true);
-        if (ui.SelectedMode != null)
-            switch (ui.SelectedMode) {
-                case SelectionMode.PSP_DIR:
-
-                    return new RealPSP(ui.SelectedFolder.toPath());
-
-                default:
-                    return null;
-
-            }
-        else
-            return null;
-
+        return ui.SelectedPSP;
     }
 }
