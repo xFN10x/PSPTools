@@ -41,6 +41,6 @@ public abstract class PSP {
 
     public abstract boolean pspActive();
 
-    public abstract PSPFile getFolder(String child, String... others);
+    public abstract PSPDirectory getFolder(String child, String... others);
 
 }

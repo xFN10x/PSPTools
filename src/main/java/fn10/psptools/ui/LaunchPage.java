@@ -13,6 +13,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import fn10.psptools.psp.PSP;
 import fn10.psptools.psp.PSPSelectionUI;
+import fn10.psptools.psp.psps.RealPSPDirectory;
 import fn10.psptools.psp.sfo.ParamSFO;
 
 import java.awt.Dimension;
@@ -130,9 +131,9 @@ public class LaunchPage extends JFrame {
             fileChooser.setFileFilter(new FileNameExtensionFilter("SFO Files", "sfo"));
             fileChooser.showOpenDialog(this);
             if (fileChooser.getSelectedFile() != null)
-                new SFOBasedManager(this, SFOBasedManager.SINGLE,
-                        fileChooser.getSelectedFile().getParentFile().getName(),
-                        fileChooser.getSelectedFile().getParentFile().getParentFile().toPath()).setVisible(true);
+                new SFOBasedManager(this, SFOBasedManager.SINGLE, "Single SFO",
+                        new RealPSPDirectory(fileChooser.getSelectedFile().getParentFile()),
+                        new RealPSPDirectory(fileChooser.getSelectedFile().getParentFile().getParentFile())).setVisible(true);
 
         });
 

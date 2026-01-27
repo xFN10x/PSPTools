@@ -4,6 +4,7 @@ import java.io.File;
 import java.nio.file.Path;
 
 import fn10.psptools.psp.PSP;
+import fn10.psptools.psp.PSPDirectory;
 import fn10.psptools.psp.PSPFile;
 import fn10.psptools.psp.SelectionMode;
 
@@ -38,8 +39,8 @@ public class RealPSP extends PSP {
     }
 
     @Override
-    public PSPFile getFolder(String child, String... others) {
-        return RealPSPFile.of(path.resolve(child, others).toFile());
+    public PSPDirectory getFolder(String child, String... others) {
+        return new RealPSPDirectory(path.resolve(child, others).toFile());
     }
 
 }

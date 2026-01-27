@@ -37,6 +37,9 @@ import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 import com.formdev.flatlaf.ui.FlatLineBorder;
 
 import fn10.psptools.psp.PSPDirectory;
+import fn10.psptools.psp.PSPFile;
+import fn10.psptools.psp.PSPFileDirectory;
+import fn10.psptools.psp.psps.RealPSPDirectory;
 import fn10.psptools.psp.sfo.ParamSFO;
 import fn10.psptools.psp.sfo.ParamSFO.Params;
 import fn10.psptools.ui.components.MediaPlayer;
@@ -162,7 +165,10 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
         OpenFolderButton.addActionListener(ac -> {
             if (selected.dir != null) {
                 try {
-                    Desktop.getDesktop().open(selected.dir);
+                    if (selected.dir instanceof RealPSPDirectory) {
+                        Desktop.getDesktop().open(((RealPSPDirectory) selected.dir).getDirOnDisc());
+                    } else
+                        OpenFolderButton.setEnabled(false);
                 } catch (Exception e) {
                     e.printStackTrace();
                     OpenFolderButton.setEnabled(false);
@@ -210,49 +216,52 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
         }
     }
 
-    public void FillOutWindow(Path... Target) {
+    public static void FillOutWindow(JPanel toAddTo, SFOListElementListener listener, PSPDirectory... Target) {
         Thread main = new Thread(() -> {
-            InnerSFOFolderViewer.removeAll();
+            toAddTo.removeAll();
             ParamSFOListElement first = null;
-            for (Path target : Target) { // get all target folders
-                if (target.toFile().isDirectory() && target.toFile().exists())
-                    for (File dir : target.toFile().listFiles()) { // get all folders (saves, games, etc)
-                        if (dir.isDirectory())
-                            try { // try to get param.sfo
-                                Boolean valid = false;
-                                for (File file : dir.listFiles()) {
-                                    if (file.getName().toUpperCase().endsWith("PBP")
-                                            || file.getName().toUpperCase().endsWith("SFO"))
-                                        valid = true;
-                                }
-                                if (!valid)
-                                    continue;
-
-                                ParamSFO sfo = ParamSFO.ofFile(Path.of(dir.toPath().toString(), "PARAM.SFO").toFile());
-                                ParamSFOListElement ToAdd = new ParamSFOListElement(sfo, dir, this);
-                                InnerSFOFolderViewer.add(Box.createRigidArea(new Dimension(0, 10)));
-                                InnerSFOFolderViewer.add(ToAdd);
-                                if (first == null)
-                                    first = ToAdd;
-
-                            } catch (Exception e) {
-                                e.printStackTrace();
+            for (PSPDirectory target : Target) { // get all target folders
+                for (PSPFileDirectory dir : target.getAll()) { // get all folders (saves, games, etc)
+                    if (dir.isDirectory())
+                        try { // try to get param.sfo
+                            PSPDirectory actualDirectory = dir.getDirectory();
+                            Boolean valid = false;
+                            for (PSPFile file : actualDirectory.getFiles()) {
+                                if (file.getExtension().equals("PBP")
+                                        || file.getExtension().equals("SFO"))
+                                    valid = true;
                             }
-                        else if (dir.getName().toLowerCase().endsWith("iso"))
+                            if (!valid)
+                                continue;
+
+                            ParamSFO sfo = ParamSFO.ofPSPFile(actualDirectory.getFileWithName("PARAM.SFO"));
+                            ParamSFOListElement ToAdd = new ParamSFOListElement(sfo, actualDirectory, listener);
+                            toAddTo.add(Box.createRigidArea(new Dimension(0, 10)));
+                            toAddTo.add(ToAdd);
+                            if (first == null)
+                                first = ToAdd;
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    else {
+                        PSPFile actualFile = dir.getFile();
+                        if (actualFile.getExtension().equals("iso"))
                             try { // try to get param.sfo
-                                ParamSFOListElement ToAdd = ParamSFOListElement.ofIso(dir, this);
+                                ParamSFOListElement ToAdd = ParamSFOListElement.ofIso(actualFile, listener);
                                 // System.out.println(ToAdd);
-                                InnerSFOFolderViewer.add(Box.createRigidArea(new Dimension(0, 10)));
-                                InnerSFOFolderViewer.add(ToAdd);
+                                toAddTo.add(Box.createRigidArea(new Dimension(0, 10)));
+                                toAddTo.add(ToAdd);
                                 if (first == null)
                                     first = ToAdd;
 
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
-                        revalidate();
-                        repaint();
                     }
+                    toAddTo.getParent().revalidate();
+                    toAddTo.getParent().repaint();
+                }
 
             }
 
@@ -260,6 +269,10 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
 
         });
         main.start();
+    }
+
+    public void FillOutWindow(PSPDirectory... Target) {
+        FillOutWindow(InnerSFOFolderViewer, this, Target);
     }
 
     @Override
@@ -364,8 +377,9 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
             else
                 OpenFolderButton.setEnabled(true);
 
-            if (selectedElement.audioDir != null)
-                MediaPlayer.playAudio(selectedElement.audioDir);
+            File tempAudioFile = selectedElement.getTempAudioFile();
+            if (tempAudioFile != null)
+                MediaPlayer.playAudio(tempAudioFile.getAbsolutePath());
 
             this.selected = selectedElement;
 
@@ -376,6 +390,9 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
 
     @Override
     public void backup() {
+        if (!(selected.dir instanceof RealPSPDirectory)) {
+            JOptionPane.showMessageDialog(this, "You cannot back this up.");
+        }
         Path backupPath = Path.of(SavedVariables.DataFolder.toString(), "PSPSaveBackups", selected.getBackupName());
         int option;
         if (!backupPath.toFile().exists())
@@ -404,7 +421,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                     loading.setVisible(true);
                 });
 
-                zip.addDirectory(selected.dir);
+                zip.addDirectory(((RealPSPDirectory) selected.dir).getDirOnDisc());
                 zip.createArchive();
 
                 SwingUtilities.invokeLater(() -> {
@@ -485,7 +502,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
             if (option == JOptionPane.YES_OPTION) {
                 backup();
 
-                FileUtils.deleteDirectory(selectedElement.dir);
+                selectedElement.dir.delete();
                 SwingUtilities.invokeLater(() -> {
                     try {
                         JOptionPane.showMessageDialog(this,

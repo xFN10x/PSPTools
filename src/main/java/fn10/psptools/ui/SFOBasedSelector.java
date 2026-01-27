@@ -3,10 +3,6 @@ package fn10.psptools.ui;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Frame;
-import java.io.File;
-import java.nio.file.Path;
-import java.util.List;
-import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -17,8 +13,7 @@ import javax.swing.JScrollPane;
 import javax.swing.SpringLayout;
 
 import fn10.psptools.psp.PSP;
-import fn10.psptools.psp.sfo.ParamSFO;
-import fn10.psptools.ui.components.MediaPlayer;
+import fn10.psptools.psp.PSPDirectory;
 import fn10.psptools.ui.components.ParamSFOListElement;
 import fn10.psptools.ui.interfaces.SFOListElementListener;
 import fn10.psptools.util.ImageUtilites;
@@ -44,14 +39,14 @@ public class SFOBasedSelector extends JDialog implements SFOListElementListener 
 
     public static ParamSFOListElement openSaveSelector(Frame parent) {
         SFOBasedSelector selector = new SFOBasedSelector(parent, SAVES_MODE, "Select Save...",
-                PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA").toFile());
+                PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA"));
 
         selector.setVisible(true);
 
         return selector.selected;
     }
 
-    private SFOBasedSelector(Frame parent, int mode, String title, File... targets) {
+    private SFOBasedSelector(Frame parent, int mode, String title, PSPDirectory... targets) {
         super(parent, title);
 
         InnerSFOFolderViewer.setLayout(new BoxLayout(InnerSFOFolderViewer, BoxLayout.Y_AXIS));
@@ -90,62 +85,9 @@ public class SFOBasedSelector extends JDialog implements SFOListElementListener 
 
         setModal(true);
 
-        FillOutWindow(targets);
+        SFOBasedManager.FillOutWindow(InnerSFOFolderViewer, this, targets);
     }
 
-    public void FillOutWindow(File... Target) {
-        Thread main = new Thread(() -> {
-            // InnerSFOFolderViewer.removeAll();
-            ParamSFOListElement first = null;
-            for (File target : List.of(Target)) { // get all target folders
-                if (target.isDirectory() && target.exists())
-                    for (File dir : target.listFiles()) { // get all folders (saves, games, etc)
-                        // System.out.println(dir.getAbsolutePath());
-                        if (dir.isDirectory())
-                            try { // try to get param.sfo
-                                Boolean valid = false;
-                                for (File file : dir.listFiles()) {
-                                    if (file.getName().endsWith("PBP") || file.getName().endsWith("SFO"))
-                                        valid = true;
-                                }
-                                if (!valid)
-                                    continue;
-
-                                ParamSFO sfo = ParamSFO.ofFile(Path.of(dir.toPath().toString(), "PARAM.SFO").toFile());
-                                ParamSFOListElement ToAdd = new ParamSFOListElement(sfo, dir, this);
-                                InnerSFOFolderViewer.add(Box.createRigidArea(new Dimension(0, 10)));
-                                InnerSFOFolderViewer.add(ToAdd);
-                                if (first == null)
-                                    first = ToAdd;
-
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        else if (dir.getName().endsWith("iso"))
-                            try { // try to get param.sfo
-                                ParamSFOListElement ToAdd = ParamSFOListElement.ofIso(dir, this);
-                                // System.out.println(ToAdd);
-                                InnerSFOFolderViewer.add(Box.createRigidArea(new Dimension(0, 10)));
-                                InnerSFOFolderViewer.add(ToAdd);
-                                if (first == null)
-                                    first = ToAdd;
-
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        revalidate();
-                        repaint();
-                    }
-                else {
-                    // System.out.println(target.getAbsolutePath());
-                }
-            }
-            // first.mouseClicked(null);
-            System.gc();
-
-        });
-        main.start();
-    }
 
     @Override
     public void selected(ParamSFOListElement selectedElement) {

@@ -504,7 +504,7 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                                     JLabel toAdd = new JLabel(currentFile);
 
                                     // make text darker if the save doesnt have that file
-                                    if (!Path.of(selected.dir.getAbsolutePath(), currentFile).toFile().exists())
+                                    if (!selected.dir.resolve(currentFile).actuallyExists())
                                         toAdd.setForeground(new Color(0.5f, 0.5f, 0.5f));
                                     else // if it does have the file, (it should only have one) set the current file
                                         currentPatchFile = currentFile;
@@ -521,9 +521,11 @@ public class SaveTools extends JFrame implements SFOListElementListener {
 
                                     // if the save doesnt have the file specified, it must be
                                     // for another save type from the game
-                                    if (!Path.of(selected.dir.getAbsolutePath(), currentFile).toFile().exists()) {
-                                        // check.setEnabled(false);
-                                    }
+                                    // if (!Path.of(selected.dir.getAbsolutePath(), currentFile).toFile().exists())
+                                    // {
+                                    // check.setEnabled(false);
+                                    // }
+                                    // commented the rest out cause the middle was already out
 
                                     if (patchName.contains("Required")) {
                                         check.setSelected(true);
@@ -862,9 +864,11 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                                 if (option2 == JOptionPane.YES_OPTION) {
                                     PSP.setCurrentPSP(PSPSelectionUI.getNewPSP(null));
 
-                                    zipUnArchiver.setDestDirectory(
-                                            PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA").toFile());
+                                    File tempFile = File.createTempFile("PSPTOOLS", "TEMPSAVE");
+                                    zipUnArchiver.setDestFile(tempFile);
                                     zipUnArchiver.extract();
+                                    PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA").addFile(tempFile);
+                                    tempFile.delete();
 
                                     loading.setVisible(false);
                                     System.gc();
@@ -877,9 +881,16 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                                 }
                             } else {
 
-                                zipUnArchiver
-                                        .setDestDirectory(PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA").toFile());
+                                /*
+                                 * zipUnArchiver
+                                 * .setDestDirectory(.toFile());
+                                 * zipUnArchiver.extract();
+                                 */
+                                File tempFile = File.createTempFile("PSPTOOLS", "TEMPSAVE");
+                                zipUnArchiver.setDestFile(tempFile);
                                 zipUnArchiver.extract();
+                                PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA").addFile(tempFile);
+                                tempFile.delete();
 
                                 loading.setVisible(false);
                                 System.gc();

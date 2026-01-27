@@ -18,6 +18,8 @@ import javax.naming.NameNotFoundException;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.gson.GsonBuilder;
 
+import fn10.psptools.psp.PSPFile;
+
 public class ParamSFO {
 
     public static transient final short UTF8_S = 4;
@@ -123,10 +125,18 @@ public class ParamSFO {
         return new GsonBuilder().setPrettyPrinting().create().toJson(this);
     }
 
+    /**
+     * @deprecated Use PSPFiles now
+     */
+    @Deprecated
     public static ParamSFO ofFile(File of) throws IOException {
         if (!of.exists())
             return null;
         return ParamSFO.ofStream(Files.newInputStream(of.toPath()));
+    }
+
+    public static ParamSFO ofPSPFile(PSPFile of) throws IOException {
+        return ofStream(of.openStream());
     }
 
     public static ParamSFO ofStream(InputStream stream) throws IOException {

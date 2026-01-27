@@ -7,10 +7,11 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
-import org.apache.commons.io.FileUtils;
-
 import com.formdev.flatlaf.ui.FlatLineBorder;
 
+import fn10.psptools.psp.PSPDirectory;
+import fn10.psptools.psp.PSPFile;
+import fn10.psptools.psp.psps.RealPSPFile;
 import fn10.psptools.psp.sfo.ParamSFO;
 import fn10.psptools.psp.sfo.ParamSFO.Params;
 import fn10.psptools.ui.interfaces.SFOListElementListener;
@@ -27,6 +28,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -49,12 +51,10 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
     private static final FlatLineBorder selectedBorder = new FlatLineBorder(new Insets(3, 3, 3, 3), Color.white, 4, 8);
 
     public final ParamSFO sfo;
-    // public final ProcessBuilder playAudioProcess;
     public String videoDir = null;
-    public String audioDir = null;
     private final ImageIcon icon0;
     private final ImageIcon pic1;
-    public final File dir;
+    public final PSPDirectory dir;
     private final SpringLayout Lay = new SpringLayout();
 
     private final JLabel SFOTitle = new JLabel();
@@ -69,6 +69,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
     private final SFOListElementListener selectedFunc;
 
     public boolean backuped = false;
+    public boolean hasAudio = false;
 
     public String getBackupName() {
         try {
@@ -106,7 +107,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
     }
 
     public void delete() throws IOException {
-        FileUtils.deleteDirectory(dir);
+        dir.delete();
     }
 
     public ImageIcon getIcon0() {
@@ -125,10 +126,11 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         return SFODesc.getText();
     }
 
-    public static ParamSFOListElement ofIso(File iso, SFOListElementListener selectedFunction) {
+    public static ParamSFOListElement ofIso(PSPFile iso, SFOListElementListener selectedFunction) {
         try {
 
-            UmdIsoReader reader = new UmdIsoReader(iso.getAbsolutePath());
+            UmdIsoReader reader = new UmdIsoReader(iso);
+
             UmdIsoFile param = reader.getFile("PSP_GAME/PARAM.SFO");
             UmdIsoFile icon = reader.getFile("PSP_GAME/ICON0.PNG");
             UmdIsoFile bg = reader.getFile("PSP_GAME/PIC1.PNG");
@@ -148,29 +150,14 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
             }
 
             ParamSFO sfo = ParamSFO.ofStream(param);
-            if (snd != null) {
-                File tempAudioFile = File.createTempFile("PSPTOOLS", "TEMPMUSIC.at3");
-                tempAudioFile.deleteOnExit();
 
-                Files.write(tempAudioFile.toPath(), snd.readNBytes((int) snd.length()), StandardOpenOption.CREATE,
-                        StandardOpenOption.TRUNCATE_EXISTING);
-
-                return new ParamSFOListElement(sfo,
-                        null,
-                        icon.readNBytes((int) icon.length()),
-                        bg.readNBytes((int) bg.length()),
-                        icon1 != null ? icon1.readNBytes((int) icon1.length()) : null,
-                        tempAudioFile.toPath(),
-                        selectedFunction);
-            } else {
-                return new ParamSFOListElement(sfo,
-                        null,
-                        icon.readNBytes((int) icon.length()),
-                        bg.readNBytes((int) bg.length()),
-                        icon1 != null ? icon1.readNBytes((int) icon1.length()) : null,
-                        null,
-                        selectedFunction);
-            }
+            return new ParamSFOListElement(sfo,
+                    null,
+                    icon.readNBytes((int) icon.length()),
+                    bg.readNBytes((int) bg.length()),
+                    icon1 != null ? icon1.readAllBytes() : null,
+                    snd != null ? snd.readAllBytes() : null,
+                    selectedFunction);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -178,35 +165,36 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         }
     }
 
-    public ParamSFOListElement(ParamSFO ParamSFO, File dir, SFOListElementListener selectedFunction)
+    public static byte[] readFileWithNameFromPSPFileButIfItDoesntExistReturnTheseBytesInstead(PSPDirectory dir,
+            String name, byte[] instead) {
+        PSPFile file = dir.getFileWithName(name);
+        if (file == null)
+            return instead;
+        return file.readAll();
+    }
+
+    private File tempAudioFile = null;
+    private final byte[] audioData;
+
+    public File getTempAudioFile() throws IOException {
+        if (audioData == null) return null;
+        if (tempAudioFile == null) {
+            tempAudioFile = File.createTempFile("PSPTOOLS", "TEMPAUDIOFILE");
+            Files.write(tempAudioFile.toPath(), audioData, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+            return tempAudioFile;
+        } else
+            return tempAudioFile;
+    }
+
+    public ParamSFOListElement(ParamSFO ParamSFO, PSPDirectory dir, SFOListElementListener selectedFunction)
             throws MalformedURLException, IOException, URISyntaxException, NameNotFoundException {
         this(ParamSFO, dir,
-                Files.readAllBytes(Path.of(dir.getAbsolutePath(), "Icon0.png").toFile().exists()
-                        ? Path.of(dir.getAbsolutePath(), "Icon0.png")
-                        : Path.of(ParamSFOListElement.class.getResource("/no_icon0.png").toURI())),
-                Files.readAllBytes(Path.of(dir.getAbsolutePath(), "Pic1.png").toFile().exists()
-                        ? Path.of(dir.getAbsolutePath(), "Pic1.png")
-                        : Path.of(ParamSFOListElement.class.getResource("/no_icon0.png").toURI())),
-                ParamSFO != null
-                        ? (ParamSFO.getParam(Params.Category).toString().trim().equals("UG")
-                                || ParamSFO.getParam(Params.Category).toString().trim().equals("MS") // if its a umd
-                                        // game then icon1
-                                        // is a
-                                        // pmf
-                                        ? (Path.of(dir.getAbsolutePath(), "Icon1.pmf").toFile().exists()
-                                                ? Files.readAllBytes(Path.of(dir.getAbsolutePath(), "ICON1.PMF"))
-                                                : null)
-                                        : (ParamSFO.getParam(Params.Category).toString().trim().equals("DG") // ps3 disc
-                                                                                                             // game
-                                                ? (Path.of(dir.getAbsolutePath(), "Icon1.pam").toFile().exists()
-                                                        ? Files.readAllBytes(
-                                                                Path.of(dir.getAbsolutePath(), "ICON1.pam"))
-                                                        : null)
-                                                : null))
-                        : null,
-                Path.of(dir.getAbsolutePath(), "SND0.AT3").toFile().exists()
-                        ? Path.of(dir.getAbsolutePath(), "SND0.AT3")
-                        : null,
+                readFileWithNameFromPSPFileButIfItDoesntExistReturnTheseBytesInstead(dir, "icon0.png",
+                        ParamSFOListElement.class.getResourceAsStream("/no_icon0.png").readAllBytes()),
+                readFileWithNameFromPSPFileButIfItDoesntExistReturnTheseBytesInstead(dir, "pic1.png",
+                        ParamSFOListElement.class.getResourceAsStream("/no_icon0.png").readAllBytes()),
+                dir.getFileStartingWith("icon1").readAll(),
+                dir.getFileWithName("snd0.at3").readAll(),
                 selectedFunction);
         // if (ParamSFO != null)
         // System.out.println(ParamSFO.getParam(Params.Title));
@@ -221,8 +209,8 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         SFODesc.setText(Desc);
     }
 
-    public ParamSFOListElement(ParamSFO ParamSFO, File dir, byte[] icon0Data, byte[] pic1Data, byte[] icon1Data,
-            Path snd0Dir,
+    public ParamSFOListElement(ParamSFO ParamSFO, PSPDirectory dir, byte[] icon0Data, byte[] pic1Data, byte[] icon1Data,
+            byte[] snd0Data,
             SFOListElementListener selectedFunction)
             throws NameNotFoundException, IOException {
         super();
@@ -230,8 +218,10 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         this.sfo = ParamSFO;
         this.selectedFunc = selectedFunction;
         this.dir = dir;
-        if (snd0Dir != null)
-            this.audioDir = snd0Dir.toString();
+        this.audioData = snd0Data;
+
+        if (snd0Data != null)
+            this.hasAudio = true;
 
         Path backupPath = Path.of(SavedVariables.DataFolder.toString(), "PSPSaveBackups", getBackupName());
 
@@ -388,7 +378,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         if (icon1Data != null) {
             add(HasVideo);
         }
-        if (snd0Dir != null) {
+        if (snd0Data != null) {
             add(HasAudio);
         }
 
