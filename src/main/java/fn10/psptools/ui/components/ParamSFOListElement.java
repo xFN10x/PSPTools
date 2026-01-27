@@ -128,37 +128,42 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
 
     public static ParamSFOListElement ofIso(PSPFile iso, SFOListElementListener selectedFunction) {
         try {
+            if (iso instanceof RealPSPFile) {
+                UmdIsoReader reader = new UmdIsoReader(((RealPSPFile) iso).getFileOnDisk().getAbsolutePath());
+                System.out.println(
+                        "Making SFOListElement out of file: " + ((RealPSPFile) iso).getFileOnDisk().getAbsolutePath());
+                UmdIsoFile param = reader.getFile("PSP_GAME/PARAM.SFO");
+                UmdIsoFile icon = reader.getFile("PSP_GAME/ICON0.PNG");
+                UmdIsoFile bg = reader.getFile("PSP_GAME/PIC1.PNG");
+                UmdIsoFile icon1;
+                UmdIsoFile snd;
+                try {
+                    snd = reader.getFile("PSP_GAME/SND0.AT3");
 
-            UmdIsoReader reader = new UmdIsoReader(iso);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    snd = null;
+                }
+                try {
+                    icon1 = reader.getFile("PSP_GAME/ICON1.PMF");
 
-            UmdIsoFile param = reader.getFile("PSP_GAME/PARAM.SFO");
-            UmdIsoFile icon = reader.getFile("PSP_GAME/ICON0.PNG");
-            UmdIsoFile bg = reader.getFile("PSP_GAME/PIC1.PNG");
-            UmdIsoFile icon1;
-            UmdIsoFile snd;
-            try {
-                snd = reader.getFile("PSP_GAME/SND0.AT3");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    icon1 = null;
+                }
 
-            } catch (Exception e) {
-                snd = null;
+                ParamSFO sfo = ParamSFO.ofStream(param);
+
+                return new ParamSFOListElement(sfo,
+                        null,
+                        icon.readAllBytes(),
+                        bg.readAllBytes(),
+                        icon1 != null ? icon1.readAllBytes() : null,
+                        snd != null ? snd.readAllBytes() : null,
+                        selectedFunction);
+            } else {
+                return ParamSFOListElement.makeEmpty(selectedFunction);
             }
-            try {
-                icon1 = reader.getFile("PSP_GAME/ICON1.PMF");
-
-            } catch (Exception e) {
-                icon1 = null;
-            }
-
-            ParamSFO sfo = ParamSFO.ofStream(param);
-
-            return new ParamSFOListElement(sfo,
-                    null,
-                    icon.readNBytes((int) icon.length()),
-                    bg.readNBytes((int) bg.length()),
-                    icon1 != null ? icon1.readAllBytes() : null,
-                    snd != null ? snd.readAllBytes() : null,
-                    selectedFunction);
-
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -181,7 +186,8 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
             return null;
         if (tempAudioFile == null) {
             tempAudioFile = File.createTempFile("PSPTOOLS", "TEMPAUDIOFILE.at3");
-            Files.write(tempAudioFile.toPath(), audioData, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
+            Files.write(tempAudioFile.toPath(), audioData, StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
             return tempAudioFile;
         } else
             return tempAudioFile;

@@ -16,17 +16,14 @@ along with Jpcsp.  If not, see <http://www.gnu.org/licenses/>.
  */
 package jpcsp.filesystems.umdiso;
 
-import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.util.Date;
 import java.util.HashMap;
 
-import fn10.psptools.psp.PSPFile;
 import jpcsp.filesystems.umdiso.iso9660.Iso9660Directory;
 import jpcsp.filesystems.umdiso.iso9660.Iso9660File;
 import jpcsp.filesystems.umdiso.iso9660.Iso9660Handler;
@@ -38,7 +35,7 @@ import jpcsp.util.Utilities;
  */
 public class UmdIsoReader {
 
-	ByteArrayInputStream fileReader;
+	RandomAccessFile fileReader;
 	private HashMap<String, Iso9660File> fileCache = new HashMap<String, Iso9660File>();
 	private HashMap<String, Iso9660Directory> dirCache = new HashMap<String, Iso9660Directory>();
 
@@ -67,12 +64,10 @@ public class UmdIsoReader {
 				| (Ubyte(bytes[offset + 2]) << 16) | (bytes[offset + 3] << 24);
 	}
 
-	// Edited 2026/01/26 xFN10x to read PSPFiles
-	public UmdIsoReader(PSPFile file) throws IOException,
+	public UmdIsoReader(String umdFilename) throws IOException,
 			FileNotFoundException {
-		fileName = file.getName();
-		fileReader = new ByteArrayInputStream(file.openStream().readAllBytes());
-		fileReader.markSupported();
+		fileName = umdFilename;
+		fileReader = new RandomAccessFile(umdFilename, "r");
 
 		/*
 		 * u32 'CISO' u32 0? u32 image size in bytes (why? it could have been
@@ -82,10 +77,11 @@ public class UmdIsoReader {
 		 */
 
 		format = FileFormat.Uncompressed;
-		numSectors = (int) (fileReader.available() / 2048);
+		numSectors = (int) (fileReader.length() / 2048);
 
 		byte[] id = new byte[24];
 
+		fileReader.seek(0);
 		fileReader.read(id);
 
 		if ((((char) id[0]) == 'C') && (((char) id[1]) == 'I')
@@ -104,7 +100,7 @@ public class UmdIsoReader {
 
 			byte[] offsetData = new byte[(numSectors + 1) * 4];
 
-			fileReader.read(offsetData);
+			fileReader.readFully(offsetData);
 
 			for (int i = 0; i <= numSectors; i++) {
 				sectorOffsets[i] = (BytesToInt(offsetData, i * 4)) & 0xFFFFFFFFl;
@@ -139,7 +135,7 @@ public class UmdIsoReader {
 				&& (((char) id[3]) == '0') && (((char) id[4]) == '0')
 				&& (((char) id[5]) == '1')) {
 			if (format == FileFormat.Uncompressed) {
-				numSectors = (int) (fileReader.available() / 2048);
+				numSectors = (int) (fileReader.length() / 2048);
 			}
 
 			return;
@@ -173,8 +169,7 @@ public class UmdIsoReader {
 
 		if (format == FileFormat.Uncompressed) {
 			// Read an uncompressed ISO file in one call
-			fileReader.reset();
-			fileReader.skip(2048L * sectorNumber);
+			fileReader.seek(2048L * sectorNumber);
 			fileReader.read(buffer, offset, numberSectors * 2048);
 		} else {
 			// Read sector per sector for the other formats
@@ -204,8 +199,7 @@ public class UmdIsoReader {
 					+ sectorNumber + " out of bounds.");
 
 		if (format == FileFormat.Uncompressed) {
-			fileReader.reset();
-			fileReader.skip(2048L * sectorNumber);
+			fileReader.seek(2048L * sectorNumber);
 			fileReader.read(buffer, offset, 2048);
 			return;
 		}
@@ -217,8 +211,7 @@ public class UmdIsoReader {
 			if ((sectorOffset & 0x80000000) != 0) {
 				long realOffset = (sectorOffset & 0x7fffffff) << offsetShift;
 
-				fileReader.reset();
-				fileReader.skip(realOffset);
+				fileReader.seek(realOffset);
 				fileReader.read(buffer, offset, 2048);
 				return;
 			}
@@ -236,12 +229,11 @@ public class UmdIsoReader {
 
 			byte[] compressedData = new byte[compressedLength];
 
-			fileReader.reset();
-			fileReader.skip(sectorOffset);
+			fileReader.seek(sectorOffset);
 			fileReader.read(compressedData);
 
-			try (java.util.zip.Inflater inflater = new java.util.zip.Inflater()) {
-
+			try {
+				java.util.zip.Inflater inflater = new java.util.zip.Inflater();
 				inflater.setInput(compressedData);
 
 				int written = 0;

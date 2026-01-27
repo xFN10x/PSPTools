@@ -240,7 +240,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                         }
                     else {
                         PSPFile actualFile = dir.getFile();
-                        if (actualFile.getExtension().equals("iso"))
+                        if (actualFile.getExtension().equalsIgnoreCase("iso"))
                             try { // try to get param.sfo
                                 ParamSFOListElement ToAdd = ParamSFOListElement.ofIso(actualFile, listener);
                                 // System.out.println(ToAdd);
