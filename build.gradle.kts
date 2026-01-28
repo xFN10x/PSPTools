@@ -25,7 +25,7 @@ dependencies {
 
     implementation("org.apache.commons:commons-lang3:3.18.0")
 
-    implementation("org.codehaus.plexus:plexus-archiver:4.10.0")
+    implementation("org.codehaus.plexus:plexus-archiver:4.11.0")
 
     //1.1.0
 
