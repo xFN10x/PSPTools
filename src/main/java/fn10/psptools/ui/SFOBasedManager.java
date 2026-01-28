@@ -39,7 +39,7 @@ import com.formdev.flatlaf.ui.FlatLineBorder;
 import fn10.psptools.psp.PSPDirectory;
 import fn10.psptools.psp.PSPFile;
 import fn10.psptools.psp.PSPFileDirectory;
-import fn10.psptools.psp.psps.RealPSPDirectory;
+import fn10.psptools.psp.psps.real.RealPSPDirectory;
 import fn10.psptools.psp.sfo.ParamSFO;
 import fn10.psptools.psp.sfo.ParamSFO.Params;
 import fn10.psptools.ui.components.MediaPlayer;
@@ -240,6 +240,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                         }
                     else {
                         PSPFile actualFile = dir.getFile();
+                        if (actualFile == null) return;
                         if (actualFile.getExtension().equalsIgnoreCase("iso"))
                             try { // try to get param.sfo
                                 ParamSFOListElement ToAdd = ParamSFOListElement.ofIso(actualFile, listener);

@@ -1,4 +1,4 @@
-package fn10.psptools.psp;
+package fn10.psptools.ui;
 
 import java.awt.Dimension;
 import java.awt.Frame;
@@ -6,6 +6,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -15,6 +16,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
@@ -23,8 +25,11 @@ import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SpringLayout;
 
-import fn10.psptools.psp.psps.RealPSP;
-import fn10.psptools.ui.LaunchPage;
+import org.apache.commons.net.ftp.FTPClient;
+
+import fn10.psptools.psp.PSP;
+import fn10.psptools.psp.psps.ftp.FTPPSP;
+import fn10.psptools.psp.psps.real.RealPSP;
 
 public class PSPSelectionUI extends JDialog {
 
@@ -52,10 +57,11 @@ public class PSPSelectionUI extends JDialog {
     // #region ftp selection part
     private final SpringLayout FtpSLay = new SpringLayout();
     private final JPanel FTPS = new JPanel(FtpSLay);
-    private final JSpinner FirstIP = new JSpinner(new SpinnerNumberModel(192, 0, 255, 1));
-    private final JSpinner SecondIP = new JSpinner(new SpinnerNumberModel(168, 0, 255, 1));
-    private final JSpinner ThirdIP = new JSpinner(new SpinnerNumberModel(0, 0, 255, 1));
-    private final JSpinner FourthIP = new JSpinner(new SpinnerNumberModel(0, 0, 255, 1));
+    private final JTextField HostName = new JTextField("192.168.0.1");
+    private final JSpinner Port = new JSpinner(new SpinnerNumberModel(0, 0, 65535, 1));
+    private final JTextField Username = new JTextField("PSPTools");
+    private final JTextField Password = new JTextField("");
+    private final JButton FtpSelectButton = new JButton("Connect...");
     // #endregion
     private PSP SelectedPSP = null;
 
@@ -227,22 +233,54 @@ public class PSPSelectionUI extends JDialog {
         // #endregion
         // #region FTP Selection Stuff
 
-        Dimension numbersSize = new Dimension(61, 30);
+        final JLabel portLabel = new JLabel("Port:");
+        final JLabel un = new JLabel("Username");
+        final JLabel pw = new JLabel("Password");
 
-        FirstIP.setPreferredSize(numbersSize);
-        SecondIP.setPreferredSize(numbersSize);
-        ThirdIP.setPreferredSize(numbersSize);
-        FourthIP.setPreferredSize(numbersSize);
+        FtpSLay.putConstraint(SpringLayout.WEST, HostName, 3, SpringLayout.WEST, FTPS);
+        FtpSLay.putConstraint(SpringLayout.NORTH, HostName, 3, SpringLayout.NORTH, FTPS);
 
-        FtpSLay.putConstraint(SpringLayout.WEST, FirstIP, 2, SpringLayout.WEST, FTPS);
-        FtpSLay.putConstraint(SpringLayout.WEST, SecondIP, 1, SpringLayout.EAST, FirstIP);
-        FtpSLay.putConstraint(SpringLayout.WEST, ThirdIP, 1, SpringLayout.EAST, SecondIP);
-        FtpSLay.putConstraint(SpringLayout.WEST, FourthIP, 1, SpringLayout.EAST, ThirdIP);
+        FtpSLay.putConstraint(SpringLayout.WEST, portLabel, 1, SpringLayout.EAST, HostName);
 
-        FTPS.add(FirstIP);
-        FTPS.add(SecondIP);
-        FTPS.add(ThirdIP);
-        FTPS.add(FourthIP);
+        FtpSLay.putConstraint(SpringLayout.WEST, Port, 3, SpringLayout.EAST, portLabel);
+        FtpSLay.putConstraint(SpringLayout.EAST, Port, 1, SpringLayout.EAST, FTPS);
+        FtpSLay.putConstraint(SpringLayout.NORTH, Port, 0, SpringLayout.NORTH, HostName);
+        FtpSLay.putConstraint(SpringLayout.SOUTH, Port, 0, SpringLayout.SOUTH, HostName);
+
+        FtpSLay.putConstraint(SpringLayout.VERTICAL_CENTER, portLabel, 0, SpringLayout.VERTICAL_CENTER, HostName);
+
+        FtpSLay.putConstraint(SpringLayout.WEST, FtpSelectButton, 3, SpringLayout.WEST, FTPS);
+        FtpSLay.putConstraint(SpringLayout.EAST, FtpSelectButton, -3, SpringLayout.EAST, FTPS);
+        FtpSLay.putConstraint(SpringLayout.SOUTH, FtpSelectButton, -3, SpringLayout.SOUTH, FTPS);
+
+        FtpSLay.putConstraint(SpringLayout.NORTH, Username, 3, SpringLayout.SOUTH, HostName);
+        FtpSLay.putConstraint(SpringLayout.WEST, Username, -3, SpringLayout.WEST, FTPS);
+
+        FtpSLay.putConstraint(SpringLayout.NORTH, Password,-3, SpringLayout.SOUTH, Username);
+        FtpSLay.putConstraint(SpringLayout.WEST, Password, -3, SpringLayout.WEST, FTPS);
+
+        FTPS.add(HostName);
+        FTPS.add(pw);
+        FTPS.add(un);
+        FTPS.add(Username);
+        FTPS.add(Password);
+        FTPS.add(Port);
+        FTPS.add(portLabel);
+
+        FTPS.add(FtpSelectButton);
+
+        FtpSelectButton.addActionListener(ac -> {
+            String host = HostName.getText();
+            FTPClient client = new FTPClient();
+            client.setConnectTimeout(10000);
+            FTPPSP ftppsp = new FTPPSP(client, host, ((int) Port.getValue()), Username.getText(), Password.getText());
+            if (ftppsp.pspActive()) {
+                SelectedPSP = ftppsp;
+                setVisible(false);
+                dispose();
+            }
+        });
+
         // #endregion
 
         add(Tabbed);

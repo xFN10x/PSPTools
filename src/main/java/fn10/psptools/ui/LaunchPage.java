@@ -12,8 +12,7 @@ import javax.swing.SpringLayout;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import fn10.psptools.psp.PSP;
-import fn10.psptools.psp.PSPSelectionUI;
-import fn10.psptools.psp.psps.RealPSPDirectory;
+import fn10.psptools.psp.psps.real.RealPSPDirectory;
 import fn10.psptools.psp.sfo.ParamSFO;
 
 import java.awt.Dimension;
@@ -37,6 +36,7 @@ public class LaunchPage extends JFrame {
     public final JButton GameEditor = new JButton("Game Manager");
     public final JButton GameTools = new JButton("Game Tools");
     public final JButton AutoPSX = new JButton("AutoPSX");
+    public final JButton FileManager = new JButton("File Manager");
 
     public final SpringLayout Lay = new SpringLayout();
 
@@ -55,6 +55,7 @@ public class LaunchPage extends JFrame {
         super("PSPTools");
         setLayout(Lay);
 
+        FileManager.setEnabled(false);
         AutoPSX.setEnabled(false);
         GameTools.setEnabled(false);
 
@@ -116,8 +117,9 @@ public class LaunchPage extends JFrame {
         ButtonsPane.add(SaveEditor);
         ButtonsPane.add(SaveTools);
         ButtonsPane.add(GameEditor);
-        ButtonsPane.add(GameTools);
+        ButtonsPane.add(FileManager);
         ButtonsPane.add(AutoPSX);
+        ButtonsPane.add(GameTools);
 
         FileMenu.add("Selected PSP").addActionListener(ac -> {
             PSP selected = PSPSelectionUI.getNewPSP(this);

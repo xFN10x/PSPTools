@@ -4,7 +4,13 @@ import java.nio.file.Path;
 
 import javax.swing.JOptionPane;
 
-import fn10.psptools.psp.psps.RealPSP;
+import org.apache.commons.net.ftp.FTPClient;
+
+import com.google.gson.Gson;
+
+import fn10.psptools.psp.psps.ftp.FTPPSP;
+import fn10.psptools.psp.psps.ftp.FTPSelectionData;
+import fn10.psptools.psp.psps.real.RealPSP;
 import fn10.psptools.util.SavedVariables;
 
 public abstract class PSP {
@@ -27,6 +33,10 @@ public abstract class PSP {
             case SelectionMode.PSP_DIR:
                 return new RealPSP(Path.of(info.data()));
 
+                case SelectionMode.FTP:
+                    String dataString = info.data();
+                    FTPSelectionData data = new Gson().fromJson(dataString, FTPSelectionData.class);;
+                    return new FTPPSP(new FTPClient(), data.host(), data.port(), data.username(), data.password());
             default:
                 return null;
         }

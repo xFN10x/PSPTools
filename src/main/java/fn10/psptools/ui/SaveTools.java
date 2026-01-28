@@ -52,7 +52,6 @@ import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 
 import com.formdev.flatlaf.util.SystemFileChooser;
 import fn10.psptools.psp.PSP;
-import fn10.psptools.psp.PSPSelectionUI;
 import fn10.psptools.psp.sfo.ParamSFO;
 import fn10.psptools.psp.sfo.ParamSFO.Params;
 import fn10.psptools.ui.components.ParamSFOListElement;

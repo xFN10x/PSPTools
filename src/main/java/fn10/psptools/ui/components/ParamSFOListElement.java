@@ -11,7 +11,7 @@ import com.formdev.flatlaf.ui.FlatLineBorder;
 
 import fn10.psptools.psp.PSPDirectory;
 import fn10.psptools.psp.PSPFile;
-import fn10.psptools.psp.psps.RealPSPFile;
+import fn10.psptools.psp.psps.real.RealPSPFile;
 import fn10.psptools.psp.sfo.ParamSFO;
 import fn10.psptools.psp.sfo.ParamSFO.Params;
 import fn10.psptools.ui.interfaces.SFOListElementListener;
@@ -141,14 +141,12 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                     snd = reader.getFile("PSP_GAME/SND0.AT3");
 
                 } catch (Exception e) {
-                    e.printStackTrace();
                     snd = null;
                 }
                 try {
                     icon1 = reader.getFile("PSP_GAME/ICON1.PMF");
 
                 } catch (Exception e) {
-                    e.printStackTrace();
                     icon1 = null;
                 }
 
