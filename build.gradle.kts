@@ -1,7 +1,7 @@
 plugins {
     application
     id("org.panteleyev.jpackageplugin") version "1.7.3"
-    id("com.gradleup.shadow") version "8.3.9"
+    id("com.gradleup.shadow") version "9.3.1"
 }
 
 
