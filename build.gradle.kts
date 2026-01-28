@@ -21,7 +21,7 @@ dependencies {
 
     implementation("com.google.guava:guava:33.4.8-jre")
 
-    implementation("commons-io:commons-io:2.20.0")
+    implementation("commons-io:commons-io:2.21.0")
 
     implementation("org.apache.commons:commons-lang3:3.18.0")
 
