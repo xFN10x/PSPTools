@@ -27,6 +27,7 @@ public class ByteArrayPSPFile implements PSPFile {
 
     @Override
     public InputStream openStream() {
+        System.out.println("OPENING STREAM: " + data);
         return new ByteArrayInputStream(data);
     }
 

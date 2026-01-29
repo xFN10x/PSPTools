@@ -10,9 +10,6 @@ import java.util.ArrayList;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPFileFilter;
-import org.apache.commons.net.ftp.FTPFileFilters;
-import org.apache.commons.net.ftp.parser.MLSxEntryParser;
-
 import fn10.psptools.psp.PSPDirectory;
 import fn10.psptools.psp.PSPFile;
 import fn10.psptools.psp.PSPFileDirectory;
@@ -25,18 +22,17 @@ public class FTPPSPDirectory implements PSPDirectory {
 
     public FTPPSPDirectory(FTPClient client, String path) throws IOException {
         this.client = client;
-        this.path = path;
+        this.path = fixPath(path);
     }
 
     @Override
     public PSPFile[] getFiles() {
         try {
-            client.changeWorkingDirectory("/");
-            System.out.println("Retriving all files from: " + client.printWorkingDirectory());
+            System.out.println("Retriving all files from: " + path);
             ArrayList<PSPFile> building = new ArrayList<>();
-            for (String file : client.listNames(path)) {
+            for (FTPFile ftpfile : client.listFiles(path)) {
+                String file = path + "/" + ftpfile.getName();
                 System.out.println(file);
-                FTPFile ftpfile = client.mlistFile(file);
                 if (ftpfile.isDirectory()) {
                     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                     client.retrieveFile(file, byteArrayOutputStream);
@@ -53,18 +49,18 @@ public class FTPPSPDirectory implements PSPDirectory {
     @Override
     public PSPFileDirectory[] getAll() {
         try {
-            client.changeWorkingDirectory("/");
+            client.changeWorkingDirectory(path);
+            String Path = client.printWorkingDirectory();
             System.out
-                    .println("Retriving all files & directories from: " + (path.startsWith("./") ? path : "./" + path));
+                    .println("Retriving all files & directories from: " + Path);
             ArrayList<PSPFileDirectory> building = new ArrayList<>();
-            String[] listNames = client.listNames(path.startsWith("./") ? path : "./" + path);
-            if (listNames == null)
-                return new FTPPSPFileDirectory[0];
-            for (String file : listNames) {
-                System.out.println(file);
-                building.add(new FTPPSPFileDirectory(client, file));
+            FTPFile[] files = client.listFiles();
+            for (FTPFile file : files) {
+                System.out.println("Got file/dir : " + file.getName());
+                building.add(new FTPPSPFileDirectory(client, Path + "/" + file.getName()));
             }
-            return building.toArray(building.toArray(new FTPPSPFileDirectory[0]));
+
+            return building.toArray(new FTPPSPFileDirectory[0]);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -74,10 +70,11 @@ public class FTPPSPDirectory implements PSPDirectory {
     @Override
     public PSPFile getFileWithName(String name) {
         try {
-            client.changeWorkingDirectory("./");
-            System.out.println("Getting file with name: " + name + ", in path: " + client.printWorkingDirectory());
-            System.out.println("So, Retriving all files from: " + client.printWorkingDirectory() + " with filter.");
-            FTPFile[] listFiles = client.listFiles(path, new FTPFileFilter() {
+            client.changeWorkingDirectory(path);
+            String printWorkingDirectory = client.printWorkingDirectory();
+            System.out.println("Getting file with name: " + name + ", in path: " + printWorkingDirectory);
+            //System.out.println("So, Retriving all files from: " + printWorkingDirectory + " with filter.");
+            FTPFile[] listFiles = client.listFiles(null, new FTPFileFilter() {
 
                 @Override
                 public boolean accept(FTPFile file) {
@@ -85,22 +82,12 @@ public class FTPPSPDirectory implements PSPDirectory {
                 }
 
             });
-            /*
-             * for (FTPFile ftpfile : ) {
-             * if (ftpfile == null)
-             * continue;
-             * System.out.println("Path? " + path + "/" + ftpfile.getName());
-             * if (!ftpfile.isDirectory() && ftpfile.getName().equalsIgnoreCase(name)) {
-             * ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-             * client.retrieveFile(path + "/" + ftpfile.getName(), byteArrayOutputStream);
-             * return new ByteArrayPSPFile(ftpfile.getName(),
-             * byteArrayOutputStream.toByteArray());
-             * }
-             * }
-             */
+
+            if (listFiles.length <= 0)
+                return null;
             FTPFile ftpfile = listFiles[0];
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            client.retrieveFile(path + "/" + ftpfile.getName(), byteArrayOutputStream);
+            client.retrieveFile(ftpfile.getName(), byteArrayOutputStream);
             return new ByteArrayPSPFile(ftpfile.getName(), byteArrayOutputStream.toByteArray());
         } catch (Exception e) {
             e.printStackTrace();
@@ -153,7 +140,11 @@ public class FTPPSPDirectory implements PSPDirectory {
         }
     }
 
-    public String resolvePath(String i, String j, String... k) {
+    public static String fixPath(String path) {
+        return path.replaceAll("\\.\\/", "/").replaceAll("//", "/");
+    }
+
+    public static String resolvePath(String i, String j, String... k) {
         StringBuilder sb = new StringBuilder(i);
         if (!i.startsWith("./")) {
             if (!i.startsWith("/"))
@@ -186,12 +177,13 @@ public class FTPPSPDirectory implements PSPDirectory {
             if (sb.toString().endsWith("/") && k2.startsWith("/"))
                 sb.append(k2.substring(1));
         }
-        return sb.toString();
+        return sb.toString().replaceAll("\\.\\/", "/");
     }
 
     @Override
     public PSPFileDirectory resolve(String first, String... children) {
         System.out.println("Resolving from: " + path + ", to " + first + "/" + String.join("/", children));
+        System.out.println("Resolved: " + resolvePath(path, first, children));
         return new FTPPSPFileDirectory(client, resolvePath(path, first, children));
     }
 

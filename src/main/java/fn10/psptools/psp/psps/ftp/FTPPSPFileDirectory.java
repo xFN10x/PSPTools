@@ -3,8 +3,6 @@ package fn10.psptools.psp.psps.ftp;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import org.apache.commons.net.ProtocolCommandEvent;
-import org.apache.commons.net.ProtocolCommandListener;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 
@@ -19,7 +17,7 @@ public class FTPPSPFileDirectory implements PSPFileDirectory {
 
     public FTPPSPFileDirectory(FTPClient client, String file) {
         this.client = client;
-        this.filePath = file;
+        this.filePath = FTPPSPDirectory.fixPath(file);
     }
 
     @Override
@@ -27,13 +25,15 @@ public class FTPPSPFileDirectory implements PSPFileDirectory {
         try {
             client.changeWorkingDirectory("/");
             System.out.println("Checking if directory: " + filePath);
-            FTPFile file = client.mlistFile(filePath);
-            
+            FTPFile[] listFiles = client.listFiles(filePath);
+            FTPFile file = null;
+            if (listFiles != null)
+                file = listFiles[0];
             if (file != null) {
                 return file.isDirectory();
             } else {
                 System.out.println("File is null! Doing crude check");
-                return (filePath.contains("."));
+                return (filePath.contains("\\."));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -46,7 +46,7 @@ public class FTPPSPFileDirectory implements PSPFileDirectory {
         try {
             client.changeWorkingDirectory("/");
             System.out.println("Getting file: " + filePath);
-            FTPFile file = client.mlistFile(filePath);
+            FTPFile file = client.listFiles(filePath)[0];
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             client.retrieveFile(filePath, byteArrayOutputStream);
             if (file == null)
@@ -61,7 +61,6 @@ public class FTPPSPFileDirectory implements PSPFileDirectory {
     @Override
     public PSPDirectory getDirectory() {
         try {
-            client.changeWorkingDirectory("/");
             System.out.println("Getting directory: " + filePath);
             return new FTPPSPDirectory(client, filePath);
         } catch (IOException e) {

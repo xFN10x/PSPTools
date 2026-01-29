@@ -1,10 +1,14 @@
 package fn10.psptools.psp.psps.ftp;
 
 import java.io.IOException;
+import java.time.Duration;
+
+import javax.swing.JOptionPane;
 
 import org.apache.commons.net.ProtocolCommandEvent;
 import org.apache.commons.net.ProtocolCommandListener;
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPCmd;
 
 import com.google.gson.Gson;
 
@@ -29,19 +33,33 @@ public class FTPPSP extends PSP {
         this.username = un;
         this.client = client;
 
+        client.setConnectTimeout(5000);
+        client.setDataTimeout(Duration.ofSeconds(10));
+
+        client.setListHiddenFiles(true);
         client.addProtocolCommandListener(new ProtocolCommandListener() {
 
-                @Override
-                public void protocolCommandSent(ProtocolCommandEvent event) {
-                    System.out.println("FTP: Command sent: " + event.getCommand());
-                }
+            @Override
+            public void protocolCommandSent(ProtocolCommandEvent event) {
+                // System.out.println("FTP: Command sent: " + event.getCommand());
+            }
 
-                @Override
-                public void protocolReplyReceived(ProtocolCommandEvent event) {
-                    System.out.println("FTP: Reply recived: " + event.getMessage());
+            @Override
+            public void protocolReplyReceived(ProtocolCommandEvent event) {
+                // System.out.println("FTP: Reply recived: " + event.getMessage());
+                if (event.getMessage().startsWith("50")) {
+                    try {
+                        client.sendCommand(FTPCmd.SYST);
+                    } catch (IOException e) {
+                    }
+                    JOptionPane.showMessageDialog(null,
+                            "FTP Server does not support command. (" + event.getMessage()
+                                    + ",) this server may be incompatible with PSPTools.",
+                            "FTP Error", JOptionPane.ERROR_MESSAGE);
                 }
+            }
 
-            });
+        });
     }
 
     public FTPPSP(FTPClient client, String host, int port) {
