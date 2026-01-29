@@ -119,4 +119,7 @@ public class SFOBasedSelector extends JDialog implements SFOListElementListener 
     @Override
     public void delete(ParamSFOListElement selectedElement) {
     }
+
+    @Override
+    public void onThreadCreate(Thread thread) {}
 }

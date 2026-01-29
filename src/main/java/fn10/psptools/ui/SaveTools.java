@@ -927,4 +927,7 @@ public class SaveTools extends JFrame implements SFOListElementListener {
     public void delete(ParamSFOListElement selectedElement) {
     }
 
+    @Override
+    public void onThreadCreate(Thread thread) {}
+
 }

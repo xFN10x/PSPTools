@@ -39,6 +39,8 @@ import com.formdev.flatlaf.ui.FlatLineBorder;
 import fn10.psptools.psp.PSPDirectory;
 import fn10.psptools.psp.PSPFile;
 import fn10.psptools.psp.PSPFileDirectory;
+import fn10.psptools.psp.psps.ByteArrayPSPFile;
+import fn10.psptools.psp.psps.ftp.FTPPSPFileDirectory;
 import fn10.psptools.psp.psps.real.RealPSPDirectory;
 import fn10.psptools.psp.sfo.ParamSFO;
 import fn10.psptools.psp.sfo.ParamSFO.Params;
@@ -78,6 +80,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
     private ParamSFOListElement selected;
     private MediaPlayer selectedVideoProcess;
     private final PSPDirectory[] targets;
+    private Thread active = null;
 
     private final JLabel Background = new JLabel(new ImageIcon(getClass().getResource("/bg.png")));
 
@@ -91,6 +94,8 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                 MediaPlayer.stopAllAudio();
                 if (selectedVideoProcess != null)
                     selectedVideoProcess.stop();
+                if (active != null)
+                    active.interrupt();
                 System.gc();
             }
 
@@ -222,6 +227,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
             ParamSFOListElement first = null;
             for (PSPDirectory target : Target) { // get all target folders
                 for (PSPFileDirectory dir : target.getAll()) { // get all folders (saves, games, etc)
+                    if (Thread.interrupted()) return;
                     if (dir.isDirectory())
                         try { // try to get param.sfo
                             PSPDirectory actualDirectory = dir.getDirectory();
@@ -238,7 +244,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-                    else {
+                    else if (!(dir instanceof FTPPSPFileDirectory)) {
                         PSPFile actualFile = dir.getFile();
                         if (actualFile == null) return;
                         if (actualFile.getExtension().equalsIgnoreCase("iso"))
@@ -263,7 +269,9 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
             System.gc();
 
         });
+        main.setName("PSPTools-FillOutThread");
         main.start();
+        listener.onThreadCreate(main);
     }
 
     public void FillOutWindow(PSPDirectory... Target) {
@@ -523,6 +531,11 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
             ViewingIcon.getGraphics().drawImage(
                     ImageUtilites.ResizeImage(frame, 300, 166), 0, 0, null);
         });
+    }
+
+    @Override
+    public void onThreadCreate(Thread thread) {
+        this.active = thread;
     }
 
 }

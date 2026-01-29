@@ -2,6 +2,7 @@ package fn10.psptools.psp.psps.ftp;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
@@ -23,18 +24,18 @@ public class FTPPSPFileDirectory implements PSPFileDirectory {
     @Override
     public boolean isDirectory() {
         try {
-            client.changeWorkingDirectory("/");
-            System.out.println("Checking if directory: " + filePath);
-            FTPFile[] listFiles = client.listFiles(filePath);
-            FTPFile file = null;
-            if (listFiles != null)
-                file = listFiles[0];
-            if (file != null) {
-                return file.isDirectory();
-            } else {
-                System.out.println("File is null! Doing crude check");
-                return (filePath.contains("\\."));
-            }
+            client.changeWorkingDirectory(filePath);
+            String printWorkingDirectory = client.printWorkingDirectory();
+            System.out.println("Checking if directory: " + printWorkingDirectory);
+            FTPFile[] listFiles = client.listFiles();
+            if (listFiles != null && listFiles.length > 0) {
+                for (FTPFile ftpFile : listFiles) {
+                    if (ftpFile.getName().equalsIgnoreCase(filePath.substring(filePath.lastIndexOf("/") + 1)))
+                        return false;
+                }
+                return true;
+            } else
+                return false;
         } catch (IOException e) {
             e.printStackTrace();
             return false;

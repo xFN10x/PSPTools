@@ -56,6 +56,8 @@ public class FTPPSPDirectory implements PSPDirectory {
             ArrayList<PSPFileDirectory> building = new ArrayList<>();
             FTPFile[] files = client.listFiles();
             for (FTPFile file : files) {
+                if (file.getName().equalsIgnoreCase(".") || file.getName().equalsIgnoreCase(".."))
+                    continue;
                 System.out.println("Got file/dir : " + file.getName());
                 building.add(new FTPPSPFileDirectory(client, Path + "/" + file.getName()));
             }
@@ -73,7 +75,8 @@ public class FTPPSPDirectory implements PSPDirectory {
             client.changeWorkingDirectory(path);
             String printWorkingDirectory = client.printWorkingDirectory();
             System.out.println("Getting file with name: " + name + ", in path: " + printWorkingDirectory);
-            //System.out.println("So, Retriving all files from: " + printWorkingDirectory + " with filter.");
+            // System.out.println("So, Retriving all files from: " + printWorkingDirectory +
+            // " with filter.");
             FTPFile[] listFiles = client.listFiles(null, new FTPFileFilter() {
 
                 @Override
@@ -122,7 +125,6 @@ public class FTPPSPDirectory implements PSPDirectory {
         try {
             client.changeWorkingDirectory("/");
             client.dele(path);
-            client.changeWorkingDirectory(path);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -141,7 +143,7 @@ public class FTPPSPDirectory implements PSPDirectory {
     }
 
     public static String fixPath(String path) {
-        return path.replaceAll("\\.\\/", "/").replaceAll("//", "/");
+        return path.replaceAll("\\.\\/", "/").replaceAll("//", "/").replace("\\.", "");
     }
 
     public static String resolvePath(String i, String j, String... k) {

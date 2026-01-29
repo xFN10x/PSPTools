@@ -14,4 +14,6 @@ public interface SFOListElementListener extends EventListener {
 
     public void delete(ParamSFOListElement selectedElement);
 
+    public void onThreadCreate(Thread thread);
+
 }
