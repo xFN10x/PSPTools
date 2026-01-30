@@ -38,7 +38,6 @@ public abstract class PSP {
             case SelectionMode.FTP:
                 String dataString = info.data();
                 FTPSelectionData data = new Gson().fromJson(dataString, FTPSelectionData.class);
-                ;
                 return new FTPPSP(new FTPClient(), data.host(), data.port(), data.username(), data.password());
             default:
                 return null;
@@ -46,17 +45,23 @@ public abstract class PSP {
     }
 
     public static void setCurrentPSP(PSP psp, boolean showPopup) {
+        setCurrentPSP(psp, showPopup, true);
+    }
+
+    public static void setCurrentPSP(PSP psp, boolean showPopup, boolean savePSP) {
         if (showPopup && psp != null)
             JOptionPane.showMessageDialog(null, "Selected new PSP.");
-        var saved = SavedVariables.Load();
-        if (psp != null) {
-            saved.LastSelectedPSP = new LastSelectedPSPInfo(psp.getSelectionMode(), psp.getSelectionData());
-            CurrentPSP = psp;
-        } else {
-            saved.LastSelectedPSP = null;
-            CurrentPSP = NULL_PSP;
+        if (savePSP) {
+            var saved = SavedVariables.Load();
+            if (psp != null) {
+                saved.LastSelectedPSP = new LastSelectedPSPInfo(psp.getSelectionMode(), psp.getSelectionData());
+                CurrentPSP = psp;
+            } else {
+                saved.LastSelectedPSP = null;
+                CurrentPSP = NULL_PSP;
+            }
+            saved.Save();
         }
-        saved.Save();
     }
 
     public abstract boolean pspActive();

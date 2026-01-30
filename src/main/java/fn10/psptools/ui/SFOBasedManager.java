@@ -82,7 +82,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
     private final PSPDirectory[] targets;
     private Thread active = null;
 
-    private final JLabel Background = new JLabel(new ImageIcon(getClass().getResource("/bg.png")));
+    private final JLabel Background = new JLabel(new ImageIcon());
 
     public SFOBasedManager(Frame parent, int mode, String title, PSPDirectory... targets) {
         super(title);
