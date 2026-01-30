@@ -9,21 +9,27 @@ import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SpringLayout;
-import javax.swing.filechooser.FileNameExtensionFilter;
+import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 
 import com.formdev.flatlaf.util.SystemFileChooser;
 
 import fn10.psptools.psp.PSP;
+import fn10.psptools.psp.psps.real.RealPSP;
 import fn10.psptools.psp.psps.real.RealPSPDirectory;
+import fn10.psptools.psp.psps.real.RealPSPFile;
 import fn10.psptools.psp.sfo.ParamSFO;
+import fn10.psptools.ui.components.ParamSFOListElement;
+import fn10.psptools.util.SavedVariables;
 
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.Component;
 import java.awt.Toolkit;
-import java.io.FileFilter;
-import java.io.IOException;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 public class LaunchPage extends JFrame {
 
@@ -78,7 +84,8 @@ public class LaunchPage extends JFrame {
 
                 if (option == JOptionPane.YES_OPTION) {
                     PSP psp = PSPSelectionUI.getNewPSP(this);
-                    if (psp == null) return;
+                    if (psp == null)
+                        return;
                     PSP.setCurrentPSP(psp);
                     SaveEditor.doClick();
                 } else
@@ -130,34 +137,66 @@ public class LaunchPage extends JFrame {
                 PSP.setCurrentPSP(selected);
         });
 
-        ExtraMenu.add("Open Single PARAM.SFO").addActionListener(ac -> {
+        ExtraMenu.add("Open Single Director").addActionListener(ac -> {
             SystemFileChooser fileChooser = new SystemFileChooser();
-            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-            fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter("SFO Files", "sfo"));
+            fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             fileChooser.showOpenDialog(this);
             if (fileChooser.getSelectedFile() != null)
                 new SFOBasedManager(this, SFOBasedManager.SINGLE, "Single SFO",
-                        new RealPSPDirectory(fileChooser.getSelectedFile().getParentFile()),
-                        new RealPSPDirectory(fileChooser.getSelectedFile().getParentFile().getParentFile())).setVisible(true);
+                        new RealPSPDirectory(fileChooser.getSelectedFile()))
+                        .setVisible(true);
 
         });
 
         ExtraMenu.add("View SFO").addActionListener(ac -> {
-            SystemFileChooser fileChooser = new SystemFileChooser();
-            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-            fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter("SFO Files", "sfo"));
-            fileChooser.showOpenDialog(this);
-            if (fileChooser.getSelectedFile() != null)
-                try {
-                    new SFOViewer(getOwner(), ParamSFO.ofFile(fileChooser.getSelectedFile())).setVisible(true);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            try {
+                SystemFileChooser fileChooser = new SystemFileChooser();
+                fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                fileChooser.addChoosableFileFilter(new SystemFileChooser.FileNameExtensionFilter("Supported Files", "sfo", "iso"));
+                fileChooser.addChoosableFileFilter(new SystemFileChooser.FileNameExtensionFilter("SFO Files", "sfo"));
+                fileChooser.addChoosableFileFilter(new SystemFileChooser.FileNameExtensionFilter("ISO Files", "iso"));
+                fileChooser.showOpenDialog(this);
+                if (fileChooser.getSelectedFile() == null)
+                    return;
+                RealPSPFile pspdir = new RealPSPFile(fileChooser.getSelectedFile());
+                if (pspdir.getExtension().equalsIgnoreCase("sfo"))
+                    new SFOViewer(getOwner(), ParamSFO.ofPSPFile(pspdir)).setVisible(true);
+                else if (pspdir.getExtension().equalsIgnoreCase("iso"))
+                    new SFOViewer(getOwner(), ParamSFOListElement.ofIso(pspdir, null).sfo).setVisible(true);
 
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         });
 
         ExtraMenu.add("Select Demo PSP").addActionListener(ac -> {
+            int choice = JOptionPane.showConfirmDialog(this,
+                    "<html>Selecting the Demo PSP will set the PSP is this session to an example one, with example games, and saves; all of which their data removed, so its only the things required for PSPTools to know what it is.<br/> <br/> <b>Save patching is not possible with these saves.</b></html>",
+                    "Entering Demo Mode", JOptionPane.OK_CANCEL_OPTION);
+            if (choice == JOptionPane.OK_OPTION) {
+                try {
+                    Path demoFolder = SavedVariables.DataFolder.resolve("demo");
 
+                    if (!demoFolder.toFile().exists()) {
+                        Files.createDirectories(demoFolder);
+                        File tempZip = File.createTempFile("PSPTOOLS", "TEMPDEMOZIP.zip");
+                        Files.write(tempZip.toPath(), getClass().getResourceAsStream("/DEMO.zip").readAllBytes(),
+                                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING,
+                                StandardOpenOption.WRITE);
+                        tempZip.deleteOnExit();
+                        ZipUnArchiver zua = new ZipUnArchiver(tempZip);
+                        zua.setDestDirectory(demoFolder.toFile());
+                        zua.extract();
+
+                    }
+                    PSP.setCurrentPSP(new RealPSP(demoFolder), true, false);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(this, "Unable to enter demo mode.", "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            }
         });
 
         MenuBar.add(FileMenu);
