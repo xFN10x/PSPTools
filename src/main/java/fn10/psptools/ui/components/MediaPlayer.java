@@ -10,6 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
@@ -32,6 +34,7 @@ import java.awt.image.BufferedImage;
 public class MediaPlayer {
 
     private boolean playing = false;
+    private boolean aborted = false;
     private volatile boolean loading = true;
     private Thread videoThread;
     private final String id;
@@ -172,36 +175,46 @@ public class MediaPlayer {
             return;
 
         try {
-            // Read loop points in samples
+            boolean hasLoopPoints = false;
             LittleEndianDataInputStream dis = new LittleEndianDataInputStream(Files.newInputStream(Path.of(file)));
-            while (true) {
-                byte[] read = new byte[4];
-
-                dis.read(read, 0, 4);
+            byte[] read = new byte[4];
+            while (dis.read(read, 0, 4) != -1) {
                 String magic = new String(read, StandardCharsets.UTF_8);
                 // System.out.println(magic);
                 if (magic.equals("smpl")) {
                     dis.skip(48);
+                    hasLoopPoints = true;
                     break;
                 }
             }
-            int loopStart = dis.readInt();
-            int loopEnd = dis.readInt() - loopStart;
+                FFMPEGProcess ffplay = new FFMPEGProcess(getDefaultFFplayPath());
+            if (hasLoopPoints) {
+                int loopStart = dis.readInt();
+                int loopEnd = dis.readInt() - loopStart;
 
-            FFMPEGProcess ffplay = new FFMPEGProcess(getDefaultFFplayPath());
+                ffplay.addArgument("\"" + file + "\"");
+                ffplay.addArgument("-af");
+                ffplay.addArgument("\"aloop=loop=-1:size=" + loopEnd + ":start=" + loopStart + "\"");
+                ffplay.addArgument("-nodisp");
 
-            ffplay.addArgument("\"" + file + "\"");
-            ffplay.addArgument("-af");
-            ffplay.addArgument("\"aloop=loop=-1:size=" + loopEnd + ":start=" + loopStart + "\"");
-            ffplay.addArgument("-nodisp");
+                if (currentFFmpeg != null)
+                    currentFFmpeg.destroy();
+                currentFFmpeg = ffplay;
+                ffplay.execute();
 
-            if (currentFFmpeg != null)
-                currentFFmpeg.destroy();
-            currentFFmpeg = ffplay;
-            ffplay.execute();
+                System.out.println(
+                        "ffplay.exe " + file + " " + "-af" + " " + "\"aloop=loop=-1:size=" + loopEnd + ":start="
+                                + loopStart + "\"");
+            } else {
 
-            System.out.println("ffplay.exe " + file + " " + "-af" + " " + "\"aloop=loop=-1:size=" + loopEnd + ":start="
-                    + loopStart + "\"");
+                ffplay.addArgument("\"" + file + "\"");
+                ffplay.addArgument("-nodisp");
+
+                if (currentFFmpeg != null)
+                    currentFFmpeg.destroy();
+                currentFFmpeg = ffplay;
+                ffplay.execute();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -263,6 +276,18 @@ public class MediaPlayer {
             return false;
         if (loading) {
             new Thread(() -> {
+                new Timer("Loading-Timeout").schedule(new TimerTask() {
+
+                    @Override
+                    public void run() {
+                        if (loading) {
+                            aborted = true;
+                            loading = false;
+                            System.out.println("loading aborted");
+                        }
+                    }
+
+                }, 4000);
                 while (loading) {
                     System.out.println("loading...");
                     try {
@@ -272,7 +297,8 @@ public class MediaPlayer {
                     }
                 }
                 System.out.println("done");
-                start(listener);
+                if (!aborted)
+                    start(listener);
             }).start();
             return false;
         }
