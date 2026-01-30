@@ -58,7 +58,7 @@ public class PSPSelectionUI extends JDialog {
     private final SpringLayout FtpSLay = new SpringLayout();
     private final JPanel FTPS = new JPanel(FtpSLay);
     private final JTextField HostName = new JTextField("192.168.0.1");
-    private final JSpinner Port = new JSpinner(new SpinnerNumberModel(0, 0, 65535, 1));
+    private final JSpinner Port = new JSpinner(new SpinnerNumberModel(21, 0, 65535, 1));
     private final JTextField Username = new JTextField("PSPTools");
     private final JTextField Password = new JTextField("");
     private final JButton FtpSelectButton = new JButton("Connect...");
@@ -239,7 +239,7 @@ public class PSPSelectionUI extends JDialog {
 
         FtpSLay.putConstraint(SpringLayout.WEST, HostName, 3, SpringLayout.WEST, FTPS);
         FtpSLay.putConstraint(SpringLayout.NORTH, HostName, 3, SpringLayout.NORTH, FTPS);
-
+        HostName.setSize(250, 0);
         FtpSLay.putConstraint(SpringLayout.WEST, portLabel, 1, SpringLayout.EAST, HostName);
 
         FtpSLay.putConstraint(SpringLayout.WEST, Port, 3, SpringLayout.EAST, portLabel);
@@ -254,10 +254,16 @@ public class PSPSelectionUI extends JDialog {
         FtpSLay.putConstraint(SpringLayout.SOUTH, FtpSelectButton, -3, SpringLayout.SOUTH, FTPS);
 
         FtpSLay.putConstraint(SpringLayout.NORTH, Username, 3, SpringLayout.SOUTH, HostName);
-        FtpSLay.putConstraint(SpringLayout.WEST, Username, -3, SpringLayout.WEST, FTPS);
+        FtpSLay.putConstraint(SpringLayout.WEST, Username, 3, SpringLayout.EAST, un);
+        FtpSLay.putConstraint(SpringLayout.SOUTH, un, 0, SpringLayout.SOUTH, Username);
+        FtpSLay.putConstraint(SpringLayout.WEST, un, 3, SpringLayout.WEST, FTPS);
+        FtpSLay.putConstraint(SpringLayout.NORTH, un, 0, SpringLayout.NORTH, Username);
 
-        FtpSLay.putConstraint(SpringLayout.NORTH, Password,-3, SpringLayout.SOUTH, Username);
-        FtpSLay.putConstraint(SpringLayout.WEST, Password, -3, SpringLayout.WEST, FTPS);
+        FtpSLay.putConstraint(SpringLayout.NORTH, Password, 3, SpringLayout.SOUTH, Username);
+        FtpSLay.putConstraint(SpringLayout.WEST, Password, 3, SpringLayout.EAST, un);
+        FtpSLay.putConstraint(SpringLayout.SOUTH, pw, 0, SpringLayout.SOUTH, Password);
+        FtpSLay.putConstraint(SpringLayout.WEST, pw, 3, SpringLayout.WEST, FTPS);
+        FtpSLay.putConstraint(SpringLayout.NORTH, pw, 0, SpringLayout.NORTH, Password);
 
         FTPS.add(HostName);
         FTPS.add(pw);

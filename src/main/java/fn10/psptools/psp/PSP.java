@@ -15,7 +15,9 @@ import fn10.psptools.util.SavedVariables;
 
 public abstract class PSP {
 
-    protected static PSP CurrentPSP = new RealPSP(Path.of(""));
+    private static final PSP NULL_PSP = new RealPSP(Path.of(""));
+
+    protected static PSP CurrentPSP = NULL_PSP;
 
     protected PSP() {
     }
@@ -33,22 +35,28 @@ public abstract class PSP {
             case SelectionMode.PSP_DIR:
                 return new RealPSP(Path.of(info.data()));
 
-                case SelectionMode.FTP:
-                    String dataString = info.data();
-                    FTPSelectionData data = new Gson().fromJson(dataString, FTPSelectionData.class);;
-                    return new FTPPSP(new FTPClient(), data.host(), data.port(), data.username(), data.password());
+            case SelectionMode.FTP:
+                String dataString = info.data();
+                FTPSelectionData data = new Gson().fromJson(dataString, FTPSelectionData.class);
+                ;
+                return new FTPPSP(new FTPClient(), data.host(), data.port(), data.username(), data.password());
             default:
                 return null;
         }
     }
 
     public static void setCurrentPSP(PSP psp, boolean showPopup) {
-        if (showPopup)
+        if (showPopup && psp != null)
             JOptionPane.showMessageDialog(null, "Selected new PSP.");
         var saved = SavedVariables.Load();
-        saved.LastSelectedPSP = new LastSelectedPSPInfo(psp.getSelectionMode(), psp.getSelectionData());
+        if (psp != null) {
+            saved.LastSelectedPSP = new LastSelectedPSPInfo(psp.getSelectionMode(), psp.getSelectionData());
+            CurrentPSP = psp;
+        } else {
+            saved.LastSelectedPSP = null;
+            CurrentPSP = NULL_PSP;
+        }
         saved.Save();
-        CurrentPSP = psp;
     }
 
     public abstract boolean pspActive();

@@ -45,8 +45,10 @@ public class App {
         if (LastPSP != null) {
             if (LastPSP.pspActive())
                 PSP.setCurrentPSP(LastPSP, false);
-            else
+            else {
                 JOptionPane.showMessageDialog(null, "PSP was disconnected.");
+                PSP.setCurrentPSP(null);
+            }
         }
         // #endregion
 

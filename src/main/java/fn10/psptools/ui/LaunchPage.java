@@ -121,7 +121,7 @@ public class LaunchPage extends JFrame {
         ButtonsPane.add(AutoPSX);
         ButtonsPane.add(GameTools);
 
-        FileMenu.add("Selected PSP").addActionListener(ac -> {
+        FileMenu.add("Select New PSP").addActionListener(ac -> {
             PSP selected = PSPSelectionUI.getNewPSP(this);
             if (selected != null)
                 PSP.setCurrentPSP(selected);
