@@ -11,6 +11,8 @@ import javax.swing.JPanel;
 import javax.swing.SpringLayout;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import com.formdev.flatlaf.util.SystemFileChooser;
+
 import fn10.psptools.psp.PSP;
 import fn10.psptools.psp.psps.real.RealPSPDirectory;
 import fn10.psptools.psp.sfo.ParamSFO;
@@ -20,6 +22,7 @@ import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.Component;
 import java.awt.Toolkit;
+import java.io.FileFilter;
 import java.io.IOException;
 
 public class LaunchPage extends JFrame {
@@ -128,9 +131,9 @@ public class LaunchPage extends JFrame {
         });
 
         ExtraMenu.add("Open Single PARAM.SFO").addActionListener(ac -> {
-            JFileChooser fileChooser = new JFileChooser();
+            SystemFileChooser fileChooser = new SystemFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-            fileChooser.setFileFilter(new FileNameExtensionFilter("SFO Files", "sfo"));
+            fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter("SFO Files", "sfo"));
             fileChooser.showOpenDialog(this);
             if (fileChooser.getSelectedFile() != null)
                 new SFOBasedManager(this, SFOBasedManager.SINGLE, "Single SFO",
@@ -140,9 +143,9 @@ public class LaunchPage extends JFrame {
         });
 
         ExtraMenu.add("View SFO").addActionListener(ac -> {
-            JFileChooser fileChooser = new JFileChooser();
+            SystemFileChooser fileChooser = new SystemFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-            fileChooser.setFileFilter(new FileNameExtensionFilter("SFO Files", "sfo"));
+            fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter("SFO Files", "sfo"));
             fileChooser.showOpenDialog(this);
             if (fileChooser.getSelectedFile() != null)
                 try {
@@ -150,6 +153,10 @@ public class LaunchPage extends JFrame {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
+        });
+
+        ExtraMenu.add("Select Demo PSP").addActionListener(ac -> {
 
         });
 
