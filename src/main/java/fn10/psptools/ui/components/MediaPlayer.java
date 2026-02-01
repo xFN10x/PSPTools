@@ -18,7 +18,6 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 
@@ -135,8 +134,11 @@ public class MediaPlayer {
                         JOptionPane.showMessageDialog(null,
                                 "This platform is unsupported.",
                                 "What the hell are you on??", JOptionPane.ERROR_MESSAGE);
+                        output.close();
                         return;
                     }
+
+                    output.close();
 
                     System.gc();
 
@@ -187,7 +189,7 @@ public class MediaPlayer {
                     break;
                 }
             }
-                FFMPEGProcess ffplay = new FFMPEGProcess(getDefaultFFplayPath());
+            FFMPEGProcess ffplay = new FFMPEGProcess(getDefaultFFplayPath());
             if (hasLoopPoints) {
                 int loopStart = dis.readInt();
                 int loopEnd = dis.readInt() - loopStart;

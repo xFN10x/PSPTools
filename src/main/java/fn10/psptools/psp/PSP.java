@@ -38,7 +38,7 @@ public abstract class PSP {
 
             case SelectionMode.FTP:
                 String dataString = info.data();
-                FTPSelectionData data = new Gson().fromJson(dataString, FTPSelectionData.class);
+                @SuppressWarnings("null") FTPSelectionData data = new Gson().fromJson(dataString, FTPSelectionData.class);
                 return new FTPPSP(new FTPClient(), data.host(), data.port(), data.username(), data.password());
             default:
                 return null;

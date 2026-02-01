@@ -3,7 +3,6 @@ package fn10.psptools.util;
 import java.awt.Frame;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.reflect.Executable;
 
 import javax.swing.JOptionPane;
 

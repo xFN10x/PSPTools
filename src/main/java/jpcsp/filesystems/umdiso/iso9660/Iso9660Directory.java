@@ -59,6 +59,9 @@ public class Iso9660Directory {
 
             Iso9660File file = new Iso9660File(b,b.length);
             files.add(file);
+
+            //Added close here xFN10x
+            dataStream.close();
         }
     }
 

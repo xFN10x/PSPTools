@@ -31,6 +31,7 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
 import org.apache.commons.io.FileUtils;
+import org.codehaus.plexus.archiver.util.DefaultFileSet;
 import org.codehaus.plexus.archiver.zip.ZipArchiver;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 
@@ -39,7 +40,6 @@ import com.formdev.flatlaf.ui.FlatLineBorder;
 import fn10.psptools.psp.PSPDirectory;
 import fn10.psptools.psp.PSPFile;
 import fn10.psptools.psp.PSPFileDirectory;
-import fn10.psptools.psp.psps.ByteArrayPSPFile;
 import fn10.psptools.psp.psps.ftp.FTPPSPFileDirectory;
 import fn10.psptools.psp.psps.real.RealPSPDirectory;
 import fn10.psptools.psp.sfo.ParamSFO;
@@ -227,11 +227,13 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
             ParamSFOListElement first = null;
             for (PSPDirectory target : Target) { // get all target folders
                 for (PSPFileDirectory dir : target.getAll()) { // get all folders (saves, games, etc)
-                    if (Thread.interrupted()) return;
+                    if (Thread.interrupted())
+                        return;
                     if (dir.isDirectory())
                         try { // try to get param.sfo
                             PSPDirectory actualDirectory = dir.getDirectory();
-                            if (actualDirectory.getFileWithName("PARAM.SFO") == null || !actualDirectory.getFileWithName("PARAM.SFO").actuallyExists())
+                            if (actualDirectory.getFileWithName("PARAM.SFO") == null
+                                    || !actualDirectory.getFileWithName("PARAM.SFO").actuallyExists())
                                 continue;
 
                             ParamSFO sfo = ParamSFO.ofPSPFile(actualDirectory.getFileWithName("PARAM.SFO"));
@@ -246,7 +248,8 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                         }
                     else if (!(dir instanceof FTPPSPFileDirectory)) {
                         PSPFile actualFile = dir.getFile();
-                        if (actualFile == null) return;
+                        if (actualFile == null)
+                            return;
                         if (actualFile.getExtension().equalsIgnoreCase("iso"))
                             try { // try to get param.sfo
                                 ParamSFOListElement ToAdd = ParamSFOListElement.ofIso(actualFile, listener);
@@ -424,7 +427,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                     loading.setVisible(true);
                 });
 
-                zip.addDirectory(((RealPSPDirectory) selected.dir).getDirOnDisc());
+                zip.addFileSet(DefaultFileSet.fileSet(((RealPSPDirectory) selected.dir).getDirOnDisc()));
                 zip.createArchive();
 
                 SwingUtilities.invokeLater(() -> {

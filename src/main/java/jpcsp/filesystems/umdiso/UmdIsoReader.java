@@ -241,6 +241,8 @@ public class UmdIsoReader {
 					written += inflater.inflate(buffer, offset + written, 2048 - written);
 				}
 
+				// Make problems shut up -xFN10x
+				inflater.close();
 				inflater.end();
 
 				// Pad with zeros if less than 2048 bytes decompressed
@@ -497,7 +499,7 @@ public class UmdIsoReader {
 				Iso9660File info = null;
 				int fileStart = 0;
 				long fileLength = 0;
-				Date timestamp = null;
+				//Removed timestamp -xFN10x
 
 				// out.println(path);
 				// out.println(file);
@@ -512,7 +514,6 @@ public class UmdIsoReader {
 					if (info != null) {
 						fileStart = info.getLBA();
 						fileLength = info.getSize();
-						timestamp = info.getTimestamp();
 						size += (fileLength + 0x7FF) & ~0x7FF;
 					}
 				}

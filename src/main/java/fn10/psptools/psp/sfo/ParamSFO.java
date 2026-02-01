@@ -141,6 +141,7 @@ public class ParamSFO {
 
     public static ParamSFO ofStream(InputStream stream) throws IOException {
         // System.out.println("READING NEW -----------------: ");
+        @SuppressWarnings("null")
         LittleEndianDataInputStream Stream = new LittleEndianDataInputStream(stream);
         int currentByte = 0;
 

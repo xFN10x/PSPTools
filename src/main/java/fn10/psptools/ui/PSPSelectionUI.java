@@ -6,7 +6,6 @@ import java.awt.event.ItemEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Timer;
 import java.util.TimerTask;
