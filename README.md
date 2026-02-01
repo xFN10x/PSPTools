@@ -1,5 +1,5 @@
 # PSPTools
-
+**Yes, i know this readme is outdated, Ill update it soon!**
 ![hackatime](https://hackatime-badge.hackclub.com/U0923KXMGUR/PSPTools) [![Java CI with Gradle](https://github.com/xFN10x/PSPTools/actions/workflows/gradle.yml/badge.svg)](https://github.com/xFN10x/PSPTools/actions/workflows/gradle.yml)
 
 Various tools for managing your Playstation®  Portable, with support for PS3
@@ -16,7 +16,7 @@ Features include:
 If you don't have a prebuilt version of PSPTools made for your platform, you can use the cross-platform jar. You need to follow these steps to make sure it works properly.
 
 #### Install JRE
-A JRE is required to run the jar. You may already have one installed, but if the program doesn't start, use [this](https://learn.microsoft.com/en-ca/java/openjdk/download#openjdk-21) (You should also run `java -jar "path/of/PSPTools.jar"`, and make an issue with the error.)
+A JRE is required to run the jar. You may already have one installed, but if the program doesn't start, use [this](https://learn.microsoft.com/en-ca/java/openjdk/download#openjdk-25) (You should also run `java -jar "path/of/PSPTools.jar"`, and make an issue with the error.)
 
 ## Special Thanks
 
