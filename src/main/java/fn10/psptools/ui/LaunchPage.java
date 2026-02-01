@@ -189,6 +189,7 @@ public class LaunchPage extends JFrame {
                         zua.extract();
 
                     }
+                    PSP.DemoMode = true;
                     PSP.setCurrentPSP(new RealPSP(demoFolder), true, false);
                 } catch (Exception e) {
                     e.printStackTrace();

@@ -16,6 +16,7 @@ import fn10.psptools.util.SavedVariables;
 public abstract class PSP {
 
     private static final PSP NULL_PSP = new RealPSP(Path.of(""));
+    public static boolean DemoMode = false;
 
     protected static PSP CurrentPSP = NULL_PSP;
 
@@ -51,15 +52,15 @@ public abstract class PSP {
     public static void setCurrentPSP(PSP psp, boolean showPopup, boolean savePSP) {
         if (showPopup && psp != null)
             JOptionPane.showMessageDialog(null, "Selected new PSP.");
+        var saved = SavedVariables.Load();
+        if (psp != null) {
+            saved.LastSelectedPSP = new LastSelectedPSPInfo(psp.getSelectionMode(), psp.getSelectionData());
+            CurrentPSP = psp;
+        } else {
+            saved.LastSelectedPSP = null;
+            CurrentPSP = NULL_PSP;
+        }
         if (savePSP) {
-            var saved = SavedVariables.Load();
-            if (psp != null) {
-                saved.LastSelectedPSP = new LastSelectedPSPInfo(psp.getSelectionMode(), psp.getSelectionData());
-                CurrentPSP = psp;
-            } else {
-                saved.LastSelectedPSP = null;
-                CurrentPSP = NULL_PSP;
-            }
             saved.Save();
         }
     }

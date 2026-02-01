@@ -186,7 +186,9 @@ public class SaveTools extends JFrame implements SFOListElementListener {
         setSize(new Dimension(450, 500));
 
         tabbedPane.addTab("Save Database", databasePanel);
+        if (!PSP.DemoMode)
         tabbedPane.addTab("Save Patching", PatchPanel);
+        
 
         tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 

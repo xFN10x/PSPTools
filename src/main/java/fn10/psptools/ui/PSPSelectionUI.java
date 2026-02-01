@@ -312,7 +312,10 @@ public class PSPSelectionUI extends JDialog {
     }
 
     public static PSP getNewPSP(Frame parent) {
-
+        if (PSP.DemoMode) {
+            JOptionPane.showMessageDialog(parent, "Cannot change PSP in demo mode, please restart PSPTools.");
+            return null;
+        }
         PSPSelectionUI ui = new PSPSelectionUI(parent);
 
         ui.setVisible(true);
