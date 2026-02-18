@@ -124,7 +124,7 @@ public class PSPSelectionUI extends JDialog {
                 File PSPGameFolder = rootPath.resolve("PSP", "GAME").toFile();
 
                 if (PSPFolder.exists() && ISOFolder.exists() && PSPGameFolder.exists()) {
-                    JOptionPane.showMessageDialog(parent, "Found PSP at " + root.toString(), "PSP Found",
+                    JOptionPane.showMessageDialog(parent, "Found PSP at " + root, "PSP Found",
                             JOptionPane.INFORMATION_MESSAGE);
                     InputDriveBox.setSelectedItem(root);
                     return;
@@ -144,7 +144,7 @@ public class PSPSelectionUI extends JDialog {
                 File PSPSaveFolder = new File(Path.of(root.getPath(), "pspemu", "PSP", "Savedata").toString());
 
                 if (PSPFolder.exists() && ISOFolder.exists() && PSPGameFolder.exists() && PSPSaveFolder.exists()) {
-                    JOptionPane.showMessageDialog(parent, "Found Vita with Adrenaline @ " + root.toString(),
+                    JOptionPane.showMessageDialog(parent, "Found Vita with Adrenaline @ " + root,
                             "PSV Found",
                             JOptionPane.INFORMATION_MESSAGE);
                     InputDriveBox.setSelectedItem(root);

@@ -22,10 +22,10 @@ import fn10.psptools.psp.PSPFile;
 
 public class ParamSFO {
 
-    public static transient final short UTF8_S = 4;
-    public static transient final short UTF8 = 516;
-    public static transient final short INT32 = 1028;
-    public static transient final Map<String, String> CATEGORIES = new HashMap<String, String>();
+    public static final short UTF8_S = 4;
+    public static final short UTF8 = 516;
+    public static final short INT32 = 1028;
+    public static final Map<String, String> CATEGORIES = new HashMap<String, String>();
     static {
         CATEGORIES.put("AP", "App Photo");
         CATEGORIES.put("AM", "App Music");
@@ -85,30 +85,30 @@ public class ParamSFO {
 
     public static class Params { // IVE FOUND THE MOTHER LOAD
                                  // https://hitmen.c02.at/files/yapspd/psp_doc/chap26.html#sec26.4
-        public static final transient String Category = "CATEGORY";
-        public static final transient String Title = "TITLE";
-        public static final transient String Parental_Level = "PARENTAL_LEVEL";
+        public static final String Category = "CATEGORY";
+        public static final String Title = "TITLE";
+        public static final String Parental_Level = "PARENTAL_LEVEL";
 
         // save specific
-        public static final transient String Description = "SAVEDATA_DETAIL";
-        public static final transient String SaveFolderName = "SAVEDATA_DIRECTORY";
-        public static final transient String SaveFiles = "SAVEDATA_FILE_LIST";
-        public static final transient String SaveParams = "SAVEDATA_PARAMS";
-        public static final transient String SaveTitle = "SAVEDATA_TITLE";
+        public static final String Description = "SAVEDATA_DETAIL";
+        public static final String SaveFolderName = "SAVEDATA_DIRECTORY";
+        public static final String SaveFiles = "SAVEDATA_FILE_LIST";
+        public static final String SaveParams = "SAVEDATA_PARAMS";
+        public static final String SaveTitle = "SAVEDATA_TITLE";
 
         // umd game specific
-        public static final transient String AppVersion = "APP_VER";
-        public static final transient String InstantBoot = "BOOTABLE";
+        public static final String AppVersion = "APP_VER";
+        public static final String InstantBoot = "BOOTABLE";
 
-        public static final transient String DiscID = "DISC_ID";
-        public static final transient String DiscNumber = "DISC_NUMBER";
-        public static final transient String TotalDiscs = "DISC_TOTAL";
-        public static final transient String DiscVersion = "DISC_VERSION";
-        public static final transient String HRKGMP_VER = "HRKGMP_VER";
+        public static final String DiscID = "DISC_ID";
+        public static final String DiscNumber = "DISC_NUMBER";
+        public static final String TotalDiscs = "DISC_TOTAL";
+        public static final String DiscVersion = "DISC_VERSION";
+        public static final String HRKGMP_VER = "HRKGMP_VER";
 
-        public static final transient String MinimumFirmwareVersion = "PSP_SYSTEM_VER";
-        public static final transient String Region = "REGION";
-        public static final transient String UseUsb = "USE_USB";
+        public static final String MinimumFirmwareVersion = "PSP_SYSTEM_VER";
+        public static final String Region = "REGION";
+        public static final String UseUsb = "USE_USB";
 
     }
 

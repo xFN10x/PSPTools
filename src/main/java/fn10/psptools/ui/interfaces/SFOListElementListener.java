@@ -6,14 +6,14 @@ import fn10.psptools.ui.components.ParamSFOListElement;
 
 public interface SFOListElementListener extends EventListener {
 
-    public void selected(ParamSFOListElement selectedElement);
+    void selected(ParamSFOListElement selectedElement);
 
-    public void backup();
+    void backup();
 
-    public void restore();
+    void restore();
 
-    public void delete(ParamSFOListElement selectedElement);
+    void delete(ParamSFOListElement selectedElement);
 
-    public void onThreadCreate(Thread thread);
+    void onThreadCreate(Thread thread);
 
 }

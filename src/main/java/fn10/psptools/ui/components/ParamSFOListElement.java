@@ -191,7 +191,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
     }
 
     public ParamSFOListElement(ParamSFO ParamSFO, PSPDirectory dir, SFOListElementListener selectedFunction)
-            throws MalformedURLException, IOException, URISyntaxException, NameNotFoundException {
+            throws IOException, URISyntaxException, NameNotFoundException {
         PSPFile icon1 = dir.getFileStartingWith("icon1");
         PSPFile snd0 = dir.getFileWithName("snd0.at3");
         this(ParamSFO, dir,
@@ -268,7 +268,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
 
                     RightClickMenu.setLabel(
                             sfo.getParam(Params.Title).toString() + " ("
-                                    + (String) sfo.getParam(Params.SaveFolderName)
+                                    + sfo.getParam(Params.SaveFolderName)
                                     + ")");
 
                     SFOTitle.setText((String) sfo.getParam(Params.SaveTitle));
@@ -278,8 +278,8 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                     SFODesc.setText((String) sfo.getParam(Params.Description, true));
 
                     setToolTipText(
-                            (String) sfo.getParam(Params.Title) + " ("
-                                    + (String) sfo.getParam(Params.SaveFolderName)
+                            sfo.getParam(Params.Title) + " ("
+                                    + sfo.getParam(Params.SaveFolderName)
                                     + ")");
                     break;
 
@@ -292,10 +292,10 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                     SFODesc.setText((String) sfo.getParam(Params.DiscVersion, true));
 
                     setToolTipText(
-                            (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam(Params.DiscID)
+                            sfo.getParam(Params.Title) + " (" + sfo.getParam(Params.DiscID)
                                     + ")");
                     RightClickMenu.setLabel(
-                            (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam(Params.DiscID)
+                            sfo.getParam(Params.Title) + " (" + sfo.getParam(Params.DiscID)
                                     + ")");
                     break;
 
@@ -308,10 +308,10 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                     SFODesc.setText((String) sfo.getParam("TITLE_ID", true));
 
                     setToolTipText(
-                            (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam("TITLE_ID")
+                            sfo.getParam(Params.Title) + " (" + sfo.getParam("TITLE_ID")
                                     + ")");
                     RightClickMenu.setLabel(
-                            (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam("TITLE_ID")
+                            sfo.getParam(Params.Title) + " (" + sfo.getParam("TITLE_ID")
                                     + ")");
                     break;
 
@@ -321,9 +321,9 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
 
                 case "sd": // PSVita, 4, 5
                     if (sfo.paramData.containsKey("PARENT_DIRECTORY")) // vita
-                        SFOTitle.setText((String) sfo.getParam("PARENT_DIRECTORY", true).toString().replace("/", ""));
+                        SFOTitle.setText(sfo.getParam("PARENT_DIRECTORY", true).toString().replace("/", ""));
                     else
-                        SFOTitle.setText((String) sfo.getParam("MAINTITLE", true).toString().replace("/", ""));
+                        SFOTitle.setText(sfo.getParam("MAINTITLE", true).toString().replace("/", ""));
                     break;
 
                 default:
@@ -334,10 +334,10 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                     SFODesc.setText((String) sfo.getParam("TITLE_ID", true));
 
                     setToolTipText(
-                            (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam("TITLE_ID")
+                            sfo.getParam(Params.Title) + " (" + sfo.getParam("TITLE_ID")
                                     + ")");
                     RightClickMenu.setLabel(
-                            (String) sfo.getParam(Params.Title) + " (" + (String) sfo.getParam("TITLE_ID")
+                            sfo.getParam(Params.Title) + " (" + sfo.getParam("TITLE_ID")
                                     + ")");
                     break;
             }

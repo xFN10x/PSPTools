@@ -103,14 +103,14 @@ public class SaveTools extends JFrame implements SFOListElementListener {
     private BufferedReader currentReader;
     private String currentMenu = "root";
     // private volatile Future<?> currentThread;
-    private ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     private File currentSavePatch;
     private ParamSFOListElement currentSfoListElement;
     private String currentPatchFile;
 
-    public final static transient int T_PSP = 0;
-    public final static transient int T_PS3 = 1;
+    public final static int T_PSP = 0;
+    public final static int T_PS3 = 1;
 
     public boolean canPatch(int mode) {
         if (!PSP.getCurrentPSP().pspActive()) {
@@ -581,7 +581,7 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                 for (Component comp : PSPPatchSeletingPanel.getComponents()) {
                     if (comp instanceof JCheckBox) {
                         if (((JCheckBox) comp).isSelected()) {
-                            patchNumbers.add(((JCheckBox) comp).getName());
+                            patchNumbers.add(comp.getName());
                         }
                     }
                 }
@@ -664,7 +664,6 @@ public class SaveTools extends JFrame implements SFOListElementListener {
 
                 default:
                     setVisible(false);
-                    return;
             }
         }
     }
@@ -705,7 +704,7 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                                         continue;
                                     }
 
-                                    URL GameIconUrl = new URI(url.toString() + "/PSP/" + keyandval[0] + "/ICON0.PNG")
+                                    URL GameIconUrl = new URI(url + "/PSP/" + keyandval[0] + "/ICON0.PNG")
                                             .toURL();
                                     System.out.println(keyandval[0] + "=" + keyandval[1] + "\n" + searchTerm);
 
@@ -753,7 +752,7 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                                         continue;
                                     }
 
-                                    URL GameIconUrl = new URI(url.toString() + "/PSP/" + currentMenu + "/ICON0.PNG")
+                                    URL GameIconUrl = new URI(url + "/PSP/" + currentMenu + "/ICON0.PNG")
                                             .toURL();
 
                                     if (Thread.currentThread().isInterrupted())
@@ -911,7 +910,6 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                     System.gc();
                     JOptionPane.showMessageDialog(null,
                             "Failed to download save: " + e.getMessage());
-                    return;
                 }
             }).start();
         }

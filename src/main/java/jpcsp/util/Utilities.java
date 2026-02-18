@@ -25,13 +25,14 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import jpcsp.filesystems.SeekableDataInput;
 
 public class Utilities {
-    public static final Charset charset = Charset.forName("UTF-8");
+    public static final Charset charset = StandardCharsets.UTF_8;
 
     public static String formatString(String type, String oldstring) {
         int counter = 0;
@@ -67,7 +68,7 @@ public class Utilities {
     }
 
     public static long readUWord(SeekableDataInput f) throws IOException {
-        long l = (f.readUnsignedByte() | (f.readUnsignedByte() << 8) | (f.readUnsignedByte() << 16) | (f.readUnsignedByte() << 24));
+        long l = (f.readUnsignedByte() | ((long) f.readUnsignedByte() << 8) | ((long) f.readUnsignedByte() << 16) | ((long) f.readUnsignedByte() << 24));
         return (l & 0xFFFFFFFFL);
     }
 
@@ -91,7 +92,7 @@ public class Utilities {
     public static String readStringZ(ByteBuffer buf) throws IOException {
         StringBuilder sb = new StringBuilder();
         byte b;
-        for (; buf.position() < buf.limit();) {
+        while (buf.position() < buf.limit()) {
             b = (byte)readUByte(buf);
             if (b == 0)
                 break;
@@ -201,7 +202,7 @@ public class Utilities {
          return getUnsignedByte(buf) | (getUnsignedByte(buf) << 8);
      }
      public static long readUWord(ByteBuffer buf) throws IOException {
-         long l = (getUnsignedByte(buf) | (getUnsignedByte(buf) << 8 ) | (getUnsignedByte(buf) << 16 ) | (getUnsignedByte(buf) << 24));
+         long l = (getUnsignedByte(buf) | (getUnsignedByte(buf) << 8 ) | (getUnsignedByte(buf) << 16 ) | ((long) getUnsignedByte(buf) << 24));
          return (l & 0xFFFFFFFFL);
      }
      public static int readWord(ByteBuffer buf) throws IOException {
@@ -383,7 +384,7 @@ public class Utilities {
         StringBuilder outputBuilder = new StringBuilder();
 
         try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
             while (null != (string = reader.readLine())) {
                 outputBuilder.append(string).append('\n');
             }

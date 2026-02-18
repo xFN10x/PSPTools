@@ -9,7 +9,7 @@ import fn10.psptools.psp.SelectionMode;
 
 public class RealPSP extends PSP {
 
-    private Path path;
+    private final Path path;
 
     public RealPSP(Path path) {
         super();

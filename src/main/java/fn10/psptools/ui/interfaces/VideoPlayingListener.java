@@ -4,6 +4,6 @@ import java.awt.image.BufferedImage;
 
 public interface VideoPlayingListener {
 
-    public void frameStepped(BufferedImage frame);
+    void frameStepped(BufferedImage frame);
      
 }

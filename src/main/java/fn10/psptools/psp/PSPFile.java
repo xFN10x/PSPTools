@@ -4,12 +4,12 @@ import java.io.InputStream;
 
 public interface PSPFile {
 
-    public byte[] readAll();
-    public String readString();
-    public InputStream openStream();
+    byte[] readAll();
+    String readString();
+    InputStream openStream();
 
-    public String getName();
-    public String getExtension();
-    public boolean actuallyExists();
+    String getName();
+    String getExtension();
+    boolean actuallyExists();
 
 }

@@ -37,10 +37,10 @@ public class MediaPlayer {
     private volatile boolean loading = true;
     private Thread videoThread;
     private final String id;
-    private static String defaultFFmpegPath = SavedVariables.DataFolder.resolve("tools", "ffmpeg.exe").toString();
-    private static String defaultFFplayPath = SavedVariables.DataFolder.resolve("tools", "ffplay.exe").toString();
-    private static String defaultFFmpegPathLinux = SavedVariables.DataFolder.resolve("tools", "ffmpeg").toString();
-    private static String defaultFFplayPathLinux = SavedVariables.DataFolder.resolve("tools", "ffplay").toString();
+    private static final String defaultFFmpegPath = SavedVariables.DataFolder.resolve("tools", "ffmpeg.exe").toString();
+    private static final String defaultFFplayPath = SavedVariables.DataFolder.resolve("tools", "ffplay.exe").toString();
+    private static final String defaultFFmpegPathLinux = SavedVariables.DataFolder.resolve("tools", "ffmpeg").toString();
+    private static final String defaultFFplayPathLinux = SavedVariables.DataFolder.resolve("tools", "ffplay").toString();
     public static FFMPEGProcess currentFFmpeg = null;
 
     public static String getDefaultFFmpegPath() {
@@ -147,14 +147,12 @@ public class MediaPlayer {
                     loading.setVisible(false);
 
                     JOptionPane.showMessageDialog(null, "FFmpeg has been downloaded.");
-                    return;
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }).start();
         } catch (Exception e) {
             e.printStackTrace();
-            return;
         }
     }
 
@@ -257,7 +255,7 @@ public class MediaPlayer {
                     Files.createDirectory(frameFolderPath);
                     ffmpeg.addArgument("-i");
                     ffmpeg.addArgument(file.getAbsolutePath());
-                    ffmpeg.addArgument("\"" + frameFolderPath.toString() + File.separator + "%03d.jpg\"");
+                    ffmpeg.addArgument("\"" + frameFolderPath + File.separator + "%03d.jpg\"");
                     ffmpeg.execute();
                     ffmpeg.getProcessExitCode();
                     loading = false;

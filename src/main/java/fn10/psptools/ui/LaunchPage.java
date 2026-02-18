@@ -88,8 +88,8 @@ public class LaunchPage extends JFrame {
                         return;
                     PSP.setCurrentPSP(psp);
                     SaveEditor.doClick();
-                } else
-                    return;
+                } else {
+                }
             } else {
                 setVisible(false);
                 new SFOBasedManager(this, SFOBasedManager.SAVES_MODE, "Save Manager",
@@ -110,8 +110,8 @@ public class LaunchPage extends JFrame {
                 if (option == JOptionPane.YES_OPTION) {
                     PSP.setCurrentPSP(PSPSelectionUI.getNewPSP(this));
                     GameEditor.doClick();
-                } else
-                    return;
+                } else {
+                }
             } else {
                 setVisible(false);
                 new SFOBasedManager(this, SFOBasedManager.GAMES_MODE, "Game Manager",
@@ -137,7 +137,7 @@ public class LaunchPage extends JFrame {
                 PSP.setCurrentPSP(selected);
         });
 
-        ExtraMenu.add("Open Single Director").addActionListener(ac -> {
+        ExtraMenu.add("Open custom SFO Manager").addActionListener(ac -> {
             SystemFileChooser fileChooser = new SystemFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             fileChooser.showOpenDialog(this);
@@ -195,7 +195,6 @@ public class LaunchPage extends JFrame {
                     e.printStackTrace();
                     JOptionPane.showMessageDialog(this, "Unable to enter demo mode.", "Error",
                             JOptionPane.ERROR_MESSAGE);
-                    return;
                 }
             }
         });

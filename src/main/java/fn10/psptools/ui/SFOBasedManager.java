@@ -373,15 +373,9 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
             if (!BackupButton.isEnabled())
                 BackupButton.setEnabled(true);
 
-            if (selectedElement.backuped)
-                RestoreButton.setEnabled(true);
-            else
-                RestoreButton.setEnabled(false);
+            RestoreButton.setEnabled(selectedElement.backuped);
 
-            if (selectedElement.dir == null)
-                OpenFolderButton.setEnabled(false);
-            else
-                OpenFolderButton.setEnabled(true);
+            OpenFolderButton.setEnabled(selectedElement.dir != null);
 
             File tempAudioFile = selectedElement.getTempAudioFile();
             if (tempAudioFile != null)
@@ -403,7 +397,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
         int option;
         if (!backupPath.toFile().exists())
             option = JOptionPane.showConfirmDialog(this,
-                    "Backup this save?\nIt will be backed up at " + backupPath.toString(), "Backup save?",
+                    "Backup this save?\nIt will be backed up at " + backupPath, "Backup save?",
                     JOptionPane.YES_NO_OPTION);
         else {
             option = JOptionPane.showConfirmDialog(this,

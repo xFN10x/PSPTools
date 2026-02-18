@@ -15,7 +15,7 @@ public class App {
 
     public static final String VERSION = "1.1.0";
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         if (args != null)
             if (args.length > 0)
                 System.out.println("Args: " + String.join(", ", args));

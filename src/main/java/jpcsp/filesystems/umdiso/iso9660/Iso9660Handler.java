@@ -28,7 +28,7 @@ import jpcsp.filesystems.umdiso.UmdIsoReader;
  */
 public class Iso9660Handler extends Iso9660Directory {
 
-    private Iso9660Directory internalDir;
+    private final Iso9660Directory internalDir;
 
     public Iso9660Handler(UmdIsoReader r) throws IOException
     {

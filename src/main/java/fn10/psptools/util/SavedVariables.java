@@ -32,7 +32,7 @@ public class SavedVariables {
     private transient static final Gson gson = new GsonBuilder()
             .registerTypeHierarchyAdapter(Path.class, new PathTypeAdapter())
             .setPrettyPrinting().create();
-    public static transient final Path DataFolder = Path.of(System.getProperty("user.home"), "/PSPTools/");
+    public static final Path DataFolder = Path.of(System.getProperty("user.home"), "/PSPTools/");
     static {
         if (!DataFolder.toFile().exists())
             try {
@@ -41,7 +41,7 @@ public class SavedVariables {
                 e.printStackTrace();
             }
     }
-    public transient static final Path saveLocation = Path.of(DataFolder.toString(), "PSPToolsSettings.json");
+    public static final Path saveLocation = Path.of(DataFolder.toString(), "PSPToolsSettings.json");
 
     public LastSelectedPSPInfo LastSelectedPSP;
     public URL DatabaseUrl;

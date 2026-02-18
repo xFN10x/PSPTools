@@ -24,9 +24,9 @@ import java.io.IOException;
  */
 public interface Seekable {
 
-    public long length() throws IOException;
+    long length() throws IOException;
 
-    public void seek(long position) throws IOException;
+    void seek(long position) throws IOException;
 
-    public long getFilePointer() throws IOException;
+    long getFilePointer() throws IOException;
 }

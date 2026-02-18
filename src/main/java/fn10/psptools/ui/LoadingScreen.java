@@ -13,7 +13,7 @@ import java.awt.*;
 public class LoadingScreen extends JDialog {
 
     protected JProgressBar MainBar = new JProgressBar();
-    protected JLabel MainText = new JLabel("Loading...");;
+    protected JLabel MainText = new JLabel("Loading...");
 
     public Integer Steps = null;
 

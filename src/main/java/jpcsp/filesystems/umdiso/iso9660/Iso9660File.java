@@ -27,13 +27,13 @@ import java.util.TimeZone;
  */
 public class Iso9660File {
 
-    private int fileLBA;
-    private int fileSize;
-    private int fileProperties;
+    private final int fileLBA;
+    private final int fileSize;
+    private final int fileProperties;
     // padding: byte[3]
     private String fileName; //[128+1];
     //Iso9660Date date; // byte[7]
-    private Date timestamp;
+    private final Date timestamp;
 
     private int Ubyte(byte b)
     {

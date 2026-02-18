@@ -36,8 +36,8 @@ import jpcsp.util.Utilities;
 public class UmdIsoReader {
 
 	RandomAccessFile fileReader;
-	private HashMap<String, Iso9660File> fileCache = new HashMap<String, Iso9660File>();
-	private HashMap<String, Iso9660Directory> dirCache = new HashMap<String, Iso9660Directory>();
+	private final HashMap<String, Iso9660File> fileCache = new HashMap<String, Iso9660File>();
+	private final HashMap<String, Iso9660Directory> dirCache = new HashMap<String, Iso9660Directory>();
 
 	enum FileFormat {
 		Uncompressed, CompressedCSO, CompressedDAX, // not implemented yet
@@ -60,12 +60,11 @@ public class UmdIsoReader {
 
 	private int BytesToInt(byte[] bytes, int offset)
 			throws ArrayIndexOutOfBoundsException {
-		return Ubyte(bytes[offset + 0]) | (Ubyte(bytes[offset + 1]) << 8)
+		return Ubyte(bytes[offset]) | (Ubyte(bytes[offset + 1]) << 8)
 				| (Ubyte(bytes[offset + 2]) << 16) | (bytes[offset + 3] << 24);
 	}
 
-	public UmdIsoReader(String umdFilename) throws IOException,
-			FileNotFoundException {
+	public UmdIsoReader(String umdFilename) throws IOException {
 		fileName = umdFilename;
 		fileReader = new RandomAccessFile(umdFilename, "r");
 
@@ -103,7 +102,7 @@ public class UmdIsoReader {
 			fileReader.readFully(offsetData);
 
 			for (int i = 0; i <= numSectors; i++) {
-				sectorOffsets[i] = (BytesToInt(offsetData, i * 4)) & 0xFFFFFFFFl;
+				sectorOffsets[i] = (BytesToInt(offsetData, i * 4)) & 0xFFFFFFFFL;
 				if (i > 0) {
 					if ((sectorOffsets[i] & 0x7FFFFFFF) < (sectorOffsets[i - 1] & 0x7FFFFFFF)) {
 						throw new IOException("Invalid offset [" + i + "]: "
@@ -275,8 +274,7 @@ public class UmdIsoReader {
 		return buffer;
 	}
 
-	private Iso9660File getFileEntry(String filePath) throws IOException,
-			FileNotFoundException {
+	private Iso9660File getFileEntry(String filePath) throws IOException {
 		Iso9660File info;
 
 		info = fileCache.get(filePath);
@@ -340,8 +338,7 @@ public class UmdIsoReader {
 		return info;
 	}
 
-	public UmdIsoFile getFile(String filePath) throws IOException,
-			FileNotFoundException {
+	public UmdIsoFile getFile(String filePath) throws IOException {
 		int fileStart;
 		long fileLength;
 		Date timestamp = null;
@@ -370,7 +367,7 @@ public class UmdIsoReader {
 			}
 		} else if (filePath != null && filePath.length() == 0) {
 			fileStart = 0;
-			fileLength = numSectors * 2048;
+			fileLength = numSectors * 2048L;
 		} else {
 			Iso9660File info = getFileEntry(filePath);
 			if (info != null) {
@@ -393,8 +390,7 @@ public class UmdIsoReader {
 		return new UmdIsoFile(this, fileStart, fileLength, timestamp, fileName);
 	}
 
-	public String[] listDirectory(String filePath) throws IOException,
-			FileNotFoundException {
+	public String[] listDirectory(String filePath) throws IOException {
 		Iso9660Directory dir = null;
 
 		if (filePath.compareTo("") == 0) {
@@ -418,8 +414,7 @@ public class UmdIsoReader {
 		return dir.getFileList();
 	}
 
-	public int getFileProperties(String filePath) throws IOException,
-			FileNotFoundException {
+	public int getFileProperties(String filePath) throws IOException {
 		if (filePath.compareTo("") == 0) {
 			return 2;
 		}
@@ -433,8 +428,7 @@ public class UmdIsoReader {
 		return info.getProperties();
 	}
 
-	public boolean isDirectory(String filePath) throws IOException,
-			FileNotFoundException {
+	public boolean isDirectory(String filePath) throws IOException {
 		return (getFileProperties(filePath) & 2) == 2;
 	}
 
@@ -443,7 +437,7 @@ public class UmdIsoReader {
 	}
 
 	private String getFileNameRecursive(int fileStartSector, String path,
-			String[] files) throws FileNotFoundException, IOException {
+			String[] files) throws IOException {
 		for (String file : files) {
 			String filePath = path + "/" + file;
 			Iso9660File info = null;
@@ -537,8 +531,7 @@ public class UmdIsoReader {
 		return size;
 	}
 
-	public void dumpIndexFile(String filename) throws IOException,
-			FileNotFoundException {
+	public void dumpIndexFile(String filename) throws IOException {
 		PrintWriter out = new PrintWriter(new FileOutputStream(filename));
 		out.println("  Start    Size       Name");
 		String[] files = listDirectory("");
@@ -546,7 +539,7 @@ public class UmdIsoReader {
 		out.println(String.format("Total Size %10d", size));
 		out.println(String.format("Image Size %10d", numSectors * 2048));
 		out.println(String.format("Missing    %10d (%d sectors)",
-				(numSectors * 2048) - size, numSectors - (size / 2048)));
+				(numSectors * 2048L) - size, numSectors - (size / 2048)));
 		out.close();
 	}
 }
