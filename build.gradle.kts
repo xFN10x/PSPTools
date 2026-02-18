@@ -34,6 +34,9 @@ dependencies {
 
     // Source: https://mvnrepository.com/artifact/commons-net/commons-net
     implementation("commons-net:commons-net:3.12.0")
+
+    //https://github.com/jpcsp/jpcsp
+    implementation(files("libs/JPCSP-OnlyFileSystemStuff.jar"))
 }
 
 
