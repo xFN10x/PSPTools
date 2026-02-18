@@ -204,6 +204,14 @@
 			<attribute name="version" value="3.5.0"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="C:/Users/mathd/Documents/PSPTools/libs/JPCSP-OnlyFileSystemStuff.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="JPCSP-OnlyFileSystemStuff.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="lib" path="C:/Users/mathd/.gradle/caches/modules-2/files-2.1/ws.schild/jave-all-deps/3.5.0/58cb14594dc90bdbc648d4327c716a2494cc74c8/jave-all-deps-3.5.0.jar">
 		<attributes>
 			<attribute name="gradle.buildServer" value="true"/>

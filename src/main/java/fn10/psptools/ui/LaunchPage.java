@@ -154,7 +154,7 @@ public class LaunchPage extends JFrame {
                 PSP.setCurrentPSP(selected);
         });
 
-        ExtraMenu.add("Open custom SFO Manager").addActionListener(ac -> {
+        ExtraMenu.add("Open Custom SFO Manager").addActionListener(ac -> {
             SystemFileChooser fileChooser = new SystemFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             fileChooser.showOpenDialog(this);
