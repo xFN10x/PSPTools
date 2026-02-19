@@ -17,11 +17,14 @@ Features include:
   - **View SFO** - View the raw data of any SFO. Useful for developers.
   - **Select Demo PSP** - Use this to test out the program without the need for any folder setting up, or a PSP. (When using the demo PSP, you cannot do save patching.)
 
-> [!TIP] Using JAR
+> [!TIP]
+> **Using JAR**
 >
 > If you don't have a prebuilt version of PSPTools made for your platform, you can use the cross-platform jar. To do this you need to have java 25 installed. You can get one at <https://learn.microsoft.com/en-ca/java/openjdk/download#openjdk-25>
 
-> [!NOTE] For Flavourtown Users/Shipwrights
+> [!NOTE]
+> **For Flavourtown Users/Shipwrights**
+> 
 > For testing, please use the demo mode. Or, if you actually own a PSP or Vita, you can try that to get the full experiance.
 
 
