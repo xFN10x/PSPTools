@@ -1,7 +1,7 @@
 plugins {
     application
-    id("org.panteleyev.jpackageplugin") version "1.7.6"
     id("com.gradleup.shadow") version "9.3.2"
+    id("org.panteleyev.jpackageplugin") version "2.0.0"
 }
 
 
@@ -19,11 +19,11 @@ dependencies {
 
     implementation("com.google.code.gson:gson:2.13.2")
 
-    implementation("com.google.guava:guava:33.4.8-jre")
+    implementation("com.google.guava:guava:33.5.0-jre")
 
     implementation("commons-io:commons-io:2.21.0")
 
-    implementation("org.apache.commons:commons-lang3:3.18.0")
+    implementation("org.apache.commons:commons-lang3:3.20.0")
 
     implementation("org.codehaus.plexus:plexus-archiver:4.11.0")
 
