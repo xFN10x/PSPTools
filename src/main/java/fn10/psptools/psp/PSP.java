@@ -49,6 +49,7 @@ public abstract class PSP {
     }
 
     public static PSP getPSPFromLastSelectedInfo(LastSelectedPSPInfo info) {
+        if (info == null) return null;
         switch (info.mode()) {
             case SelectionMode.PSP_DIR:
                 return new RealPSP(Path.of(info.data()));

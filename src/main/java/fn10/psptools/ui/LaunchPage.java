@@ -17,15 +17,8 @@
 */
 package fn10.psptools.ui;
 
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.SpringLayout;
+import javax.swing.*;
+
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 
 import com.formdev.flatlaf.util.SystemFileChooser;
@@ -43,6 +36,8 @@ import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.Component;
 import java.awt.Toolkit;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -77,6 +72,11 @@ public class LaunchPage extends JFrame {
 
     }
 
+    public static void showLaunchPage() {
+        LaunchPage launchPage = new LaunchPage();
+        SwingUtilities.invokeLater(() -> launchPage.setVisible(true));
+    }
+
     public LaunchPage() {
         super("PSPTools");
         setLayout(Lay);
@@ -105,7 +105,6 @@ public class LaunchPage extends JFrame {
                         return;
                     PSP.setCurrentPSP(psp);
                     SaveEditor.doClick();
-                } else {
                 }
             } else {
                 setVisible(false);
@@ -115,11 +114,11 @@ public class LaunchPage extends JFrame {
             }
         });
 
-        SaveTools.addActionListener(act -> {
+        SaveTools.addActionListener(_ -> {
             new SaveTools(this);
         });
 
-        GameEditor.addActionListener(action -> {
+        GameEditor.addActionListener(_ -> {
             if (!PSP.getCurrentPSP().pspActive()) {
                 int option = JOptionPane.showConfirmDialog(this, "No PSP is selected, but is required.\nSelect one?",
                         "PSP Selection Confirm", JOptionPane.YES_NO_OPTION);
@@ -127,7 +126,6 @@ public class LaunchPage extends JFrame {
                 if (option == JOptionPane.YES_OPTION) {
                     PSP.setCurrentPSP(PSPSelectionUI.getNewPSP(this));
                     GameEditor.doClick();
-                } else {
                 }
             } else {
                 setVisible(false);
@@ -148,13 +146,13 @@ public class LaunchPage extends JFrame {
         ButtonsPane.add(AutoPSX);
         ButtonsPane.add(GameTools);
 
-        FileMenu.add("Select New PSP").addActionListener(ac -> {
+        FileMenu.add("Select New PSP").addActionListener(_ -> {
             PSP selected = PSPSelectionUI.getNewPSP(this);
             if (selected != null)
                 PSP.setCurrentPSP(selected);
         });
 
-        ExtraMenu.add("Open Custom SFO Manager").addActionListener(ac -> {
+        ExtraMenu.add("Open Custom SFO Manager").addActionListener(_ -> {
             SystemFileChooser fileChooser = new SystemFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             fileChooser.showOpenDialog(this);
@@ -224,5 +222,6 @@ public class LaunchPage extends JFrame {
         setSize(size);
         setLocation(getScreenCenter(this));
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setAlwaysOnTop(true);
     }
 }

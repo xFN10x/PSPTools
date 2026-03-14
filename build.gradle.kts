@@ -37,6 +37,9 @@ dependencies {
 
     //https://github.com/jpcsp/jpcsp
     implementation(files("libs/JPCSP-OnlyFileSystemStuff.jar"))
+
+    implementation("org.apache.logging.log4j:log4j-core:2.25.3")
+    annotationProcessor("org.apache.logging.log4j:log4j-core:2.25.3")
 }
 
 
@@ -51,7 +54,7 @@ application {
 }
 
 
-var version = "1.1.0"
+var version = "1.1.1"
 
 tasks.jpackage {
     dependsOn("build", "shadowJar")
