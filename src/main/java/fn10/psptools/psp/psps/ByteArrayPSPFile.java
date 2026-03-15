@@ -26,10 +26,12 @@ public class ByteArrayPSPFile implements PSPFile {
 
     private final String name;
     private final byte[] data;
+    private final Runnable onDelete;
 
-    public ByteArrayPSPFile(String name, byte[] data) {
+    public ByteArrayPSPFile(String name, byte[] data, Runnable onDelete) {
         this.name = name;
         this.data = data;
+        this.onDelete = onDelete;
     }
 
     @Override
@@ -61,6 +63,11 @@ public class ByteArrayPSPFile implements PSPFile {
     @Override
     public boolean actuallyExists() {
         return true;
+    }
+
+    @Override
+    public void delete() {
+        onDelete.run();
     }
 
 }

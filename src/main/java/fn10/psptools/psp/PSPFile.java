@@ -28,5 +28,6 @@ public interface PSPFile {
     String getName();
     String getExtension();
     boolean actuallyExists();
+    void delete();
 
 }

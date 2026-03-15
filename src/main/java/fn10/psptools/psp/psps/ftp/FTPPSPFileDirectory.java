@@ -69,7 +69,14 @@ public class FTPPSPFileDirectory implements PSPFileDirectory {
             client.retrieveFile(filePath, byteArrayOutputStream);
             if (file == null)
                 return null;
-            return new ByteArrayPSPFile(file.getName(), byteArrayOutputStream.toByteArray());
+            return new ByteArrayPSPFile(file.getName(), byteArrayOutputStream.toByteArray(), () -> {
+                try {
+                    client.changeWorkingDirectory("/");
+                    client.dele(filePath);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
         } catch (Exception e) {
             ErrorShower.full(FTPPSP.alwaysOnTopFrame, "Failed to get file: " + filePath, e);
             return null;

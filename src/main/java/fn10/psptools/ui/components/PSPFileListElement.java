@@ -3,11 +3,11 @@ package fn10.psptools.ui.components;
 import fn10.psptools.psp.PSPFileDirectory;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -44,8 +44,7 @@ public class PSPFileListElement extends JPanel implements MouseListener {
         if (pfd.isDirectory() && pfd.getDirectory().getName().equalsIgnoreCase("ISO")) {
             nameLabel.setIcon(new ImageIcon(getClass().getResource("/fileIcons/iso.png")));
             nameLabel.setText(pfd.getDirectory().getName());
-        }
-        else if (pfd.isDirectory()) {
+        } else if (pfd.isDirectory()) {
             nameLabel.setIcon(new ImageIcon(getClass().getResource("/fileIcons/generic-folder.png")));
             nameLabel.setText(pfd.getDirectory().getName());
         } else if (pfd.isFile()) {
@@ -98,12 +97,38 @@ public class PSPFileListElement extends JPanel implements MouseListener {
 
     }
 
+    public String getFileName() {
+        return (fileDir.isDirectory() ? fileDir.getDirectory().getName() : fileDir.getFile().getName());
+    }
+
+    public void rightClickCheck(MouseEvent e) {
+        if (e.getButton() != MouseEvent.BUTTON3) return;
+
+        JPopupMenu jPopupMenu = new JPopupMenu();
+        if (selectedList.size() == 1) {
+            jPopupMenu.setBorder(new TitledBorder("Manage " + (fileDir.isDirectory() ? "Folder" : "File") + ": " + getFileName()));
+            jPopupMenu.add("Delete").addActionListener(ac -> {
+                int option = JOptionPane.showConfirmDialog(getParent(), "Are you sure you want delete " + getFileName() + "?");
+                if (option == JOptionPane.YES_OPTION) {
+                    if (fileDir.isDirectory()) {
+                        fileDir.getDirectory().delete();
+                    } else {
+                        fileDir.getFile().delete();
+                    }
+                }
+            });
+        } else {
+
+        }
+        jPopupMenu.show(this, e.getX(), e.getY());
+    }
+
     @Override
     public void mousePressed(MouseEvent e) {
 
         Component[] components = getParent().getComponents();
         //System.out.println(List.of(components).indexOf(this));
-        if (e.isShiftDown()) {
+        if (e.isShiftDown() && !e.isPopupTrigger()) {
             select();
             List<Component> list = List.of(components);
             ArrayList<PSPFileListElement> copy = new ArrayList<>(selectedList);
@@ -116,9 +141,10 @@ public class PSPFileListElement extends JPanel implements MouseListener {
                     ((PSPFileListElement) component).select();
                 }
             }
+            rightClickCheck(e);
             return;
         }
-        if (!e.isControlDown()) {
+        if (!e.isControlDown() && !e.isPopupTrigger()) {
             for (Component component : components) {
                 if (component instanceof PSPFileListElement) {
                     ((PSPFileListElement) component).unselect();
@@ -126,13 +152,12 @@ public class PSPFileListElement extends JPanel implements MouseListener {
             }
         }
 
-
         select();
+        rightClickCheck(e);
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-
     }
 
     @Override

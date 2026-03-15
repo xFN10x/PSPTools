@@ -83,4 +83,9 @@ public class RealPSPFile implements PSPFile {
         return file.exists();
     }
 
+    @Override
+    public void delete() {
+        file.delete();
+    }
+
 }

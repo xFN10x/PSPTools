@@ -56,7 +56,14 @@ public class FTPPSPDirectory implements PSPDirectory {
                 if (ftpfile.isDirectory()) {
                     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                     client.retrieveFile(file, byteArrayOutputStream);
-                    building.add(new ByteArrayPSPFile(ftpfile.getName(), byteArrayOutputStream.toByteArray()));
+                    building.add(new ByteArrayPSPFile(ftpfile.getName(), byteArrayOutputStream.toByteArray(), () -> {
+                        try {
+                            client.changeWorkingDirectory("/");
+                            client.dele(file);
+                        } catch (IOException e) {
+                            ErrorShower.full(PSP.alwaysOnTopFrame, e);
+                        }
+                    }));
                 }
             }
             return building.toArray(new PSPFile[0]);
@@ -112,7 +119,15 @@ public class FTPPSPDirectory implements PSPDirectory {
             FTPFile ftpfile = listFiles[0];
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             client.retrieveFile(ftpfile.getName(), byteArrayOutputStream);
-            return new ByteArrayPSPFile(ftpfile.getName(), byteArrayOutputStream.toByteArray());
+            String path = resolvePath(this.path, name);
+            return new ByteArrayPSPFile(ftpfile.getName(), byteArrayOutputStream.toByteArray(), () -> {
+                try {
+                    client.changeWorkingDirectory("/");
+                    client.dele(path);
+                } catch (IOException e) {
+                    PSPTools.log.error("Failed to delete file: " + path);
+                }
+            });
         } catch (Exception e) {
             ErrorShower.full(FTPPSP.alwaysOnTopFrame, "Failed to get file: " + printWorkingDirectory + "/" + name, e);
             return null;
@@ -122,7 +137,10 @@ public class FTPPSPDirectory implements PSPDirectory {
     protected ByteArrayPSPFile makePSPFile(FTPFile file) throws IOException {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         client.retrieveFile(file.getName(), byteArrayOutputStream);
-        return new ByteArrayPSPFile(file.getName(), byteArrayOutputStream.toByteArray());
+        String fullPath = resolvePath(client.printWorkingDirectory(), file.getName());
+        return new ByteArrayPSPFile(file.getName(), byteArrayOutputStream.toByteArray(), () -> {
+
+        });
     }
 
     @Override
@@ -200,7 +218,7 @@ public class FTPPSPDirectory implements PSPDirectory {
             if (sb.toString().endsWith("/") && k2.startsWith("/"))
                 sb.append(k2.substring(1));
         }
-        return sb.toString().replaceAll("\\.\\/", "/");
+        return sb.toString().replaceAll("\\./", "/");
     }
 
     @Override
