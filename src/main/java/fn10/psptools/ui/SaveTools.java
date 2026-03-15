@@ -75,6 +75,7 @@ import fn10.psptools.ui.components.ParamSFOListElement;
 import fn10.psptools.ui.interfaces.SFOListElementListener;
 import fn10.psptools.util.ImageUtilites;
 import fn10.psptools.util.SavedVariables;
+import org.jspecify.annotations.NonNull;
 
 public class SaveTools extends JFrame implements SFOListElementListener {
 
@@ -187,9 +188,6 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                         e1.printStackTrace();
                     }
                 }
-
-                System.gc();
-
             }
 
             public void windowOpened(WindowEvent e) {
@@ -339,11 +337,12 @@ public class SaveTools extends JFrame implements SFOListElementListener {
 
                         // System.out.println(Path.of(SavedVariables.DataFolder.toString(), "Patches",
                         // "PSP").toString());
+                        Path path = Path.of(SavedVariables.DataFolder.toString());
                         switch (option.toString()) {
                             case "PSP":
                                 try {
                                     zip.extract("apollo-patches-main/PSP/",
-                                            Path.of(SavedVariables.DataFolder.toString()).toFile());
+                                            path.toFile());
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
@@ -351,7 +350,7 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                             case "PS3":
                                 try {
                                     zip.extract("apollo-patches-main/PS3/",
-                                            Path.of(SavedVariables.DataFolder.toString()).toFile());
+                                            path.toFile());
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
@@ -360,10 +359,10 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                             default:
                                 try {
                                     zip.extract("apollo-patches-main/PSP/",
-                                            Path.of(SavedVariables.DataFolder.toString()).toFile());
+                                            path.toFile());
 
                                     zip.extract("apollo-patches-main/PS3/",
-                                            Path.of(SavedVariables.DataFolder.toString()).toFile());
+                                            path.toFile());
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
@@ -386,7 +385,6 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                         });
 
                         JOptionPane.showMessageDialog(null, "Patchs have been downloaded.");
-                        System.gc();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -532,21 +530,7 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                                     System.out.println("(" + currentFile + ") Patch " + i + ": "
                                             + patchName);
 
-                                    JCheckBox check = new JCheckBox(patchName);
-                                    check.setName(String.valueOf(i));
-
-                                    // if the save doesnt have the file specified, it must be
-                                    // for another save type from the game
-                                    // if (!Path.of(selected.dir.getAbsolutePath(), currentFile).toFile().exists())
-                                    // {
-                                    // check.setEnabled(false);
-                                    // }
-                                    // commented the rest out cause the middle was already out
-
-                                    if (patchName.contains("Required")) {
-                                        check.setSelected(true);
-                                        check.setEnabled(false);
-                                    }
+                                    JCheckBox check = getJCheckBox(patchName, i);
 
                                     PSPPatchSeletingPanel.add(check);
                                     i++;
@@ -683,9 +667,26 @@ public class SaveTools extends JFrame implements SFOListElementListener {
         }
     }
 
-    public void reloadDatabase(URL url, String searchTerm) {
-        System.gc();
+    private static @NonNull JCheckBox getJCheckBox(String patchName, int i) {
+        JCheckBox check = new JCheckBox(patchName);
+        check.setName(String.valueOf(i));
 
+        // if the save doesnt have the file specified, it must be
+        // for another save type from the game
+        // if (!Path.of(selected.dir.getAbsolutePath(), currentFile).toFile().exists())
+        // {
+        // check.setEnabled(false);
+        // }
+        // commented the rest out cause the middle was already out
+
+        if (patchName.contains("Required")) {
+            check.setSelected(true);
+            check.setEnabled(false);
+        }
+        return check;
+    }
+
+    public void reloadDatabase(URL url, String searchTerm) {
         if (currentThread != null) {
             try {
                 currentThread.cancel(true);
@@ -844,7 +845,6 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                             FileUtils.copyFile(zipFile, file);
 
                             loading.setVisible(false);
-                            System.gc();
                             JOptionPane.showMessageDialog(null,
                                     "The save has been downloaded.");
                             break;
@@ -862,7 +862,6 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                             zipUnArchiver.setDestDirectory(directory);
                             zipUnArchiver.extract();
                             loading.setVisible(false);
-                            System.gc();
                             JOptionPane.showMessageDialog(null,
                                     "The save has been downloaded.");
 
@@ -883,7 +882,6 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                                     tempFile.delete();
 
                                     loading.setVisible(false);
-                                    System.gc();
                                     JOptionPane.showMessageDialog(loading,
                                             "The save has been downloaded.");
 
@@ -905,7 +903,6 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                                 tempFile.delete();
 
                                 loading.setVisible(false);
-                                System.gc();
                                 JOptionPane.showMessageDialog(null,
                                         "The save has been downloaded.");
 
@@ -919,7 +916,6 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                 } catch (Exception e) {
                     e.printStackTrace();
                     loading.setVisible(false);
-                    System.gc();
                     JOptionPane.showMessageDialog(null,
                             "Failed to download save: " + e.getMessage());
                 }

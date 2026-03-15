@@ -113,7 +113,6 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                     selectedVideoProcess.stop();
                 if (active != null)
                     active.interrupt();
-                System.gc();
             }
 
         });
@@ -285,9 +284,6 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                 }
 
             }
-
-            System.gc();
-
         });
         main.setName("PSPTools-FillOutThread");
         main.start();
@@ -444,7 +440,6 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                 SwingUtilities.invokeLater(() -> {
                     loading.setVisible(false);
 
-                    System.gc();
                     FillOutWindow(targets);
                 });
 
@@ -496,7 +491,6 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                     }
                     loading.setVisible(false);
 
-                    System.gc();
                     FillOutWindow(targets);
                 });
             } catch (Exception e) {

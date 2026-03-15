@@ -141,8 +141,6 @@ public class SavedVariables {
                     unarc.setDestDirectory(SavedVariables.DataFolder.toFile());
                     unarc.extract();
 
-                    System.gc();
-
                     tempFile.delete();
 
                     loading.setVisible(false);

@@ -159,8 +159,6 @@ public class MediaPlayer {
 
                     output.close();
 
-                    System.gc();
-
                     tempFile.delete();
 
                     loading.setVisible(false);
