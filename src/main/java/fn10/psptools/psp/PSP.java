@@ -34,7 +34,7 @@ public abstract class PSP {
 
     private static final PSP NULL_PSP = new RealPSP(Path.of(""));
     public static boolean DemoMode = false;
-    protected static final JFrame alwaysOnTopFrame = new JFrame();
+    public static final JFrame alwaysOnTopFrame = new JFrame();
     static {
         alwaysOnTopFrame.setAlwaysOnTop(true);
     }

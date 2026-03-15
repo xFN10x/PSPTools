@@ -31,6 +31,7 @@ import java.util.Date;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import fn10.psptools.psp.PSP;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SystemUtils;
@@ -55,7 +56,7 @@ public class SavedVariables {
             try {
                 Files.createDirectory(DataFolder);
             } catch (IOException e) {
-                e.printStackTrace();
+                ErrorShower.full(PSP.alwaysOnTopFrame, e);
             }
     }
     public static final Path saveLocation = Path.of(DataFolder.toString(), "PSPToolsSettings.json");
@@ -145,13 +146,13 @@ public class SavedVariables {
 
                     loading.setVisible(false);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    ErrorShower.full(parent, "Failed to download CLI tools.", e);
                 }
 
                 JOptionPane.showMessageDialog(null, "Apollo CLI Tools have been downloaded.");
             }).start();
         } catch (Exception e) {
-            e.printStackTrace();
+            ErrorShower.full(parent, "Failed to download CLI tools.", e);
         }
     }
 
@@ -176,8 +177,7 @@ public class SavedVariables {
             Files.write(saveLocation, json.getBytes(), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
 
         } catch (Exception e) {
-            ErrorShower.showError(null, "Failed to save settings.", e.getMessage(), e);
-            e.printStackTrace();
+            ErrorShower.full(PSP.alwaysOnTopFrame, "Failed to save settings", e);
         }
     }
 

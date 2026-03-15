@@ -33,6 +33,7 @@ import fn10.psptools.psp.PSP;
 import fn10.psptools.psp.PSPDirectory;
 import fn10.psptools.ui.components.ParamSFOListElement;
 import fn10.psptools.ui.interfaces.SFOListElementListener;
+import fn10.psptools.util.ErrorShower;
 import fn10.psptools.util.ImageUtilites;
 
 public class SFOBasedSelector extends JDialog implements SFOListElementListener {
@@ -120,7 +121,7 @@ public class SFOBasedSelector extends JDialog implements SFOListElementListener 
             this.selected = selectedElement;
 
         } catch (Exception e) {
-            e.printStackTrace();
+            ErrorShower.full(this, e);
         }
     }
 

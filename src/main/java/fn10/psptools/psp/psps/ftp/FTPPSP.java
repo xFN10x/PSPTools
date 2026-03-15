@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.*;
 
 import fn10.psptools.ui.LoadingScreen;
+import fn10.psptools.util.ErrorShower;
 import org.apache.commons.net.ProtocolCommandEvent;
 import org.apache.commons.net.ProtocolCommandListener;
 import org.apache.commons.net.ftp.FTPClient;
@@ -126,11 +127,12 @@ public class FTPPSP extends PSP {
 
     @Override
     public PSPDirectory getFolder(String child, String... others) {
+        String loggingFolderPath = child + "/" + String.join("/", others);
         try {
-            System.out.println("Getting folder: " + child + "/" + String.join("?", others));
+            System.out.println("Getting folder: " + loggingFolderPath);
             return new FTPPSPDirectory(client, "/").resolve(child, others).getDirectory();
         } catch (IOException e) {
-            e.printStackTrace();
+            ErrorShower.full(alwaysOnTopFrame, "Failed to get FTP Folder: " + loggingFolderPath, e);
             return null;
         }
     }

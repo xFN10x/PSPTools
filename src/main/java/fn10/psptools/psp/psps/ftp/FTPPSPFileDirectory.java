@@ -20,6 +20,7 @@ package fn10.psptools.psp.psps.ftp;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import fn10.psptools.util.ErrorShower;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 
@@ -53,7 +54,7 @@ public class FTPPSPFileDirectory implements PSPFileDirectory {
             } else
                 return false;
         } catch (IOException e) {
-            e.printStackTrace();
+            ErrorShower.full(FTPPSP.alwaysOnTopFrame, "Failed isDirectory", e);
             return false;
         }
     }
@@ -70,7 +71,7 @@ public class FTPPSPFileDirectory implements PSPFileDirectory {
                 return null;
             return new ByteArrayPSPFile(file.getName(), byteArrayOutputStream.toByteArray());
         } catch (Exception e) {
-            e.printStackTrace();
+            ErrorShower.full(FTPPSP.alwaysOnTopFrame, "Failed to get file: " + filePath, e);
             return null;
         }
     }

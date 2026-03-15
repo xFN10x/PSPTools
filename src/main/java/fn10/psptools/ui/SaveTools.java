@@ -63,6 +63,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import fn10.psptools.util.ErrorShower;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
@@ -185,7 +186,7 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                     try {
                         currentReader.close();
                     } catch (Exception e1) {
-                        e1.printStackTrace();
+                        ErrorShower.full(parent, e1);
                     }
                 }
             }
@@ -202,7 +203,7 @@ public class SaveTools extends JFrame implements SFOListElementListener {
 
         tabbedPane.addTab("Save Database", databasePanel);
         if (!PSP.DemoMode)
-        tabbedPane.addTab("Save Patching", PatchPanel);
+            tabbedPane.addTab("Save Patching", PatchPanel);
         
 
         tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
@@ -344,7 +345,7 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                                     zip.extract("apollo-patches-main/PSP/",
                                             path.toFile());
                                 } catch (Exception e) {
-                                    e.printStackTrace();
+
                                 }
                                 break;
                             case "PS3":
@@ -352,7 +353,7 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                                     zip.extract("apollo-patches-main/PS3/",
                                             path.toFile());
                                 } catch (Exception e) {
-                                    e.printStackTrace();
+                                    ErrorShower.full(this, e);
                                 }
                                 break;
 
@@ -364,7 +365,7 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                                     zip.extract("apollo-patches-main/PS3/",
                                             path.toFile());
                                 } catch (Exception e) {
-                                    e.printStackTrace();
+                                    ErrorShower.full(this, e);
                                 }
                                 break;
 
@@ -386,11 +387,11 @@ public class SaveTools extends JFrame implements SFOListElementListener {
 
                         JOptionPane.showMessageDialog(null, "Patchs have been downloaded.");
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        ErrorShower.full(this, e);
                     }
                 }).start();
             } catch (Exception e) {
-                e.printStackTrace();
+                ErrorShower.full(this, e);
             }
         });
 
@@ -545,7 +546,7 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                         JOptionPane.showMessageDialog(this, "No patches were found for this save.", "No Patches found",
                                 JOptionPane.ERROR_MESSAGE);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    ErrorShower.full(this, e);
                 }
             }
         });
@@ -607,11 +608,11 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                             file.delete();
 
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        ErrorShower.full(this, e);
                     }
                 }).start();
             } catch (Exception e) {
-                e.printStackTrace();
+                ErrorShower.full(this, e);
             }
         });
 
@@ -693,7 +694,7 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                 if (currentReader != null)
                     currentReader.close();
             } catch (Exception e) {
-                e.printStackTrace();
+                ErrorShower.full(this, e);
             }
         }
 
@@ -744,7 +745,7 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                                 return;
                             }
 
-                            e.printStackTrace();
+                            ErrorShower.full(this, e);
                         }
                     });
         } else {
@@ -789,7 +790,7 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                                     databaseListingInnerPanel.remove(comp);
                                 return;
                             }
-                            e.printStackTrace();
+                            ErrorShower.full(this, e);
                         }
                     });
         }
@@ -914,7 +915,7 @@ public class SaveTools extends JFrame implements SFOListElementListener {
                     }
                     zipFile.delete();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    ErrorShower.full(this, e);
                     loading.setVisible(false);
                     JOptionPane.showMessageDialog(null,
                             "Failed to download save: " + e.getMessage());

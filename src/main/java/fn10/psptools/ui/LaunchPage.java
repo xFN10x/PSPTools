@@ -19,6 +19,7 @@ package fn10.psptools.ui;
 
 import javax.swing.*;
 
+import fn10.psptools.util.ErrorShower;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 
 import com.formdev.flatlaf.util.SystemFileChooser;
@@ -36,8 +37,6 @@ import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.Component;
 import java.awt.Toolkit;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -180,7 +179,7 @@ public class LaunchPage extends JFrame {
                     new SFOViewer(getOwner(), ParamSFOListElement.ofIso(pspdir, null).sfo).setVisible(true);
 
             } catch (Exception e) {
-                e.printStackTrace();
+                ErrorShower.full(this, e);
             }
         });
 
@@ -207,9 +206,7 @@ public class LaunchPage extends JFrame {
                     PSP.DemoMode = true;
                     PSP.setCurrentPSP(new RealPSP(demoFolder), true, false);
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    JOptionPane.showMessageDialog(this, "Unable to enter demo mode.", "Error",
-                            JOptionPane.ERROR_MESSAGE);
+                    ErrorShower.full(this, "Unable to enter demo mode.", e);
                 }
             }
         });

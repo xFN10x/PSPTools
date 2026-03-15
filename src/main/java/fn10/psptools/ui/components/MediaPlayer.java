@@ -34,6 +34,8 @@ import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import fn10.psptools.psp.PSP;
+import fn10.psptools.util.ErrorShower;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
@@ -126,14 +128,14 @@ public class MediaPlayer {
                                     "ffmpeg-8.0.1-essentials_build", "bin",
                                     "ffmpeg.exe").toFile(), new File(getDefaultFFmpegPath()));
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            ErrorShower.full(PSP.alwaysOnTopFrame, e);
                         }
                         try {
                             FileUtils.moveFile(Path.of(new File(getDefaultFFplayPath()).getParentFile().getPath(),
                                     "ffmpeg-8.0.1-essentials_build", "bin",
                                     "ffplay.exe").toFile(), new File(getDefaultFFplayPath()));
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            ErrorShower.full(PSP.alwaysOnTopFrame, e);
                         }
 
                         FileUtils.deleteDirectory(
@@ -165,11 +167,11 @@ public class MediaPlayer {
 
                     JOptionPane.showMessageDialog(null, "FFmpeg has been downloaded.");
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    ErrorShower.full(PSP.alwaysOnTopFrame, e);
                 }
             }).start();
         } catch (Exception e) {
-            e.printStackTrace();
+            ErrorShower.full(PSP.alwaysOnTopFrame, e);
         }
     }
 
@@ -233,7 +235,7 @@ public class MediaPlayer {
                 ffplay.execute();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            ErrorShower.full(PSP.alwaysOnTopFrame, e);
         }
     }
 
@@ -277,7 +279,7 @@ public class MediaPlayer {
                         ffmpeg.getProcessExitCode();
                         loading.countDown();
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        ErrorShower.full(PSP.alwaysOnTopFrame, e);
                     }
                 }).start();
             } else {
@@ -336,7 +338,7 @@ public class MediaPlayer {
                     try {
                         frames.add(ImageIO.read(file));
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        ErrorShower.full(PSP.alwaysOnTopFrame, e);
                     }
                 }
                 while (playing) {
@@ -351,7 +353,7 @@ public class MediaPlayer {
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                ErrorShower.full(PSP.alwaysOnTopFrame, e);
             }
         });
 

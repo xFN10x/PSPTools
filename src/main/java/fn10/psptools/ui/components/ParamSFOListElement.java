@@ -26,12 +26,14 @@ import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 import com.formdev.flatlaf.ui.FlatLineBorder;
 
+import fn10.psptools.psp.PSP;
 import fn10.psptools.psp.PSPDirectory;
 import fn10.psptools.psp.PSPFile;
 import fn10.psptools.psp.psps.real.RealPSPFile;
 import fn10.psptools.psp.sfo.ParamSFO;
 import fn10.psptools.psp.sfo.ParamSFO.Params;
 import fn10.psptools.ui.interfaces.SFOListElementListener;
+import fn10.psptools.util.ErrorShower;
 import fn10.psptools.util.ImageUtilites;
 import fn10.psptools.util.SavedVariables;
 import jpcsp.filesystems.umdiso.UmdIsoFile;
@@ -116,7 +118,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                                 .replace("\n", " ").replace(" ", "-") + ".zip";
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            ErrorShower.full(PSP.alwaysOnTopFrame, e);
             return null;
         }
 
@@ -179,7 +181,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                 return ParamSFOListElement.makeEmpty(selectedFunction);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            ErrorShower.full(PSP.alwaysOnTopFrame, e);
             return null;
         }
     }

@@ -24,6 +24,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 
+import fn10.psptools.PSPTools;
+import fn10.psptools.psp.PSP;
+import fn10.psptools.util.ErrorShower;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPFileFilter;
@@ -45,7 +48,7 @@ public class FTPPSPDirectory implements PSPDirectory {
     @Override
     public PSPFile[] getFiles() {
         try {
-            System.out.println("Retriving all files from: " + path);
+            PSPTools.log.info("Retrieving all files from: {}", path);
             ArrayList<PSPFile> building = new ArrayList<>();
             for (FTPFile ftpfile : client.listFiles(path)) {
                 String file = path + "/" + ftpfile.getName();
@@ -56,42 +59,43 @@ public class FTPPSPDirectory implements PSPDirectory {
                     building.add(new ByteArrayPSPFile(ftpfile.getName(), byteArrayOutputStream.toByteArray()));
                 }
             }
-            return building.toArray(new ByteArrayPSPFile[0]);
+            return building.toArray(new PSPFile[0]);
         } catch (Exception e) {
-            e.printStackTrace();
+            ErrorShower.full(FTPPSP.alwaysOnTopFrame, "Failed to get all files from:" + path, e);
             return null;
         }
     }
 
     @Override
     public PSPFileDirectory[] getAll() {
+        String Path = "";
         try {
+            Path = client.printWorkingDirectory();
             client.changeWorkingDirectory(path);
-            String Path = client.printWorkingDirectory();
-            System.out
-                    .println("Retriving all files & directories from: " + Path);
+            PSPTools.log.info("Retrieving all files & directories from: {}", Path);
             ArrayList<PSPFileDirectory> building = new ArrayList<>();
             FTPFile[] files = client.listFiles();
             for (FTPFile file : files) {
                 if (file.getName().equalsIgnoreCase(".") || file.getName().equalsIgnoreCase(".."))
                     continue;
-                System.out.println("Got file/dir : " + file.getName());
+                PSPTools.log.info("Got file/dir : {}", file.getName());
                 building.add(new FTPPSPFileDirectory(client, Path + "/" + file.getName()));
             }
 
-            return building.toArray(new FTPPSPFileDirectory[0]);
+            return building.toArray(new PSPFileDirectory[0]);
         } catch (Exception e) {
-            e.printStackTrace();
+            ErrorShower.full(FTPPSP.alwaysOnTopFrame, "Failed to get all files & directories from: " + Path, e);
             return null;
         }
     }
 
     @Override
     public PSPFile getFileWithName(String name) {
+        String printWorkingDirectory = "";
         try {
             client.changeWorkingDirectory(path);
-            String printWorkingDirectory = client.printWorkingDirectory();
-            System.out.println("Getting file with name: " + name + ", in path: " + printWorkingDirectory);
+            printWorkingDirectory = client.printWorkingDirectory();
+            PSPTools.log.info("Getting file with name: {}, in path: {}", name, printWorkingDirectory);
             // System.out.println("So, Retriving all files from: " + printWorkingDirectory +
             // " with filter.");
             FTPFile[] listFiles = client.listFiles(null, new FTPFileFilter() {
@@ -110,7 +114,7 @@ public class FTPPSPDirectory implements PSPDirectory {
             client.retrieveFile(ftpfile.getName(), byteArrayOutputStream);
             return new ByteArrayPSPFile(ftpfile.getName(), byteArrayOutputStream.toByteArray());
         } catch (Exception e) {
-            e.printStackTrace();
+            ErrorShower.full(FTPPSP.alwaysOnTopFrame, "Failed to get file: " + printWorkingDirectory + "/" + name, e);
             return null;
         }
     }
@@ -132,7 +136,7 @@ public class FTPPSPDirectory implements PSPDirectory {
             }
             return null;
         } catch (Exception e) {
-            e.printStackTrace();
+            ErrorShower.full(FTPPSP.alwaysOnTopFrame, "Couldn't find a file starting with: '" + prefix + "' in the dir: " + path, e);
             return null;
         }
     }
@@ -143,7 +147,7 @@ public class FTPPSPDirectory implements PSPDirectory {
             client.changeWorkingDirectory("/");
             client.dele(path);
         } catch (Exception e) {
-            e.printStackTrace();
+            ErrorShower.full(FTPPSP.alwaysOnTopFrame, "Failed to delete: " + path, e);
         }
     }
 
@@ -154,7 +158,7 @@ public class FTPPSPDirectory implements PSPDirectory {
             return client.printWorkingDirectory().substring(client.printWorkingDirectory().lastIndexOf("/") + 1);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            ErrorShower.full(PSP.alwaysOnTopFrame, "Couldn't get name of: " + path, e);
             return "err";
         }
     }
@@ -217,7 +221,7 @@ public class FTPPSPDirectory implements PSPDirectory {
             client.changeWorkingDirectory(path);
             client.storeFile("", Files.newInputStream(file.toPath()));
         } catch (IOException e) {
-            e.printStackTrace();
+            ErrorShower.full(PSP.alwaysOnTopFrame, "Couldn't add: " + file.getAbsolutePath() + " to:" + path, e);
         }
     }
 

@@ -23,7 +23,9 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 
+import fn10.psptools.psp.PSP;
 import fn10.psptools.psp.PSPFile;
+import fn10.psptools.util.ErrorShower;
 
 public class RealPSPFile implements PSPFile {
     private final File file;
@@ -46,7 +48,7 @@ public class RealPSPFile implements PSPFile {
         try {
             return Files.readAllBytes(file.toPath());
         } catch (IOException e) {
-            e.printStackTrace();
+            ErrorShower.full(PSP.alwaysOnTopFrame, "Failed to read file: " + file.getAbsolutePath(), e);
             return null;
         }
     }
@@ -61,7 +63,7 @@ public class RealPSPFile implements PSPFile {
         try {
             return Files.newInputStream(file.toPath(), StandardOpenOption.READ);
         } catch (IOException e) {
-            e.printStackTrace();
+            ErrorShower.full(PSP.alwaysOnTopFrame, "Failed to open stream of: " + file.getAbsolutePath(), e);
             return null;
         }
     }

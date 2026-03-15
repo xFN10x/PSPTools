@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 
+import fn10.psptools.util.ErrorShower;
 import org.apache.commons.io.FileUtils;
 
 import fn10.psptools.psp.PSPDirectory;
@@ -83,7 +84,7 @@ public class RealPSPDirectory implements PSPDirectory {
         try {
             Files.deleteIfExists(dir.toPath());
         } catch (IOException e) {
-            e.printStackTrace();
+            ErrorShower.full(RealPSP.alwaysOnTopFrame, "Failed to delete file: " + dir.getAbsolutePath(), e);
         }
     }
 
@@ -107,7 +108,7 @@ public class RealPSPDirectory implements PSPDirectory {
         try {
             FileUtils.copyFileToDirectory(file, dir);
         } catch (IOException e) {
-            e.printStackTrace();
+            ErrorShower.full(RealPSP.alwaysOnTopFrame, "Failed to add file: " + file.getAbsolutePath() + " to: " + dir, e);
         }
     }
 

@@ -191,7 +191,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                     } else
                         OpenFolderButton.setEnabled(false);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    ErrorShower.full(this, e);
                     OpenFolderButton.setEnabled(false);
                 }
             }
@@ -233,7 +233,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
         try {
             selected(ParamSFOListElement.makeEmpty(this));
         } catch (NameNotFoundException | IOException e1) {
-            e1.printStackTrace();
+            ErrorShower.full(this, e1);
         }
     }
 
@@ -260,7 +260,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                                 first = ToAdd;
 
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            ErrorShower.full(toAddTo, e);
                         }
                     else if (!(dir instanceof FTPPSPFileDirectory)) {
                         PSPFile actualFile = dir.getFile();
@@ -276,7 +276,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                                     first = ToAdd;
 
                             } catch (Exception e) {
-                                e.printStackTrace();
+                                ErrorShower.full(toAddTo, e);
                             }
                     }
                     toAddTo.getParent().revalidate();
@@ -397,7 +397,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
             this.selected = selectedElement;
 
         } catch (Exception e) {
-            e.printStackTrace();
+            ErrorShower.full(this, e);
         }
     }
 
@@ -444,8 +444,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                 });
 
             } catch (Exception e) {
-                e.printStackTrace();
-                ErrorShower.showError(this, "Failed to backup save.", e.getMessage(), e);
+                ErrorShower.full(this, "Failed to backup save.", e);
             }
         }
     }
@@ -487,15 +486,14 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                         if (Option == JOptionPane.YES_OPTION)
                             Files.delete(backupPath);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                       ErrorShower.full(this, e);
                     }
                     loading.setVisible(false);
 
                     FillOutWindow(targets);
                 });
             } catch (Exception e) {
-                e.printStackTrace();
-                ErrorShower.showError(this, "Failed to restore save.", e.getMessage(), e);
+                ErrorShower.full(this, "Failed to restore save.", e);
             }
         }
     }
@@ -520,14 +518,14 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                                 "<html>Deleted save " + selectedElement.sfo.getParam(Params.SaveTitle, true).toString()
                                         .replace("<html>", ""));
                     } catch (HeadlessException | NameNotFoundException e) {
-                        e.printStackTrace();
+                        ErrorShower.full(this, e);
                     }
 
                 });
                 FillOutWindow(targets);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            ErrorShower.full(this, e);
         }
     }
 

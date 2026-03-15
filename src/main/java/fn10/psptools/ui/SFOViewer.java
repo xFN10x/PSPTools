@@ -28,6 +28,7 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
 import fn10.psptools.psp.sfo.ParamSFO;
+import fn10.psptools.util.ErrorShower;
 
 public class SFOViewer extends JDialog {
 
@@ -54,7 +55,7 @@ public class SFOViewer extends JDialog {
 
                 data.add(new String[] { paramName, paramType, paramValue });
             } catch (NameNotFoundException e) {
-                e.printStackTrace();
+                ErrorShower.full(this, e);
             }
         }
         JTable table = new JTable();
