@@ -72,7 +72,7 @@ public class LaunchPage extends JFrame {
     }
 
     public static void showLaunchPage() {
-        LaunchPage launchPage = new LaunchPage();
+        NewLaunchPage launchPage = new NewLaunchPage();
         SwingUtilities.invokeLater(() -> launchPage.setVisible(true));
     }
 
