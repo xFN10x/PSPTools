@@ -33,6 +33,8 @@ public class FTPPSPFileDirectory implements PSPFileDirectory {
     private final FTPClient client;
     private final String filePath;
 
+    private Boolean isDir = null;
+
     public FTPPSPFileDirectory(FTPClient client, String file) {
         this.client = client;
         this.filePath = FTPPSPDirectory.fixPath(file);
@@ -40,23 +42,28 @@ public class FTPPSPFileDirectory implements PSPFileDirectory {
 
     @Override
     public boolean isDirectory() {
-        try {
-            client.changeWorkingDirectory(filePath);
-            String printWorkingDirectory = client.printWorkingDirectory();
-            System.out.println("Checking if directory: " + printWorkingDirectory);
-            FTPFile[] listFiles = client.listFiles();
-            if (listFiles != null && listFiles.length > 0) {
-                for (FTPFile ftpFile : listFiles) {
-                    if (ftpFile.getName().equalsIgnoreCase(filePath.substring(filePath.lastIndexOf("/") + 1)))
-                        return false;
+        if (isDir == null)
+            try {
+                client.changeWorkingDirectory(filePath);
+                String printWorkingDirectory = client.printWorkingDirectory();
+                System.out.println("Checking if directory: " + printWorkingDirectory);
+                FTPFile[] listFiles = client.listFiles();
+                if (listFiles != null && listFiles.length > 0) {
+                    for (FTPFile ftpFile : listFiles) {
+                        if (ftpFile.getName().equalsIgnoreCase(filePath.substring(filePath.lastIndexOf("/") + 1)))
+                            return false;
+                    }
+                    isDir = true;
+                    return true;
+                } else {
+                    isDir = false;
+                    return false;
                 }
-                return true;
-            } else
+            } catch (IOException e) {
+                ErrorShower.full(FTPPSP.alwaysOnTopFrame, "Failed isDirectory", e);
                 return false;
-        } catch (IOException e) {
-            ErrorShower.full(FTPPSP.alwaysOnTopFrame, "Failed isDirectory", e);
-            return false;
-        }
+            }
+        else return isDir;
     }
 
     @Override

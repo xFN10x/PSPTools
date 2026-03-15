@@ -172,9 +172,8 @@ public class FTPPSPDirectory implements PSPDirectory {
     @Override
     public String getName() {
         try {
-            client.changeWorkingDirectory(path);
-            return client.printWorkingDirectory().substring(client.printWorkingDirectory().lastIndexOf("/") + 1);
-
+            int beginIndex = path.lastIndexOf("/") + 1;
+            return path.substring(beginIndex);
         } catch (Exception e) {
             ErrorShower.full(PSP.alwaysOnTopFrame, "Couldn't get name of: " + path, e);
             return "err";
