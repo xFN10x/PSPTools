@@ -22,7 +22,7 @@ public class ErrorShower {
         else
             trun = sw.toString();
 
-        var message = msg + "\n" + (trun.length() >= 1500 ? trun + "\n(And way more lines to go...)" : trun);
+        var message = msg + "\n" + trun;
 
         JOptionPane.showMessageDialog(parent,
                 message,

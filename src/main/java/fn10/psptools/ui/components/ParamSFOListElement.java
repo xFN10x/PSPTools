@@ -108,11 +108,11 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                                 .replace("\n", " ").replace(" ", "-") + ".zip";
 
                 default:
-                    if (sfo != null)
-                        return sfo.getParam(Params.Title).toString().replace("\u0000", "").replace(":", "")
+                    if (dir != null)
+                        return dir.getName().replace(":", "")
                                 .replace("\n", " ").replace(" ", "-") + ".zip";
                     else
-                        return dir.getName().replace(":", "")
+                        return sfo.getParam(Params.Title).toString().replace("\u0000", "").replace(":", "")
                                 .replace("\n", " ").replace(" ", "-") + ".zip";
             }
         } catch (Exception e) {

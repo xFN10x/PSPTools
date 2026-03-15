@@ -84,7 +84,7 @@ public class SavedVariables {
                     URL patchZip;
 
                     if (SystemUtils.IS_OS_WINDOWS) {
-                        if (System.getProperty("sun.arch.data.model") == "64") {
+                        if (System.getProperty("sun.arch.data.model").equalsIgnoreCase("64")) {
                             patchZip = new URI(
                                     "https://github.com/bucanero/apollo-lib/releases/download/v1.3.0/apollo-cli-43bace95-Win64.zip")
                                     .toURL();

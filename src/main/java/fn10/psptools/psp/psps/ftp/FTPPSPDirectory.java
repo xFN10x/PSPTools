@@ -103,7 +103,7 @@ public class FTPPSPDirectory implements PSPDirectory {
 
             });
 
-            if (listFiles.length <= 0)
+            if (listFiles.length == 0)
                 return null;
             FTPFile ftpfile = listFiles[0];
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();

@@ -46,12 +46,14 @@ import fn10.psptools.util.SavedVariables;
 import ws.schild.jave.process.ffmpeg.FFMPEGProcess;
 
 import java.awt.image.BufferedImage;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class MediaPlayer {
 
     private boolean playing = false;
     private boolean aborted = false;
-    private volatile boolean loading = true;
+    private volatile CountDownLatch loading = new CountDownLatch(1);
     private Thread videoThread;
     private final String id;
     private static final String defaultFFmpegPath = SavedVariables.DataFolder.resolve("tools", "ffmpeg.exe").toString();
@@ -275,13 +277,13 @@ public class MediaPlayer {
                         ffmpeg.addArgument("\"" + frameFolderPath + File.separator + "%03d.jpg\"");
                         ffmpeg.execute();
                         ffmpeg.getProcessExitCode();
-                        loading = false;
+                        loading.countDown();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }).start();
             } else {
-                loading = false;
+                loading.countDown();
             }
         }
     }
@@ -294,7 +296,11 @@ public class MediaPlayer {
     public boolean start(VideoPlayingListener listener) {
         if (!checkFFmpeg())
             return false;
-        if (loading) {
+        try {
+            loading.await(4000, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException _) {
+        }
+        /*if (loading) {
             new Thread(() -> {
                 new Timer("Loading-Timeout").schedule(new TimerTask() {
 
@@ -321,7 +327,7 @@ public class MediaPlayer {
                     start(listener);
             }).start();
             return false;
-        }
+        }*/
         playing = true;
         videoThread = new Thread(() -> {
             try {

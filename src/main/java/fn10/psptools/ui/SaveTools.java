@@ -506,14 +506,12 @@ public class SaveTools extends JFrame implements SFOListElementListener {
 
                             PSPPatchSeletingPanel.removeAll();
 
-                            boolean done = false;
                             int i = 1;
                             String currentFile = "*";
 
-                            while (!done) { // read each line
+                            while (true) { // read each line
                                 String line = stream.readLine();
                                 if (line == null) {
-                                    done = true;
                                     break;
                                 }
 
@@ -691,7 +689,8 @@ public class SaveTools extends JFrame implements SFOListElementListener {
         if (currentThread != null) {
             try {
                 currentThread.cancel(true);
-                currentReader.close();
+                if (currentReader != null)
+                    currentReader.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -699,103 +698,99 @@ public class SaveTools extends JFrame implements SFOListElementListener {
 
         databaseListingInnerPanel.removeAll();
         databaseListingInnerPanel.repaint();
-        switch (currentMenu) {
-            case "root":
-                currentThread = executorService.submit(
-                        () -> {
-                            Component comp = null;
-                            if (searchTerm.trim().equals(""))
+        if (currentMenu.equals("root")) {
+            currentThread = executorService.submit(
+                    () -> {
+                        Component comp = null;
+                        if (searchTerm.trim().isEmpty())
+                            return;
+                        try (BufferedReader buff = new BufferedReader(
+                                new InputStreamReader(
+                                        new URI(url.toString() + "/PSP/games.txt").toURL().openStream()))) {
+                            currentReader = buff;
+                            String currentLine;
+                            while ((currentLine = currentReader.readLine()) != null
+                                    && !Thread.currentThread().isInterrupted()) {
+                                String[] keyandval = currentLine.split("=");
+
+                                if (!keyandval[1].trim().toLowerCase().contains(searchTerm.toLowerCase().trim())
+                                        && !keyandval[0].trim().toLowerCase()
+                                        .contains(searchTerm.toLowerCase().trim())) {
+                                    continue;
+                                }
+
+                                URL GameIconUrl = new URI(url + "/PSP/" + keyandval[0] + "/ICON0.PNG")
+                                        .toURL();
+                                System.out.println(keyandval[0] + "=" + keyandval[1] + "\n" + searchTerm);
+
+                                if (Thread.currentThread().isInterrupted())
+                                    break;
+
+                                comp = databaseListingInnerPanel.add(new ParamSFOListElement(
+                                        keyandval[1],
+                                        keyandval[0],
+                                        GameIconUrl.openStream().readAllBytes(),
+                                        this));
+                                if (Thread.currentThread().isInterrupted())
+                                    databaseListingInnerPanel.remove(comp);
+
+                                databaseListingInnerPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+                            }
+                        } catch (Exception e) {
+                            if (e instanceof IOException) {
+                                if (comp != null)
+                                    databaseListingInnerPanel.remove(comp);
                                 return;
-                            try (BufferedReader buff = new BufferedReader(
-                                    new InputStreamReader(
-                                            new URI(url.toString() + "/PSP/games.txt").toURL().openStream()))) {
-                                currentReader = buff;
-                                String currentLine;
-                                while ((currentLine = currentReader.readLine()) != null
-                                        && !Thread.currentThread().isInterrupted()) {
-                                    String[] keyandval = currentLine.split("=");
-
-                                    if (!keyandval[1].trim().toLowerCase().contains(searchTerm.toLowerCase().trim())
-                                            && !keyandval[0].trim().toLowerCase()
-                                                    .contains(searchTerm.toLowerCase().trim())) {
-                                        continue;
-                                    }
-
-                                    URL GameIconUrl = new URI(url + "/PSP/" + keyandval[0] + "/ICON0.PNG")
-                                            .toURL();
-                                    System.out.println(keyandval[0] + "=" + keyandval[1] + "\n" + searchTerm);
-
-                                    if (Thread.currentThread().isInterrupted())
-                                        break;
-
-                                    comp = databaseListingInnerPanel.add(new ParamSFOListElement(
-                                            keyandval[1],
-                                            keyandval[0],
-                                            GameIconUrl.openStream().readAllBytes(),
-                                            this));
-                                    if (Thread.currentThread().isInterrupted())
-                                        databaseListingInnerPanel.remove(comp);
-
-                                    databaseListingInnerPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-                                }
-                            } catch (Exception e) {
-                                if (e instanceof IOException) {
-                                    if (comp != null)
-                                        databaseListingInnerPanel.remove(comp);
-                                    return;
-                                }
-
-                                e.printStackTrace();
                             }
-                        });
-                break;
 
-            default:
-                currentThread = executorService.submit(
-                        () -> {
-                            Component comp = null;
-                            try (BufferedReader buff = new BufferedReader(
-                                    new InputStreamReader(new URI(url.toString() + "/PSP/" + currentMenu + "/saves.txt")
-                                            .toURL().openStream()))) {
-                                currentReader = buff;
-                                String currentLine;
-                                while ((currentLine = currentReader.readLine()) != null
-                                        && !Thread.currentThread().isInterrupted()) {
-                                    String[] keyandval = currentLine.split("=");
+                            e.printStackTrace();
+                        }
+                    });
+        } else {
+            currentThread = executorService.submit(
+                    () -> {
+                        Component comp = null;
+                        try (BufferedReader buff = new BufferedReader(
+                                new InputStreamReader(new URI(url.toString() + "/PSP/" + currentMenu + "/saves.txt")
+                                        .toURL().openStream()))) {
+                            currentReader = buff;
+                            String currentLine;
+                            while ((currentLine = currentReader.readLine()) != null
+                                    && !Thread.currentThread().isInterrupted()) {
+                                String[] keyandval = currentLine.split("=");
 
-                                    if (!keyandval[1].trim().toLowerCase().contains(searchTerm.toLowerCase().trim())
-                                            && !keyandval[0].trim().toLowerCase()
-                                                    .contains(searchTerm.toLowerCase().trim())) {
-                                        continue;
-                                    }
-
-                                    URL GameIconUrl = new URI(url + "/PSP/" + currentMenu + "/ICON0.PNG")
-                                            .toURL();
-
-                                    if (Thread.currentThread().isInterrupted())
-                                        break;
-
-                                    comp = databaseListingInnerPanel.add(new ParamSFOListElement(
-                                            keyandval[1],
-                                            keyandval[0],
-                                            GameIconUrl.openStream().readAllBytes(),
-                                            this));
-
-                                    if (Thread.currentThread().isInterrupted())
-                                        databaseListingInnerPanel.remove(comp);
-
-                                    databaseListingInnerPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+                                if (!keyandval[1].trim().toLowerCase().contains(searchTerm.toLowerCase().trim())
+                                        && !keyandval[0].trim().toLowerCase()
+                                        .contains(searchTerm.toLowerCase().trim())) {
+                                    continue;
                                 }
-                            } catch (Exception e) {
-                                if (e instanceof IOException) {
-                                    if (comp != null)
-                                        databaseListingInnerPanel.remove(comp);
-                                    return;
-                                }
-                                e.printStackTrace();
+
+                                URL GameIconUrl = new URI(url + "/PSP/" + currentMenu + "/ICON0.PNG")
+                                        .toURL();
+
+                                if (Thread.currentThread().isInterrupted())
+                                    break;
+
+                                comp = databaseListingInnerPanel.add(new ParamSFOListElement(
+                                        keyandval[1],
+                                        keyandval[0],
+                                        GameIconUrl.openStream().readAllBytes(),
+                                        this));
+
+                                if (Thread.currentThread().isInterrupted())
+                                    databaseListingInnerPanel.remove(comp);
+
+                                databaseListingInnerPanel.add(Box.createRigidArea(new Dimension(0, 10)));
                             }
-                        });
-                break;
+                        } catch (Exception e) {
+                            if (e instanceof IOException) {
+                                if (comp != null)
+                                    databaseListingInnerPanel.remove(comp);
+                                return;
+                            }
+                            e.printStackTrace();
+                        }
+                    });
         }
 
     }
