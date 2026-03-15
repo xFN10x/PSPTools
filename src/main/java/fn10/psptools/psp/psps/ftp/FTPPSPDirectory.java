@@ -180,6 +180,11 @@ public class FTPPSPDirectory implements PSPDirectory {
         }
     }
 
+    @Override
+    public String getPath() {
+        return path;
+    }
+
     public static String fixPath(String path) {
         return path.replaceAll("\\.\\/", "/").replaceAll("//", "/").replace("\\.", "");
     }

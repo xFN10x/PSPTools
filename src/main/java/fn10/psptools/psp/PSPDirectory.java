@@ -52,6 +52,12 @@ public interface PSPDirectory {
      * @return the name
      */
     String getName();
+
+    /**
+     * Get the path of this directory reletive to the root of the PSP.
+     * @return the path as a string.
+     */
+    String getPath();
     /**
      * Create a new PSPFileDirectory from this current one, into these children.
      * @param first The first folder to go into

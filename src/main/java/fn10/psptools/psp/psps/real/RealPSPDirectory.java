@@ -94,6 +94,11 @@ public class RealPSPDirectory implements PSPDirectory {
     }
 
     @Override
+    public String getPath() {
+        return dir.getAbsolutePath();
+    }
+
+    @Override
     public PSPFileDirectory resolve(String first, String... children) {
         return new RealPSPFileDirectory(dir.toPath().resolve(first, children));
     }
