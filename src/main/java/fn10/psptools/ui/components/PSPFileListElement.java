@@ -115,6 +115,7 @@ public class PSPFileListElement extends JPanel implements MouseListener {
                     } else {
                         fileDir.getFile().delete();
                     }
+                    getParent().remove(this);
                 }
             });
         } else {
