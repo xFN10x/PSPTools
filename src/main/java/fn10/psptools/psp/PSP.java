@@ -19,7 +19,7 @@ package fn10.psptools.psp;
 
 import java.nio.file.Path;
 
-import javax.swing.JOptionPane;
+import javax.swing.*;
 
 import org.apache.commons.net.ftp.FTPClient;
 
@@ -34,6 +34,10 @@ public abstract class PSP {
 
     private static final PSP NULL_PSP = new RealPSP(Path.of(""));
     public static boolean DemoMode = false;
+    protected static final JFrame alwaysOnTopFrame = new JFrame();
+    static {
+        alwaysOnTopFrame.setAlwaysOnTop(true);
+    }
 
     protected static PSP CurrentPSP = NULL_PSP;
 
@@ -69,7 +73,7 @@ public abstract class PSP {
 
     public static void setCurrentPSP(PSP psp, boolean showPopup, boolean savePSP) {
         if (showPopup && psp != null)
-            JOptionPane.showMessageDialog(null, "Selected new PSP.");
+            JOptionPane.showMessageDialog(alwaysOnTopFrame, "Selected new PSP.");
         var saved = SavedVariables.Load();
         if (psp != null) {
             saved.LastSelectedPSP = new LastSelectedPSPInfo(psp.getSelectionMode(), psp.getSelectionData());

@@ -21,16 +21,20 @@ import com.formdev.flatlaf.FlatDarculaLaf;
 import fn10.psptools.psp.PSP;
 import fn10.psptools.ui.LaunchPage;
 import fn10.psptools.util.SavedVariables;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class PSPTools {
 
     public static final String VERSION = "1.1.1";
-    private static final Logger log = LogManager.getLogger(PSPTools.class);
+    public static final Logger log = LogManager.getLogger(PSPTools.class);
+    public static final Path MainLogPath = Path.of("logs", "main.log");
 
     static void main(String[] args) {
 

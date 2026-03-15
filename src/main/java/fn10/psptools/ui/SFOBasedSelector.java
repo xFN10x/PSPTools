@@ -121,7 +121,6 @@ public class SFOBasedSelector extends JDialog implements SFOListElementListener 
 
         } catch (Exception e) {
             e.printStackTrace();
-
         }
     }
 

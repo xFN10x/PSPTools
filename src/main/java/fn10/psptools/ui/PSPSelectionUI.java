@@ -41,6 +41,7 @@ import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SpringLayout;
 
+import fn10.psptools.PSPTools;
 import org.apache.commons.net.ftp.FTPClient;
 
 import fn10.psptools.psp.PSP;
@@ -175,19 +176,16 @@ public class PSPSelectionUI extends JDialog {
 
         });
 
-        SelectButton.addActionListener(action -> {
+        SelectButton.addActionListener(_ -> {
             String root = ((File) InputDriveBox.getSelectedItem()).getPath();
             if (VitaCheck.isSelected())
                 root += "pspemu";
-            System.out.println(root);
             File PSPFolder = new File(Path.of(root, "PSP").toString());
-            File ISOFolder = new File(Path.of(root, "ISO").toString());
             File PSPGameFolder = new File(Path.of(root, "PSP", "Game").toString());
 
-            if (PSPFolder.exists() && ISOFolder.exists() && PSPGameFolder.exists()) {
+            if (PSPFolder.exists() && PSPGameFolder.exists()) {
                 SelectedPSP = new RealPSP(Path.of(root));
                 setVisible(false);
-                dispose();
             } else {
                 JOptionPane.showMessageDialog(this, "Selected drive is not a PSP.");
             }
@@ -291,16 +289,18 @@ public class PSPSelectionUI extends JDialog {
 
         FTPS.add(FtpSelectButton);
 
-        FtpSelectButton.addActionListener(ac -> {
-            String host = HostName.getText();
-            FTPClient client = new FTPClient();
-            client.setConnectTimeout(10000);
-            FTPPSP ftppsp = new FTPPSP(client, host, ((int) Port.getValue()), Username.getText(), Password.getText());
-            if (ftppsp.pspActive()) {
-                SelectedPSP = ftppsp;
-                setVisible(false);
-                dispose();
-            }
+        FtpSelectButton.addActionListener(_ -> {
+            new Thread(() -> {
+                String host = HostName.getText();
+                FTPClient client = new FTPClient();
+                client.setConnectTimeout(10000);
+                FTPPSP ftppsp = new FTPPSP(client, host, ((int) Port.getValue()), Username.getText(), Password.getText());
+                if (ftppsp.pspActive()) {
+                    SelectedPSP = ftppsp;
+                    setVisible(false);
+                    dispose();
+                }
+            }).start();
         });
 
         // #endregion
@@ -335,6 +335,11 @@ public class PSPSelectionUI extends JDialog {
         PSPSelectionUI ui = new PSPSelectionUI(parent);
 
         ui.setVisible(true);
+
+        if (ui.SelectedPSP != null) {
+            PSPTools.log.info("New PSP Selected: {}", ui.SelectedPSP.getClass().getSimpleName());
+        }
+
         return ui.SelectedPSP;
     }
 }

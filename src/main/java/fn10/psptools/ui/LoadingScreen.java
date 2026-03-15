@@ -46,6 +46,14 @@ public class LoadingScreen extends JDialog {
         }
     }
 
+    public void showWhenPossible() {
+        SwingUtilities.invokeLater(() -> setVisible(true));
+    }
+
+    public void hideWhenPossible() {
+        SwingUtilities.invokeLater(() -> setVisible(false));
+    }
+
     public void increaseProgress(int increase, String TextChange) {
         changeText(TextChange);
         SwingUtilities.invokeLater(() -> {

@@ -19,19 +19,23 @@ package fn10.psptools.psp.psps.ftp;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.swing.JOptionPane;
+import javax.swing.*;
 
+import fn10.psptools.ui.LoadingScreen;
 import org.apache.commons.net.ProtocolCommandEvent;
 import org.apache.commons.net.ProtocolCommandListener;
 import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPCmd;
 
 import com.google.gson.Gson;
 
 import fn10.psptools.psp.PSP;
 import fn10.psptools.psp.PSPDirectory;
 import fn10.psptools.psp.SelectionMode;
+
+import static fn10.psptools.PSPTools.log;
 
 public class FTPPSP extends PSP {
 
@@ -65,10 +69,6 @@ public class FTPPSP extends PSP {
             public void protocolReplyReceived(ProtocolCommandEvent event) {
                 // System.out.println("FTP: Reply recived: " + event.getMessage());
                 if (event.getMessage().startsWith("50")) {
-                    try {
-                        client.sendCommand(FTPCmd.SYST);
-                    } catch (IOException e) {
-                    }
                     JOptionPane.showMessageDialog(null,
                             "FTP Server does not support command. (" + event.getMessage()
                                     + ",) this server may be incompatible with PSPTools.",
@@ -87,19 +87,41 @@ public class FTPPSP extends PSP {
     public boolean pspActive() {
         if (client.isConnected())
             return true;
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        AtomicBoolean retur = new AtomicBoolean(true);
+        new Thread(() -> {
+            LoadingScreen loadingScreen = new LoadingScreen(alwaysOnTopFrame);
+            loadingScreen.showWhenPossible();
+            try {
+                String connectingTo = "Connecting to " + host + ":" + port + "...";
+                loadingScreen.changeText(connectingTo);
+                log.info(connectingTo);
+                client.connect(
+                        host,
+                        port);
+                String loggingIn = "Logging in...";
+                loadingScreen.changeText(loggingIn);
+                log.info(loggingIn);
+                client.login(username, pw);
+                log.info("Logged in.");
+                countDownLatch.countDown();
+            } catch (Exception e) {
+                log.error("Failed to connect to PSP.", e);
+                JOptionPane.showMessageDialog(alwaysOnTopFrame, "Failed to connect to PSP.\n\n" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                countDownLatch.countDown();
+                retur.set(false);
+            } finally {
+                loadingScreen.hideWhenPossible();
+            }
+        }).start();
+
         try {
-            System.out.println("Connecting to " + host + ":" + port + "...");
-            client.connect(
-                    host,
-                    port);
-            System.out.println("Logging in...");
-            client.login(username, pw);
-            System.out.println("Logged in.");
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
+
+        return retur.get();
     }
 
     @Override

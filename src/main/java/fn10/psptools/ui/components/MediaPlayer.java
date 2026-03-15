@@ -262,24 +262,27 @@ public class MediaPlayer {
         this.id = gameID;
         if (!checkFFmpeg())
             return;
-        FFMPEGProcess ffmpeg = new FFMPEGProcess(getDefaultFFmpegPath());
-        Path frameFolderPath = SavedVariables.DataFolder.resolve("video", gameID);
-        System.out.println(file.getAbsolutePath());
-        if (!frameFolderPath.toFile().exists()) {
-            new Thread(() -> {
-                try {
-                    FileUtils.createParentDirectories(frameFolderPath.toFile());
-                    Files.createDirectory(frameFolderPath);
-                    ffmpeg.addArgument("-i");
-                    ffmpeg.addArgument(file.getAbsolutePath());
-                    ffmpeg.addArgument("\"" + frameFolderPath + File.separator + "%03d.jpg\"");
-                    ffmpeg.execute();
-                    ffmpeg.getProcessExitCode();
-                    loading = false;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }).start();
+        try (FFMPEGProcess ffmpeg = new FFMPEGProcess(getDefaultFFmpegPath())) {
+            Path frameFolderPath = SavedVariables.DataFolder.resolve("video", gameID);
+            System.out.println(file.getAbsolutePath());
+            if (!frameFolderPath.toFile().exists()) {
+                new Thread(() -> {
+                    try {
+                        FileUtils.createParentDirectories(frameFolderPath.toFile());
+                        Files.createDirectory(frameFolderPath);
+                        ffmpeg.addArgument("-i");
+                        ffmpeg.addArgument(file.getAbsolutePath());
+                        ffmpeg.addArgument("\"" + frameFolderPath + File.separator + "%03d.jpg\"");
+                        ffmpeg.execute();
+                        ffmpeg.getProcessExitCode();
+                        loading = false;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }).start();
+            } else {
+                loading = false;
+            }
         }
     }
 
@@ -336,8 +339,7 @@ public class MediaPlayer {
                     for (BufferedImage img : frames) {
                         try {
                             Thread.sleep(1000 / 30);
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                        } catch (Exception _) {
                         }
                         if (!playing)
                             break;
