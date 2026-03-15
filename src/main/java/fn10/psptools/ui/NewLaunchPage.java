@@ -17,9 +17,13 @@ public class NewLaunchPage extends JFrame {
     private final ArrayList<PSPFileListElement> selectedFilesList = new ArrayList<>();
     private final JPanel files = new JPanel();
     private final JLabel loadingText = new JLabel("Not Busy");
+    private final JLabel dirText = new JLabel("/");
+
+    public static NewLaunchPage current;
 
     public NewLaunchPage() {
         super("PSPTools");
+        current = this;
         setSize(new Dimension(669, 500));
         setLocation(LaunchPage.getScreenCenter(this));
         setResizable(false);
@@ -46,7 +50,10 @@ public class NewLaunchPage extends JFrame {
         lay.putConstraint(SpringLayout.WEST, scroll, 5, SpringLayout.WEST, getContentPane());
         lay.putConstraint(SpringLayout.EAST, scroll, -5, SpringLayout.EAST, getContentPane());
         lay.putConstraint(SpringLayout.SOUTH, scroll, -10, SpringLayout.NORTH, loadingText);
-        lay.putConstraint(SpringLayout.NORTH, scroll, 5, SpringLayout.NORTH, getContentPane());
+        lay.putConstraint(SpringLayout.NORTH, scroll, 5, SpringLayout.SOUTH, dirText);
+
+        lay.putConstraint(SpringLayout.NORTH, dirText, 5, SpringLayout.NORTH, getContentPane());
+        lay.putConstraint(SpringLayout.WEST, dirText, 10, SpringLayout.WEST, getContentPane());
 
         lay.putConstraint(SpringLayout.WEST, loadingText, 10, SpringLayout.WEST, getContentPane());
         lay.putConstraint(SpringLayout.SOUTH, loadingText, -10, SpringLayout.SOUTH, getContentPane());
@@ -54,17 +61,49 @@ public class NewLaunchPage extends JFrame {
         scroll.getVerticalScrollBar().setUnitIncrement(16);
         add(scroll);
         add(loadingText);
+        add(dirText);
 
         showDir("/");
     }
 
+    public static boolean isRoot(String path) {
+        String serilized = path.replace("\\", "/");
+        return serilized.lastIndexOf("/") == path.indexOf("/");
+    }
+
+    /**
+     * Returns the parent of the path
+     * @param path the path to get the parent from
+     * @return the directory one level above
+     */
+    public static String top(String path) {
+        String serilized = path.replace("\\", "/");
+        String fin = "";
+        if (serilized.lastIndexOf("/") == serilized.length() - 1) {
+            fin = serilized.substring(0, serilized.length() - 2);
+        } else fin = serilized;
+
+        return fin.substring(0, fin.lastIndexOf("/") + 1);
+    }
+
     public void showDir(String path) {
         Thread thread = new Thread(() -> {
+            selectedFilesList.clear();
+            dirText.setText(path);
             String print = "Listing Directory '" + path + "'...";
             PSPTools.log.info(print);
             loadingText.setText(print);
             int i = 1;
             files.removeAll();
+
+            if (!isRoot(path)) {
+                JButton backButton = new JButton("< Back");
+                backButton.addActionListener(_ -> {
+                    showDir(top(path));
+                });
+                files.add(backButton);
+            }
+
             PSP currentPSP = PSP.getCurrentPSP();
             if (!currentPSP.pspActive()) {
                 String log = "No PSP active.";

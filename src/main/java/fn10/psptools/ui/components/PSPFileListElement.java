@@ -1,6 +1,7 @@
 package fn10.psptools.ui.components;
 
 import fn10.psptools.psp.PSPFileDirectory;
+import fn10.psptools.ui.NewLaunchPage;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -107,7 +108,13 @@ public class PSPFileListElement extends JPanel implements MouseListener {
         JPopupMenu jPopupMenu = new JPopupMenu();
         if (selectedList.size() == 1) {
             jPopupMenu.setBorder(new TitledBorder("Manage " + (fileDir.isDirectory() ? "Folder" : "File") + ": " + getFileName()));
-            jPopupMenu.add("Delete").addActionListener(ac -> {
+            if (fileDir.isDirectory()) {
+                jPopupMenu.add("Go into...").addActionListener(_ -> {
+                    NewLaunchPage.current.showDir(fileDir.getDirectory().getPath());
+                });
+                jPopupMenu.addSeparator();
+            }
+            jPopupMenu.add("Delete").addActionListener(_ -> {
                 int option = JOptionPane.showConfirmDialog(getParent(), "Are you sure you want delete " + getFileName() + "?");
                 if (option == JOptionPane.YES_OPTION) {
                     if (fileDir.isDirectory()) {
