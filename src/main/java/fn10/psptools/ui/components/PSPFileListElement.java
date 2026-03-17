@@ -10,6 +10,7 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -54,7 +55,7 @@ public class PSPFileListElement extends JPanel implements MouseListener {
         hovered = Color.lightGray.darker();
 
         String name = pfd.getDirectory().getName();
-        if (pfd.isDirectory() && (name.equalsIgnoreCase("ISO") || name.equalsIgnoreCase("GAME"))) {
+        if (pfd.isDirectory() && (name.equalsIgnoreCase("ISO") || name.equalsIgnoreCase("GAME") || name.equalsIgnoreCase("GAME150") || name.equalsIgnoreCase("GAME303"))) {
             nameLabel.setIcon(new ImageIcon(getClass().getResource("/fileIcons/iso.png")));
             nameLabel.setText(name);
             setSpecialButton("Open Manager", _ -> {
@@ -152,6 +153,11 @@ public class PSPFileListElement extends JPanel implements MouseListener {
 
     @Override
     public void mousePressed(MouseEvent e) {
+        if (e.getClickCount() >= 2) {
+            if (fileDir.isDirectory()) {
+                NewLaunchPage.current.showDir(fileDir.getDirectory().getPath());
+            }
+        }
 
         Component[] components = getParent().getComponents();
         //System.out.println(List.of(components).indexOf(this));
