@@ -53,8 +53,7 @@ application {
     mainClass = "fn10.psptools.App"
 }
 
-
-var version = "1.1.1"
+var version = "1.2"
 
 tasks.jpackage {
     dependsOn("build", "shadowJar")
