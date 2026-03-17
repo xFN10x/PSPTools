@@ -2,10 +2,12 @@ package fn10.psptools.ui.components;
 
 import fn10.psptools.psp.PSPFileDirectory;
 import fn10.psptools.ui.NewLaunchPage;
+import fn10.psptools.ui.SFOBasedManager;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
@@ -16,6 +18,7 @@ public class PSPFileListElement extends JPanel implements MouseListener {
 
     private final SpringLayout lay = new SpringLayout();
     private final JLabel nameLabel = new JLabel();
+    private final JButton specialButton = new JButton();
 
     public final PSPFileDirectory fileDir;
 
@@ -24,16 +27,24 @@ public class PSPFileListElement extends JPanel implements MouseListener {
     private boolean selected = false;
     private final ArrayList<PSPFileListElement> selectedList;
 
-    public PSPFileListElement(PSPFileDirectory pfd, ArrayList<PSPFileListElement> selectedList) {
-        this(pfd, null, selectedList);
+    public PSPFileListElement(NewLaunchPage lp, PSPFileDirectory pfd, ArrayList<PSPFileListElement> selectedList) {
+        this(lp,pfd, null, selectedList);
     }
 
-    public PSPFileListElement(PSPFileDirectory pfd, Color bg, ArrayList<PSPFileListElement> selectedList) {
+    private void setSpecialButton(String text, ActionListener onClick) {
+        specialButton.setText(text);
+        specialButton.setVisible(true);
+        specialButton.addActionListener(onClick);
+    }
+
+    public PSPFileListElement(NewLaunchPage lp, PSPFileDirectory pfd, Color bg, ArrayList<PSPFileListElement> selectedList) {
         setLayout(lay);
         Dimension dimension = new Dimension(0, 20);
         setPreferredSize(dimension);
         setMinimumSize(dimension);
+        setMaximumSize(dimension);
         addMouseListener(this);
+        specialButton.setVisible(false);
         if (bg != null)
             setBackground(bg);
         this.fileDir = pfd;
@@ -42,12 +53,16 @@ public class PSPFileListElement extends JPanel implements MouseListener {
         unhovered = getBackground();
         hovered = Color.lightGray.darker();
 
-        if (pfd.isDirectory() && pfd.getDirectory().getName().equalsIgnoreCase("ISO")) {
+        String name = pfd.getDirectory().getName();
+        if (pfd.isDirectory() && (name.equalsIgnoreCase("ISO") || name.equalsIgnoreCase("GAME"))) {
             nameLabel.setIcon(new ImageIcon(getClass().getResource("/fileIcons/iso.png")));
-            nameLabel.setText(pfd.getDirectory().getName());
+            nameLabel.setText(name);
+            setSpecialButton("Open Manager", _ -> {
+                new SFOBasedManager(lp, SFOBasedManager.GAMES_MODE, "SFO Manager: " + name, pfd.getDirectory()).setVisible(true);
+            });
         } else if (pfd.isDirectory()) {
             nameLabel.setIcon(new ImageIcon(getClass().getResource("/fileIcons/generic-folder.png")));
-            nameLabel.setText(pfd.getDirectory().getName());
+            nameLabel.setText(name);
         } else if (pfd.isFile()) {
             nameLabel.setIcon(new ImageIcon(getClass().getResource("/fileIcons/generic-icon.png")));
             nameLabel.setText(pfd.getFile().getName());
@@ -59,7 +74,11 @@ public class PSPFileListElement extends JPanel implements MouseListener {
         lay.putConstraint(SpringLayout.WEST, nameLabel, 5, SpringLayout.WEST, this);
         lay.putConstraint(SpringLayout.VERTICAL_CENTER, nameLabel, 0, SpringLayout.VERTICAL_CENTER, this);
 
+        lay.putConstraint(SpringLayout.VERTICAL_CENTER, specialButton, 0, SpringLayout.VERTICAL_CENTER, this);
+        lay.putConstraint(SpringLayout.EAST, specialButton, -5, SpringLayout.EAST, this);
+
         add(nameLabel);
+        add(specialButton);
     }
 
     @Override

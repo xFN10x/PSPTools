@@ -17,12 +17,7 @@
 */
 package fn10.psptools.ui;
 
-import java.awt.Color;
-import java.awt.Desktop;
-import java.awt.Dimension;
-import java.awt.Frame;
-import java.awt.HeadlessException;
-import java.awt.Insets;
+import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
@@ -101,7 +96,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
 
     private final JLabel Background = new JLabel(new ImageIcon());
 
-    public SFOBasedManager(Frame parent, int mode, String title, PSPDirectory... targets) {
+    public SFOBasedManager(Component parent, int mode, String title, PSPDirectory... targets) {
         super(title);
 
         addWindowListener(new WindowAdapter() {

@@ -133,9 +133,9 @@ public class NewLaunchPage extends JFrame {
             for (PSPFileDirectory pfd : all) {
                 PSPFileListElement comp;
                 if (i % 2 == 0)
-                    comp = new PSPFileListElement(pfd, Color.darkGray.darker(), selectedFilesList);
+                    comp = new PSPFileListElement(this, pfd, Color.darkGray.darker(), selectedFilesList);
                 else
-                    comp = new PSPFileListElement(pfd, selectedFilesList);
+                    comp = new PSPFileListElement(this, pfd, selectedFilesList);
                 i++;
                 files.add(comp);
             }
