@@ -78,7 +78,7 @@ public class NewLaunchPage extends JFrame {
      */
     public static String top(String path) {
         String serilized = path.replace("\\", "/");
-        String fin = "";
+        String fin;
         if (serilized.lastIndexOf("/") == serilized.length() - 1) {
             fin = serilized.substring(0, serilized.length() - 2);
         } else fin = serilized;

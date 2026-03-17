@@ -23,7 +23,10 @@ import java.awt.event.ItemEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -40,8 +43,11 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SpringLayout;
+import javax.swing.filechooser.FileSystemView;
 
 import fn10.psptools.PSPTools;
+import fn10.psptools.psp.psps.real.RealPSPRoot;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.net.ftp.FTPClient;
 
 import fn10.psptools.psp.PSP;
@@ -59,10 +65,11 @@ public class PSPSelectionUI extends JDialog {
     private final JPanel DS = new JPanel();
     private final SpringLayout DSLay = new SpringLayout();
     private final JButton AutoButton = new JButton("Auto");
+    private final JButton RefreshButton = new JButton("Refresh");
     private final JButton AutoVitaButton = new JButton("Auto (PSV)");
     private final JCheckBox VitaCheck = new JCheckBox("Is this a vita?");
     private final JButton SelectButton = new JButton("Select");
-    private final JComboBox<File> InputDriveBox = new JComboBox<File>(File.listRoots());
+    private final JComboBox<RealPSPRoot> InputDriveBox = new JComboBox<>(RealPSPRoot.getRoots());
     // #endregion
     // #region folder selection part
     private final JPanel DIRS = new JPanel();
@@ -88,20 +95,12 @@ public class PSPSelectionUI extends JDialog {
 
         Timer timer = new Timer();
 
-        timer.scheduleAtFixedRate(new TimerTask() {
-
-            @Override
-            public void run() {
-                if (InputDriveBox.getItemCount() != File.listRoots().length) {
-                    InputDriveBox.removeAllItems();
-
-                    for (File f : File.listRoots()) {
-                        InputDriveBox.addItem(f);
-                    }
-                }
+        Runnable onUpdateDrives = () -> {
+            InputDriveBox.removeAllItems();
+            for (RealPSPRoot f : RealPSPRoot.getRoots()) {
+                InputDriveBox.addItem(f);
             }
-
-        }, 5, 5);
+        };
 
         Lay.putConstraint(SpringLayout.EAST, Tabbed, 0, SpringLayout.EAST, getContentPane());
         Lay.putConstraint(SpringLayout.WEST, Tabbed, 0, SpringLayout.WEST, getContentPane());
@@ -121,11 +120,17 @@ public class PSPSelectionUI extends JDialog {
 
         DSLay.putConstraint(SpringLayout.NORTH, InputDriveBox, 5, SpringLayout.NORTH, DS);
         DSLay.putConstraint(SpringLayout.WEST, InputDriveBox, 5, SpringLayout.EAST, AutoButton);
-        DSLay.putConstraint(SpringLayout.EAST, InputDriveBox, -5, SpringLayout.EAST, DS);
+        DSLay.putConstraint(SpringLayout.EAST, InputDriveBox, -5, SpringLayout.WEST, RefreshButton);
+
+        DSLay.putConstraint(SpringLayout.NORTH, RefreshButton, 0, SpringLayout.NORTH, InputDriveBox);
+        DSLay.putConstraint(SpringLayout.SOUTH, RefreshButton, 0, SpringLayout.SOUTH, InputDriveBox);
+        DSLay.putConstraint(SpringLayout.EAST, RefreshButton, -5, SpringLayout.EAST, DS);
 
         DSLay.putConstraint(SpringLayout.SOUTH, SelectButton, -5, SpringLayout.SOUTH, DS);
         DSLay.putConstraint(SpringLayout.EAST, SelectButton, -5, SpringLayout.EAST, DS);
         DSLay.putConstraint(SpringLayout.WEST, SelectButton, 5, SpringLayout.WEST, DS);
+
+        RefreshButton.addActionListener(_ -> onUpdateDrives.run());
 
         VitaCheck.addItemListener(state -> {
             AutoVitaButton.setEnabled(state.getStateChange() == ItemEvent.SELECTED);
@@ -135,49 +140,60 @@ public class PSPSelectionUI extends JDialog {
         AutoVitaButton.setEnabled(false);
 
         AutoButton.addActionListener(action -> {
-            for (File root : File.listRoots()) {
-                Path rootPath = root.toPath();
+            ArrayList<RealPSPRoot> found = new ArrayList<>();
+            for (RealPSPRoot root : RealPSPRoot.getRoots()) {
+                Path rootPath = root.getFile().toPath();
                 File PSPFolder = rootPath.resolve("PSP").toFile();
-                File ISOFolder = rootPath.resolve("ISO").toFile();
-                File PSPGameFolder = rootPath.resolve("PSP", "GAME").toFile();
+//                File ISOFolder = rootPath.resolve("ISO").toFile();
+//                File PSPGameFolder = rootPath.resolve("PSP", "GAME").toFile();
 
-                if (PSPFolder.exists() && ISOFolder.exists() && PSPGameFolder.exists()) {
-                    JOptionPane.showMessageDialog(parent, "Found PSP at " + root, "PSP Found",
-                            JOptionPane.INFORMATION_MESSAGE);
-                    InputDriveBox.setSelectedItem(root);
-                    return;
-
+                if (PSPFolder.exists()) {
+                    found.add(root);
                 }
             }
-            JOptionPane.showMessageDialog(parent, "Did not find PSP connected to any drives.", "PSP Not Found",
-                    JOptionPane.WARNING_MESSAGE);
-
+            if (found.size() == 1) {
+                RealPSPRoot root = found.getFirst();
+                JOptionPane.showMessageDialog(parent, "Found PSP at " + root, "PSP Found",
+                        JOptionPane.INFORMATION_MESSAGE);
+                InputDriveBox.setSelectedItem(root);
+            } else if (found.isEmpty()) {
+                JOptionPane.showMessageDialog(parent, "Did not find PSP connected to any drives.", "PSP Not Found",
+                        JOptionPane.WARNING_MESSAGE);
+            } else {
+                int selected = JOptionPane.showOptionDialog(parent, "Multiple PSPs were found, which drive do you want to use?", "Select PSP", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, found.toArray(), found.getFirst());
+                InputDriveBox.setSelectedItem(found.get(selected));
+            }
         });
 
-        AutoVitaButton.addActionListener(action -> {
-            for (File root : File.listRoots()) {
-                File PSPFolder = new File(Path.of(root.getPath(), "pspemu", "PSP").toString());
-                File ISOFolder = new File(Path.of(root.getPath(), "pspemu", "ISO").toString());
-                File PSPGameFolder = new File(Path.of(root.getPath(), "pspemu", "PSP", "Game").toString());
-                File PSPSaveFolder = new File(Path.of(root.getPath(), "pspemu", "PSP", "Savedata").toString());
+        AutoVitaButton.addActionListener(_ -> {
+            ArrayList<RealPSPRoot> found = new ArrayList<>();
+            for (RealPSPRoot root : RealPSPRoot.getRoots()) {
+                String path = root.getFile().getPath();
+                File PSPFolder = Path.of(path, "pspemu", "PSP").toFile();
+//                File ISOFolder = Path.of(path, "pspemu", "ISO").toFile();
+//                File PSPGameFolder = Path.of(path, "pspemu", "PSP", "Game").toFile();
+//                File PSPSaveFolder = Path.of(path, "pspemu", "PSP", "Savedata").toFile();
 
-                if (PSPFolder.exists() && ISOFolder.exists() && PSPGameFolder.exists() && PSPSaveFolder.exists()) {
-                    JOptionPane.showMessageDialog(parent, "Found Vita with Adrenaline @ " + root,
-                            "PSV Found",
-                            JOptionPane.INFORMATION_MESSAGE);
-                    InputDriveBox.setSelectedItem(root);
-                    return;
-
+                if (PSPFolder.exists()) {
+                    found.add(root);
                 }
             }
-            JOptionPane.showMessageDialog(parent, "Did not find Adrenaline on any drives.",
-                    "Adrenaline Not Found/Installed",
-                    JOptionPane.WARNING_MESSAGE);
-
+            if (found.size() == 1) {
+                RealPSPRoot root = found.getFirst();
+                JOptionPane.showMessageDialog(parent, "Found Vita at " + root, "Vita Found",
+                        JOptionPane.INFORMATION_MESSAGE);
+                InputDriveBox.setSelectedItem(root);
+            } else if (found.isEmpty()) {
+                JOptionPane.showMessageDialog(parent, "Did not find a Vita with Adrenaline connected to any drives.", "Vita Not Found",
+                        JOptionPane.WARNING_MESSAGE);
+            } else {
+                int selected = JOptionPane.showOptionDialog(parent, "Multiple Vitas were found, which drive do you want to use?", "Select Vita", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, found.toArray(), found.getFirst());
+                InputDriveBox.setSelectedItem(found.get(selected));
+            }
         });
 
         SelectButton.addActionListener(_ -> {
-            String root = ((File) InputDriveBox.getSelectedItem()).getPath();
+            String root = ((RealPSPRoot) InputDriveBox.getSelectedItem()).getFile().getPath();
             if (VitaCheck.isSelected())
                 root += "pspemu";
             File PSPFolder = new File(Path.of(root, "PSP").toString());
@@ -196,6 +212,7 @@ public class PSPSelectionUI extends JDialog {
         DS.add(VitaCheck);
         DS.add(InputDriveBox);
         DS.add(SelectButton);
+        DS.add(RefreshButton);
 
         // #endregion
         // #region Dir Selection Stuff
