@@ -47,9 +47,39 @@ public class NewLaunchPage extends JFrame {
         GridLayout mgr = new GridLayout(0, 1, 0, 0);
         files.setLayout(mgr);
 
+        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.CENTER,4,0));
+
+        JButton gmButton = new JButton("Game Manager");
+        gmButton.addActionListener(_ -> {
+            new SFOBasedManager(this, SFOBasedManager.GAMES_MODE, "Game Manager",
+                    PSP.getCurrentPSP().getFolder("PSP", "GAME"),
+                    PSP.getCurrentPSP().getFolder("PSP", "GAME150"),
+                    PSP.getCurrentPSP().getFolder("ISO"),
+                    PSP.getCurrentPSP().getFolder("PSP", "GAME303")).setVisible(true);
+        });
+        JButton smButton = new JButton("Save Manager");
+        smButton.addActionListener(_ -> {
+            new SFOBasedManager(this, SFOBasedManager.GAMES_MODE, "Game Manager",
+                    PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA")).setVisible(true);
+        });
+        JButton npButton = new JButton("Save Patching");
+        npButton.addActionListener(_ -> {
+            new SavePatching(this).setVisible(true);
+        });
+        JButton dtButton = new JButton("Database Tools");
+        dtButton.addActionListener(_ -> {
+            new DatabaseTools(this).setVisible(true);
+        });
+        JButton pmButton = new JButton("Plugin Manager");
+        buttons.add(gmButton);
+        buttons.add(smButton);
+        buttons.add(npButton);
+        buttons.add(dtButton);
+        buttons.add(pmButton);
+
         lay.putConstraint(SpringLayout.WEST, scroll, 5, SpringLayout.WEST, getContentPane());
         lay.putConstraint(SpringLayout.EAST, scroll, -5, SpringLayout.EAST, getContentPane());
-        lay.putConstraint(SpringLayout.SOUTH, scroll, -10, SpringLayout.NORTH, loadingText);
+        lay.putConstraint(SpringLayout.SOUTH, scroll, -10, SpringLayout.NORTH, buttons);
         lay.putConstraint(SpringLayout.NORTH, scroll, 5, SpringLayout.SOUTH, dirText);
 
         lay.putConstraint(SpringLayout.NORTH, dirText, 5, SpringLayout.NORTH, getContentPane());
@@ -58,10 +88,15 @@ public class NewLaunchPage extends JFrame {
         lay.putConstraint(SpringLayout.WEST, loadingText, 10, SpringLayout.WEST, getContentPane());
         lay.putConstraint(SpringLayout.SOUTH, loadingText, -10, SpringLayout.SOUTH, getContentPane());
 
+        lay.putConstraint(SpringLayout.SOUTH, buttons, -5, SpringLayout.NORTH, loadingText);
+        lay.putConstraint(SpringLayout.EAST, buttons, 0, SpringLayout.EAST, getContentPane());
+        lay.putConstraint(SpringLayout.WEST, buttons, 0, SpringLayout.WEST, getContentPane());
+
         scroll.getVerticalScrollBar().setUnitIncrement(16);
         add(scroll);
         add(loadingText);
         add(dirText);
+        add(buttons);
 
         showDir("/");
     }

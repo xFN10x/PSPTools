@@ -114,7 +114,7 @@ public class LaunchPage extends JFrame {
         });
 
         SaveTools.addActionListener(_ -> {
-            new SaveTools(this);
+            new SavePatching(this);
         });
 
         GameEditor.addActionListener(_ -> {

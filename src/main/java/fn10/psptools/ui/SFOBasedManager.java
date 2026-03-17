@@ -17,6 +17,29 @@
 */
 package fn10.psptools.ui;
 
+import com.formdev.flatlaf.ui.FlatLineBorder;
+import fn10.psptools.psp.PSPDirectory;
+import fn10.psptools.psp.PSPFile;
+import fn10.psptools.psp.PSPFileDirectory;
+import fn10.psptools.psp.psps.ftp.FTPPSPFileDirectory;
+import fn10.psptools.psp.psps.real.RealPSPDirectory;
+import fn10.psptools.psp.reader.PBPReader;
+import fn10.psptools.psp.reader.SFOReader;
+import fn10.psptools.psp.reader.SFOReader.Params;
+import fn10.psptools.ui.components.MediaPlayer;
+import fn10.psptools.ui.components.ParamSFOListElement;
+import fn10.psptools.ui.interfaces.SFOListElementListener;
+import fn10.psptools.ui.interfaces.VideoPlayingListener;
+import fn10.psptools.util.ErrorShower;
+import fn10.psptools.util.ImageUtilites;
+import fn10.psptools.util.SavedVariables;
+import org.apache.commons.io.FileUtils;
+import org.codehaus.plexus.archiver.util.DefaultFileSet;
+import org.codehaus.plexus.archiver.zip.ZipArchiver;
+import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
+
+import javax.naming.NameNotFoundException;
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -27,42 +50,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
-import javax.naming.NameNotFoundException;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
-import javax.swing.SpringLayout;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-
-import org.apache.commons.io.FileUtils;
-import org.codehaus.plexus.archiver.util.DefaultFileSet;
-import org.codehaus.plexus.archiver.zip.ZipArchiver;
-import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
-
-import com.formdev.flatlaf.ui.FlatLineBorder;
-
-import fn10.psptools.psp.PSPDirectory;
-import fn10.psptools.psp.PSPFile;
-import fn10.psptools.psp.PSPFileDirectory;
-import fn10.psptools.psp.psps.ftp.FTPPSPFileDirectory;
-import fn10.psptools.psp.psps.real.RealPSPDirectory;
-import fn10.psptools.psp.reader.SFOReader;
-import fn10.psptools.psp.reader.SFOReader.Params;
-import fn10.psptools.ui.components.MediaPlayer;
-import fn10.psptools.ui.components.ParamSFOListElement;
-import fn10.psptools.ui.interfaces.SFOListElementListener;
-import fn10.psptools.ui.interfaces.VideoPlayingListener;
-import fn10.psptools.util.ErrorShower;
-import fn10.psptools.util.ImageUtilites;
-import fn10.psptools.util.SavedVariables;
 
 public class SFOBasedManager extends JFrame implements SFOListElementListener, VideoPlayingListener {
 
@@ -243,16 +230,27 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                     if (dir.isDirectory())
                         try { // try to get param.sfo
                             PSPDirectory actualDirectory = dir.getDirectory();
-                            if (actualDirectory.getFileWithName("PARAM.SFO") == null
-                                    || !actualDirectory.getFileWithName("PARAM.SFO").actuallyExists())
-                                continue;
+                            PSPFile param = actualDirectory.getFileWithName("PARAM.SFO");
+                            PSPFile eboot = actualDirectory.getFileWithName("EBOOT.PBP");
 
-                            SFOReader sfo = SFOReader.ofPSPFile(actualDirectory.getFileWithName("PARAM.SFO"));
-                            ParamSFOListElement ToAdd = new ParamSFOListElement(sfo, actualDirectory, listener);
-                            toAddTo.add(Box.createRigidArea(new Dimension(0, 10)));
-                            toAddTo.add(ToAdd);
-                            if (first == null)
-                                first = ToAdd;
+                            if (param != null
+                                    && param.actuallyExists()) {
+                                SFOReader sfo = SFOReader.ofPSPFile(param);
+                                ParamSFOListElement ToAdd = new ParamSFOListElement(sfo, actualDirectory, listener);
+                                toAddTo.add(Box.createRigidArea(new Dimension(0, 10)));
+                                toAddTo.add(ToAdd);
+                                if (first == null)
+                                    first = ToAdd;
+                            } else if (eboot != null
+                                    && eboot.actuallyExists()) {
+                                PBPReader pbpReader = PBPReader.ofPSPFile(eboot);
+                                ParamSFOListElement ToAdd = pbpReader.createListElement(listener);
+                                toAddTo.add(Box.createRigidArea(new Dimension(0, 10)));
+                                toAddTo.add(ToAdd);
+                                if (first == null)
+                                    first = ToAdd;
+                            }
+
 
                         } catch (Exception e) {
                             ErrorShower.full(toAddTo, e);
@@ -364,6 +362,18 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                     }
                     break;
 
+                case "MG":
+                    ViewingName.setText(selectedElement.sfo.getParam(Params.Title, true).toString());
+                    ViewingDesc.setText("ID: " + selectedElement.sfo.getParam(Params.DiscID, false).toString());
+                    ViewingSubDesc.setText("");
+//                    if (selectedElement.videoDir != null) {
+//                        selectedVideoProcess = new MediaPlayer(new File(selectedElement.videoDir),
+//                                selectedElement.sfo.getParam(Params.SaveFolderName).toString().trim());
+//
+//                        selectedVideoProcess.start(this);
+//                    }
+                    break;
+
                 default:
                     ViewingName.setText(selectedElement.sfo.getParam(Params.Title, true).toString());
                     ViewingDesc.setText("ID: " + selectedElement.sfo.getParam("TITLE_ID", false).toString());
@@ -450,7 +460,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
         int option = JOptionPane.showConfirmDialog(this,
                 "Restore & override this save?\nThe backup was made at "
                         + new SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
-                                .format(new Date(backupPath.toFile().lastModified())),
+                        .format(new Date(backupPath.toFile().lastModified())),
                 "Restore save?",
                 JOptionPane.YES_NO_OPTION);
 
@@ -481,7 +491,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                         if (Option == JOptionPane.YES_OPTION)
                             Files.delete(backupPath);
                     } catch (Exception e) {
-                       ErrorShower.full(this, e);
+                        ErrorShower.full(this, e);
                     }
                     loading.setVisible(false);
 

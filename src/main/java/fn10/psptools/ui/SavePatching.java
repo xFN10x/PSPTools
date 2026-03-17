@@ -78,20 +78,9 @@ import fn10.psptools.util.ImageUtilites;
 import fn10.psptools.util.SavedVariables;
 import org.jspecify.annotations.NonNull;
 
-public class SaveTools extends JFrame implements SFOListElementListener {
+public class SavePatching extends JFrame {
 
-    private final JTabbedPane tabbedPane = new JTabbedPane();
-
-    // #region database stuff
-    private final JTextField databaseSearch = new JTextField();
-    private final JPanel databasePanel = new JPanel();
-    private final JButton databaseBack = new JButton("< Back");
-    private final JPanel databaseListingInnerPanel = new JPanel();
-    private final JScrollPane databaseListingPanel = new JScrollPane(databaseListingInnerPanel,
-            JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-    // #endregion
     // #region patching
-    private final JPanel PatchPanel = new JPanel();
     private final JTabbedPane PatchTabs = new JTabbedPane();
 
     private final JPanel SetupPanel = new JPanel();
@@ -173,8 +162,8 @@ public class SaveTools extends JFrame implements SFOListElementListener {
         return true;
     }
 
-    public SaveTools(Frame parent) {
-        super("Save Tools");
+    public SavePatching(Frame parent) {
+        super("Save Patching");
 
         SavedVariables saved = SavedVariables.Load();
 
@@ -200,88 +189,6 @@ public class SaveTools extends JFrame implements SFOListElementListener {
         setResizable(false);
         setLayout(Lay);
         setSize(new Dimension(450, 500));
-
-        tabbedPane.addTab("Save Database", databasePanel);
-        if (!PSP.DemoMode)
-            tabbedPane.addTab("Save Patching", PatchPanel);
-        
-
-        tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
-
-        Lay.putConstraint(SpringLayout.NORTH, tabbedPane, 0, SpringLayout.NORTH, getContentPane());
-        Lay.putConstraint(SpringLayout.SOUTH, tabbedPane, 0, SpringLayout.SOUTH, getContentPane());
-        Lay.putConstraint(SpringLayout.WEST, tabbedPane, 0, SpringLayout.WEST, getContentPane());
-        Lay.putConstraint(SpringLayout.EAST, tabbedPane, 0, SpringLayout.EAST, getContentPane());
-
-        Lay.putConstraint(SpringLayout.NORTH, databasePanel, 0, SpringLayout.SOUTH, tabbedPane);
-        Lay.putConstraint(SpringLayout.WEST, databasePanel, 0, SpringLayout.WEST, getContentPane());
-        Lay.putConstraint(SpringLayout.EAST, databasePanel, 0, SpringLayout.EAST, getContentPane());
-        Lay.putConstraint(SpringLayout.SOUTH, databasePanel, 0, SpringLayout.SOUTH, getContentPane());
-
-        Lay.putConstraint(SpringLayout.NORTH, PatchPanel, 0, SpringLayout.SOUTH, tabbedPane);
-        Lay.putConstraint(SpringLayout.WEST, PatchPanel, 0, SpringLayout.WEST, getContentPane());
-        Lay.putConstraint(SpringLayout.EAST, PatchPanel, 0, SpringLayout.EAST, getContentPane());
-        Lay.putConstraint(SpringLayout.SOUTH, PatchPanel, 0, SpringLayout.SOUTH, getContentPane());
-
-        databaseListingInnerPanel.setLayout(new BoxLayout(databaseListingInnerPanel, BoxLayout.Y_AXIS));
-
-        add(tabbedPane);
-
-        // #region datapase panel
-        databasePanel.setLayout(Lay2);
-
-        Lay2.putConstraint(SpringLayout.NORTH, databaseSearch, 10, SpringLayout.NORTH, databasePanel);
-        // Lay2.putConstraint(SpringLayout.SOUTH, databaseSearch, -40,
-        // SpringLayout.SOUTH, databasePanel);
-        Lay2.putConstraint(SpringLayout.EAST, databaseSearch, -10, SpringLayout.EAST, databasePanel);
-        Lay2.putConstraint(SpringLayout.WEST, databaseSearch, 10, SpringLayout.WEST, databasePanel);
-
-        Lay2.putConstraint(SpringLayout.NORTH, databaseListingPanel, 5, SpringLayout.SOUTH, databaseSearch);
-        Lay2.putConstraint(SpringLayout.SOUTH, databaseListingPanel, -40, SpringLayout.SOUTH, databasePanel);
-        Lay2.putConstraint(SpringLayout.EAST, databaseListingPanel, -10, SpringLayout.EAST, databasePanel);
-        Lay2.putConstraint(SpringLayout.WEST, databaseListingPanel, 10, SpringLayout.WEST, databasePanel);
-
-        Lay2.putConstraint(SpringLayout.NORTH, databaseBack, 5, SpringLayout.SOUTH, databaseListingPanel);
-        Lay2.putConstraint(SpringLayout.SOUTH, databaseBack, -5, SpringLayout.SOUTH, databasePanel);
-        Lay2.putConstraint(SpringLayout.EAST, databaseBack, -10, SpringLayout.EAST, databasePanel);
-        Lay2.putConstraint(SpringLayout.WEST, databaseBack, 10, SpringLayout.WEST, databasePanel);
-        databaseListingPanel.getVerticalScrollBar().setUnitIncrement(18);
-        databaseListingInnerPanel.add(new JLabel("Search by ID (e.g. ULUS03410) or by name (e.g. METAL GEAR SOLID)"));
-
-        databaseSearch.getDocument().addDocumentListener(new DocumentListener() {
-
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                reloadDatabase(saved.DatabaseUrl, databaseSearch.getText());
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                reloadDatabase(saved.DatabaseUrl, databaseSearch.getText());
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                reloadDatabase(saved.DatabaseUrl, databaseSearch.getText());
-            }
-
-        });
-
-        databaseBack.addActionListener(ac -> {
-            if (!currentMenu.equals("root")) {
-                currentMenu = "root";
-                databaseSearch.setText("");
-                reloadDatabase(saved.DatabaseUrl, "");
-                databaseListingInnerPanel
-                        .add(new JLabel("Search by ID (e.g. ULUS03410) or by name (e.g. METAL GEAR SOLID)"));
-                databaseBack.setEnabled(false);
-            }
-        });
-
-        databasePanel.add(databaseSearch);
-        databasePanel.add(databaseListingPanel);
-        databasePanel.add(databaseBack);
-        // #endregion
         // #region patch panel
 
         // #region setup setup tab
@@ -633,14 +540,14 @@ public class SaveTools extends JFrame implements SFOListElementListener {
         PatchTabs.addTab("Setup", SetupPanel);
         PatchTabs.addTab("PSP", PSPPatchPanel);
 
-        PatchPanel.setLayout(Lay3);
+        setLayout(Lay3);
 
-        Lay3.putConstraint(SpringLayout.WEST, PatchTabs, 0, SpringLayout.WEST, PatchPanel);
-        Lay3.putConstraint(SpringLayout.SOUTH, PatchTabs, 0, SpringLayout.SOUTH, PatchPanel);
-        Lay3.putConstraint(SpringLayout.NORTH, PatchTabs, 0, SpringLayout.NORTH, PatchPanel);
-        Lay3.putConstraint(SpringLayout.EAST, PatchTabs, 0, SpringLayout.EAST, PatchPanel);
+        Lay3.putConstraint(SpringLayout.WEST, PatchTabs, 0, SpringLayout.WEST, getContentPane());
+        Lay3.putConstraint(SpringLayout.SOUTH, PatchTabs, 0, SpringLayout.SOUTH, getContentPane());
+        Lay3.putConstraint(SpringLayout.NORTH, PatchTabs, 0, SpringLayout.NORTH, getContentPane());
+        Lay3.putConstraint(SpringLayout.EAST, PatchTabs, 0, SpringLayout.EAST, getContentPane());
 
-        PatchPanel.add(PatchTabs);
+        add(PatchTabs);
         // #endregion
 
         setLocation(LaunchPage.getScreenCenter(this));
@@ -686,257 +593,5 @@ public class SaveTools extends JFrame implements SFOListElementListener {
         }
         return check;
     }
-
-    public void reloadDatabase(URL url, String searchTerm) {
-        if (currentThread != null) {
-            try {
-                currentThread.cancel(true);
-                if (currentReader != null)
-                    currentReader.close();
-            } catch (Exception e) {
-                ErrorShower.full(this, e);
-            }
-        }
-
-        databaseListingInnerPanel.removeAll();
-        databaseListingInnerPanel.repaint();
-        if (currentMenu.equals("root")) {
-            currentThread = executorService.submit(
-                    () -> {
-                        Component comp = null;
-                        if (searchTerm.trim().isEmpty())
-                            return;
-                        try (BufferedReader buff = new BufferedReader(
-                                new InputStreamReader(
-                                        new URI(url.toString() + "/PSP/games.txt").toURL().openStream()))) {
-                            currentReader = buff;
-                            String currentLine;
-                            while ((currentLine = currentReader.readLine()) != null
-                                    && !Thread.currentThread().isInterrupted()) {
-                                String[] keyandval = currentLine.split("=");
-
-                                if (!keyandval[1].trim().toLowerCase().contains(searchTerm.toLowerCase().trim())
-                                        && !keyandval[0].trim().toLowerCase()
-                                        .contains(searchTerm.toLowerCase().trim())) {
-                                    continue;
-                                }
-
-                                URL GameIconUrl = new URI(url + "/PSP/" + keyandval[0] + "/ICON0.PNG")
-                                        .toURL();
-                                System.out.println(keyandval[0] + "=" + keyandval[1] + "\n" + searchTerm);
-
-                                if (Thread.currentThread().isInterrupted())
-                                    break;
-
-                                comp = databaseListingInnerPanel.add(new ParamSFOListElement(
-                                        keyandval[1],
-                                        keyandval[0],
-                                        GameIconUrl.openStream().readAllBytes(),
-                                        this));
-                                if (Thread.currentThread().isInterrupted())
-                                    databaseListingInnerPanel.remove(comp);
-
-                                databaseListingInnerPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-                            }
-                        } catch (Exception e) {
-                            if (e instanceof IOException) {
-                                if (comp != null)
-                                    databaseListingInnerPanel.remove(comp);
-                                return;
-                            }
-
-                            ErrorShower.full(this, e);
-                        }
-                    });
-        } else {
-            currentThread = executorService.submit(
-                    () -> {
-                        Component comp = null;
-                        try (BufferedReader buff = new BufferedReader(
-                                new InputStreamReader(new URI(url.toString() + "/PSP/" + currentMenu + "/saves.txt")
-                                        .toURL().openStream()))) {
-                            currentReader = buff;
-                            String currentLine;
-                            while ((currentLine = currentReader.readLine()) != null
-                                    && !Thread.currentThread().isInterrupted()) {
-                                String[] keyandval = currentLine.split("=");
-
-                                if (!keyandval[1].trim().toLowerCase().contains(searchTerm.toLowerCase().trim())
-                                        && !keyandval[0].trim().toLowerCase()
-                                        .contains(searchTerm.toLowerCase().trim())) {
-                                    continue;
-                                }
-
-                                URL GameIconUrl = new URI(url + "/PSP/" + currentMenu + "/ICON0.PNG")
-                                        .toURL();
-
-                                if (Thread.currentThread().isInterrupted())
-                                    break;
-
-                                comp = databaseListingInnerPanel.add(new ParamSFOListElement(
-                                        keyandval[1],
-                                        keyandval[0],
-                                        GameIconUrl.openStream().readAllBytes(),
-                                        this));
-
-                                if (Thread.currentThread().isInterrupted())
-                                    databaseListingInnerPanel.remove(comp);
-
-                                databaseListingInnerPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-                            }
-                        } catch (Exception e) {
-                            if (e instanceof IOException) {
-                                if (comp != null)
-                                    databaseListingInnerPanel.remove(comp);
-                                return;
-                            }
-                            ErrorShower.full(this, e);
-                        }
-                    });
-        }
-
-    }
-
-    @Override
-    public void selected(ParamSFOListElement selectedElement) {
-        if (currentMenu.equals("root")) {
-            currentMenu = selectedElement.getDescription();
-            databaseSearch.setText("");
-            reloadDatabase(SavedVariables.Load().DatabaseUrl, databaseSearch.getText());
-        } else {
-            Object choice = JOptionPane.showInputDialog(this,
-                    "<html>How would you like to install the save,<br><b>" + selectedElement.getTitle()
-                            + "</b>, for game "
-                            + currentMenu + "?</html>",
-                    "Install save: " + selectedElement.getTitle(), JOptionPane.QUESTION_MESSAGE, null,
-                    new String[] { "To PSP", "To Folder", "To Zip" }, "To PSP");
-            if (choice == null)
-                return;
-            LoadingScreen loading = new LoadingScreen(this);
-            SwingUtilities.invokeLater(() -> {
-                loading.setVisible(true);
-            });
-            new Thread(() -> {
-                try {
-                    URL zipUrl = new URI(SavedVariables.Load().DatabaseUrl + "/PSP/" + currentMenu + "/"
-                            + selectedElement.getDescription()).toURL();
-                    System.out.println("Downloading save: " + zipUrl);
-                    InputStream stream = zipUrl.openStream();
-                    File zipFile = File.createTempFile("PSPTOOLS", "TEMPSAVE.zip");
-                    zipFile.deleteOnExit();
-                    ZipUnArchiver zipUnArchiver = new ZipUnArchiver(zipFile);
-
-                    Files.write(zipFile.toPath(), stream.readAllBytes());
-                    stream.close();
-
-                    SystemFileChooser chooser = new SystemFileChooser();
-                    switch (choice.toString()) {
-                        case "To Zip":
-                            chooser.setDialogType(SystemFileChooser.SAVE_DIALOG);
-                            chooser.setFileSelectionMode(SystemFileChooser.FILES_ONLY);
-                            chooser.setSelectedFile(new File("test.zip"));
-                            chooser.showOpenDialog(loading);
-
-                            File file = chooser.getSelectedFile();
-                            if (file == null) {
-                                loading.setVisible(false);
-                                return;
-                            }
-
-                            FileUtils.copyFile(zipFile, file);
-
-                            loading.setVisible(false);
-                            JOptionPane.showMessageDialog(null,
-                                    "The save has been downloaded.");
-                            break;
-                        case "To Folder":
-                            chooser.setDialogType(SystemFileChooser.SAVE_DIALOG);
-                            chooser.setFileSelectionMode(SystemFileChooser.DIRECTORIES_ONLY);
-                            chooser.showOpenDialog(loading);
-
-                            File directory = chooser.getSelectedFile();
-                            if (directory == null) {
-                                loading.setVisible(false);
-                                return;
-                            }
-
-                            zipUnArchiver.setDestDirectory(directory);
-                            zipUnArchiver.extract();
-                            loading.setVisible(false);
-                            JOptionPane.showMessageDialog(null,
-                                    "The save has been downloaded.");
-
-                            break;
-                        case "To PSP":
-                            if (!PSP.getCurrentPSP().pspActive()) {
-                                int option2 = JOptionPane.showConfirmDialog(loading,
-                                        "No PSP is selected, but is required.\nSelect one?",
-                                        "PSP Selection Confirm", JOptionPane.YES_NO_OPTION);
-
-                                if (option2 == JOptionPane.YES_OPTION) {
-                                    PSP.setCurrentPSP(PSPSelectionUI.getNewPSP(null));
-
-                                    File tempFile = File.createTempFile("PSPTOOLS", "TEMPSAVE");
-                                    zipUnArchiver.setDestFile(tempFile);
-                                    zipUnArchiver.extract();
-                                    PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA").addFile(tempFile);
-                                    tempFile.delete();
-
-                                    loading.setVisible(false);
-                                    JOptionPane.showMessageDialog(loading,
-                                            "The save has been downloaded.");
-
-                                } else {
-                                    loading.setVisible(false);
-                                    return;
-                                }
-                            } else {
-
-                                /*
-                                 * zipUnArchiver
-                                 * .setDestDirectory(.toFile());
-                                 * zipUnArchiver.extract();
-                                 */
-                                File tempFile = File.createTempFile("PSPTOOLS", "TEMPSAVE");
-                                zipUnArchiver.setDestFile(tempFile);
-                                zipUnArchiver.extract();
-                                PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA").addFile(tempFile);
-                                tempFile.delete();
-
-                                loading.setVisible(false);
-                                JOptionPane.showMessageDialog(null,
-                                        "The save has been downloaded.");
-
-                            }
-                            break;
-
-                        default:
-                            break;
-                    }
-                    zipFile.delete();
-                } catch (Exception e) {
-                    ErrorShower.full(this, e);
-                    loading.setVisible(false);
-                    JOptionPane.showMessageDialog(null,
-                            "Failed to download save: " + e.getMessage());
-                }
-            }).start();
-        }
-    }
-
-    @Override
-    public void backup() {
-    }
-
-    @Override
-    public void restore() {
-    }
-
-    @Override
-    public void delete(ParamSFOListElement selectedElement) {
-    }
-
-    @Override
-    public void onThreadCreate(Thread thread) {}
 
 }
