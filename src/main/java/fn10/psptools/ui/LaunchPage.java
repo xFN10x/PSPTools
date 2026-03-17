@@ -28,7 +28,7 @@ import fn10.psptools.psp.PSP;
 import fn10.psptools.psp.psps.real.RealPSP;
 import fn10.psptools.psp.psps.real.RealPSPDirectory;
 import fn10.psptools.psp.psps.real.RealPSPFile;
-import fn10.psptools.psp.sfo.ParamSFO;
+import fn10.psptools.psp.reader.SFOReader;
 import fn10.psptools.ui.components.ParamSFOListElement;
 import fn10.psptools.util.SavedVariables;
 
@@ -174,7 +174,7 @@ public class LaunchPage extends JFrame {
                     return;
                 RealPSPFile pspdir = new RealPSPFile(fileChooser.getSelectedFile());
                 if (pspdir.getExtension().equalsIgnoreCase("sfo"))
-                    new SFOViewer(getOwner(), ParamSFO.ofPSPFile(pspdir)).setVisible(true);
+                    new SFOViewer(getOwner(), SFOReader.ofPSPFile(pspdir)).setVisible(true);
                 else if (pspdir.getExtension().equalsIgnoreCase("iso"))
                     new SFOViewer(getOwner(), ParamSFOListElement.ofIso(pspdir, null).sfo).setVisible(true);
 

@@ -70,8 +70,8 @@ import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 
 import com.formdev.flatlaf.util.SystemFileChooser;
 import fn10.psptools.psp.PSP;
-import fn10.psptools.psp.sfo.ParamSFO;
-import fn10.psptools.psp.sfo.ParamSFO.Params;
+import fn10.psptools.psp.reader.SFOReader;
+import fn10.psptools.psp.reader.SFOReader.Params;
 import fn10.psptools.ui.components.ParamSFOListElement;
 import fn10.psptools.ui.interfaces.SFOListElementListener;
 import fn10.psptools.util.ImageUtilites;
@@ -481,8 +481,8 @@ public class SaveTools extends JFrame implements SFOListElementListener {
 
                 SaveIcon.setIcon(ImageUtilites.ResizeIcon(selected.getIcon0(), 117, 65));
                 try {
-                    SaveName.setText(selected.sfo.getParam(ParamSFO.Params.SaveTitle, true).toString());
-                    SaveGameName.setText(selected.sfo.getParam(ParamSFO.Params.Title, true).toString());
+                    SaveName.setText(selected.sfo.getParam(SFOReader.Params.SaveTitle, true).toString());
+                    SaveGameName.setText(selected.sfo.getParam(SFOReader.Params.Title, true).toString());
 
                     File PSPPatchDir = Path.of(SavedVariables.DataFolder.toString(), "Patches", "PSP").toFile();
                     boolean foundPatch = false;

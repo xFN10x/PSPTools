@@ -54,8 +54,8 @@ import fn10.psptools.psp.PSPFile;
 import fn10.psptools.psp.PSPFileDirectory;
 import fn10.psptools.psp.psps.ftp.FTPPSPFileDirectory;
 import fn10.psptools.psp.psps.real.RealPSPDirectory;
-import fn10.psptools.psp.sfo.ParamSFO;
-import fn10.psptools.psp.sfo.ParamSFO.Params;
+import fn10.psptools.psp.reader.SFOReader;
+import fn10.psptools.psp.reader.SFOReader.Params;
 import fn10.psptools.ui.components.MediaPlayer;
 import fn10.psptools.ui.components.ParamSFOListElement;
 import fn10.psptools.ui.interfaces.SFOListElementListener;
@@ -247,7 +247,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                                     || !actualDirectory.getFileWithName("PARAM.SFO").actuallyExists())
                                 continue;
 
-                            ParamSFO sfo = ParamSFO.ofPSPFile(actualDirectory.getFileWithName("PARAM.SFO"));
+                            SFOReader sfo = SFOReader.ofPSPFile(actualDirectory.getFileWithName("PARAM.SFO"));
                             ParamSFOListElement ToAdd = new ParamSFOListElement(sfo, actualDirectory, listener);
                             toAddTo.add(Box.createRigidArea(new Dimension(0, 10)));
                             toAddTo.add(ToAdd);
@@ -306,7 +306,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
             Background.repaint();
 
             ViewingCategory.setText(
-                    ParamSFO.tryToGetCategoryName(selectedElement.sfo.getParam(Params.Category).toString().trim()));
+                    SFOReader.tryToGetCategoryName(selectedElement.sfo.getParam(Params.Category).toString().trim()));
 
             switch (selectedElement.sfo.getParam(Params.Category).toString().trim()) {
                 case "MS":

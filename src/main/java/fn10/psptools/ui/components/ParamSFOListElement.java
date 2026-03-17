@@ -30,8 +30,8 @@ import fn10.psptools.psp.PSP;
 import fn10.psptools.psp.PSPDirectory;
 import fn10.psptools.psp.PSPFile;
 import fn10.psptools.psp.psps.real.RealPSPFile;
-import fn10.psptools.psp.sfo.ParamSFO;
-import fn10.psptools.psp.sfo.ParamSFO.Params;
+import fn10.psptools.psp.reader.SFOReader;
+import fn10.psptools.psp.reader.SFOReader.Params;
 import fn10.psptools.ui.interfaces.SFOListElementListener;
 import fn10.psptools.util.ErrorShower;
 import fn10.psptools.util.ImageUtilites;
@@ -47,7 +47,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -58,7 +57,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
     public static ParamSFOListElement makeEmpty(SFOListElementListener listiener)
             throws NameNotFoundException, IOException {
         return new ParamSFOListElement(
-                ParamSFO.ofStream(ParamSFOListElement.class.getResourceAsStream("/EmptyParam/PARAM.SFO")), null,
+                SFOReader.ofStream(ParamSFOListElement.class.getResourceAsStream("/EmptyParam/PARAM.SFO")), null,
                 ParamSFOListElement.class.getResourceAsStream("/EmptyParam/ICON0.PNG").readAllBytes(),
                 ParamSFOListElement.class.getResourceAsStream("/EmptyParam/PIC1.PNG").readAllBytes(), null, null,
                 listiener);
@@ -68,7 +67,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
     private static final FlatLineBorder border = new FlatLineBorder(new Insets(3, 3, 3, 3), Color.white, 2, 8);
     private static final FlatLineBorder selectedBorder = new FlatLineBorder(new Insets(3, 3, 3, 3), Color.white, 4, 8);
 
-    public final ParamSFO sfo;
+    public final SFOReader sfo;
     public String videoDir = null;
     private final ImageIcon icon0;
     private final ImageIcon pic1;
@@ -168,7 +167,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                     icon1 = null;
                 }
 
-                ParamSFO sfo = ParamSFO.ofStream(param);
+                SFOReader sfo = SFOReader.ofStream(param);
 
                 return new ParamSFOListElement(sfo,
                         null,
@@ -209,11 +208,11 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
             return tempAudioFile;
     }
 
-    public ParamSFOListElement(ParamSFO ParamSFO, PSPDirectory dir, SFOListElementListener selectedFunction)
+    public ParamSFOListElement(SFOReader SFOReader, PSPDirectory dir, SFOListElementListener selectedFunction)
             throws IOException, URISyntaxException, NameNotFoundException {
         PSPFile icon1 = dir.getFileStartingWith("icon1");
         PSPFile snd0 = dir.getFileWithName("snd0.at3");
-        this(ParamSFO, dir,
+        this(SFOReader, dir,
                 readFileWithNameFromPSPFileButIfItDoesntExistReturnTheseBytesInstead(dir, "icon0.png",
                         ParamSFOListElement.class.getResourceAsStream("/no_icon0.png").readAllBytes()),
                 readFileWithNameFromPSPFileButIfItDoesntExistReturnTheseBytesInstead(dir, "pic1.png",
@@ -234,13 +233,13 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         SFODesc.setText(Desc);
     }
 
-    public ParamSFOListElement(ParamSFO ParamSFO, PSPDirectory dir, byte[] icon0Data, byte[] pic1Data, byte[] icon1Data,
-            byte[] snd0Data,
-            SFOListElementListener selectedFunction)
+    public ParamSFOListElement(SFOReader SFOReader, PSPDirectory dir, byte[] icon0Data, byte[] pic1Data, byte[] icon1Data,
+                               byte[] snd0Data,
+                               SFOListElementListener selectedFunction)
             throws NameNotFoundException, IOException {
         super();
         // System.out.println("SGIMAS");
-        this.sfo = ParamSFO;
+        this.sfo = SFOReader;
         this.selectedFunc = selectedFunction;
         this.dir = dir;
         this.audioData = snd0Data;

@@ -27,12 +27,12 @@ import javax.swing.JDialog;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
-import fn10.psptools.psp.sfo.ParamSFO;
+import fn10.psptools.psp.reader.SFOReader;
 import fn10.psptools.util.ErrorShower;
 
 public class SFOViewer extends JDialog {
 
-    public SFOViewer(Window parent, ParamSFO sfo) {
+    public SFOViewer(Window parent, SFOReader sfo) {
         super(parent);
         setSize(500, 500);
         setTitle("Viewing SFO");
@@ -44,9 +44,9 @@ public class SFOViewer extends JDialog {
             try {
                 String paramName = entry.getKey();
                 String paramType;
-                if (sfo.dataTypes.get(entry.getKey()) == ParamSFO.UTF8) {
+                if (sfo.dataTypes.get(entry.getKey()) == SFOReader.UTF8) {
                     paramType = "UTF8";
-                } else if (sfo.dataTypes.get(entry.getKey()) == ParamSFO.UTF8_S) {
+                } else if (sfo.dataTypes.get(entry.getKey()) == SFOReader.UTF8_S) {
                     paramType = "UTF8 (Null Terminated)";
                 } else {
                     paramType = "INT32";

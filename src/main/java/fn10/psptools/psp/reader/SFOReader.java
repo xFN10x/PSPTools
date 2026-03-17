@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package fn10.psptools.psp.sfo;
+package fn10.psptools.psp.reader;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +37,7 @@ import com.google.gson.GsonBuilder;
 
 import fn10.psptools.psp.PSPFile;
 
-public class ParamSFO {
+public class SFOReader {
 
     public static final short UTF8_S = 4;
     public static final short UTF8 = 516;
@@ -63,7 +63,6 @@ public class ParamSFO {
         CATEGORIES.put("PP", "PSP Game");
         CATEGORIES.put("GD", "PS3 Game Data");
         CATEGORIES.put("2D", "PS2 Data");
-        CATEGORIES.put("HG", "HDD Game");
 
         CATEGORIES.put("DG", "PS3 Disc Game");
         CATEGORIES.put("SD", "Save Data");
@@ -146,23 +145,23 @@ public class ParamSFO {
      * @deprecated Use PSPFiles now
      */
     @Deprecated
-    public static ParamSFO ofFile(File of) throws IOException {
+    public static SFOReader ofFile(File of) throws IOException {
         if (!of.exists())
             return null;
-        return ParamSFO.ofStream(Files.newInputStream(of.toPath()));
+        return SFOReader.ofStream(Files.newInputStream(of.toPath()));
     }
 
-    public static ParamSFO ofPSPFile(PSPFile of) throws IOException {
+    public static SFOReader ofPSPFile(PSPFile of) throws IOException {
         return ofStream(of.openStream());
     }
 
-    public static ParamSFO ofStream(InputStream stream) throws IOException {
+    public static SFOReader ofStream(InputStream stream) throws IOException {
         // System.out.println("READING NEW -----------------: ");
         @SuppressWarnings("null")
         LittleEndianDataInputStream Stream = new LittleEndianDataInputStream(stream);
         int currentByte = 0;
 
-        ParamSFO toBuild = new ParamSFO();
+        SFOReader toBuild = new SFOReader();
         Header paramHeader = new Header();
 
         paramHeader.magic = new String(Stream.readNBytes(4), StandardCharsets.UTF_8); // 4
