@@ -238,7 +238,6 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                                SFOListElementListener selectedFunction)
             throws NameNotFoundException, IOException {
         super();
-        // System.out.println("SGIMAS");
         this.sfo = SFOReader;
         this.selectedFunc = selectedFunction;
         this.dir = dir;
@@ -342,6 +341,21 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                         SFOTitle.setText(sfo.getParam("PARENT_DIRECTORY", true).toString().replace("/", ""));
                     else
                         SFOTitle.setText(sfo.getParam("MAINTITLE", true).toString().replace("/", ""));
+                    break;
+
+                case "MG":
+                    SFOTitle.setText((String) sfo.getParam(Params.Title, true));
+
+                    SFODesc.setFont(SFODesc.getFont().deriveFont(10f));
+
+                    SFODesc.setText((String) sfo.getParam(Params.DiscID, true));
+
+                    setToolTipText(
+                            sfo.getParam(Params.Title) + " (" + Params.DiscID
+                                    + ")");
+                    RightClickMenu.setLabel(
+                            sfo.getParam(Params.Title) + " (" + Params.DiscID
+                                    + ")");
                     break;
 
                 default:
