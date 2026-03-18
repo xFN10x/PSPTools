@@ -8,6 +8,8 @@ import org.jspecify.annotations.NonNull;
 
 import javax.swing.*;
 import java.awt.*;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,7 +70,11 @@ public class NewLaunchPage extends JFrame {
         });
         JButton dtButton = new JButton("Database Tools");
         dtButton.addActionListener(_ -> {
-            new DatabaseTools(this).setVisible(true);
+            try {
+                new DatabaseTools(this).setVisible(true);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         });
         JButton pmButton = new JButton("Plugin Manager");
         buttons.add(gmButton);

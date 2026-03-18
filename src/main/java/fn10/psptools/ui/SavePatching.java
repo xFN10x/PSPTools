@@ -554,25 +554,6 @@ public class SavePatching extends JFrame {
         setVisible(true);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         parent.setVisible(false);
-
-        if (saved.DatabaseUrl == null) {
-            String choice = JOptionPane.showInputDialog(this, "There is no save database selected.\nPlease Select one.",
-                    "Select Save Database", JOptionPane.INFORMATION_MESSAGE, null,
-                    new String[] { "Apollo Save Database" }, "Apollo Save Database").toString();
-            switch (choice) {
-                case "Apollo Save Database":
-                    try {
-                        saved.DatabaseUrl = new URI("https://bucanero.github.io/apollo-saves/").toURL();
-                        saved.Save();
-                    } catch (MalformedURLException | URISyntaxException e1) {
-                        e1.printStackTrace();
-                    }
-                    break;
-
-                default:
-                    setVisible(false);
-            }
-        }
     }
 
     private static @NonNull JCheckBox getJCheckBox(String patchName, int i) {

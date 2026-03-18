@@ -121,4 +121,6 @@ public class VimmDownloader {
             return name + " (" + region + ") " + version + " [" + gameID + "]";
         }
     }
+
+    public record VimmGameDetails(String serial, String publisher, String year, String region, String name, String gameDownloadURL) {}
 }

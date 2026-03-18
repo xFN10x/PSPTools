@@ -17,14 +17,11 @@
 */
 package fn10.psptools.ui;
 
-import com.formdev.flatlaf.ui.FlatLineBorder;
 import com.formdev.flatlaf.util.SystemFileChooser;
-import fn10.psptools.PSPTools;
 import fn10.psptools.psp.PSP;
 import fn10.psptools.ui.components.ParamSFOListElement;
 import fn10.psptools.ui.interfaces.SFOListElementListener;
 import fn10.psptools.util.ErrorShower;
-import fn10.psptools.util.SavedVariables;
 import fn10.psptools.util.VimmDownloader;
 import org.apache.commons.io.FileUtils;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
@@ -40,13 +37,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -56,6 +47,8 @@ import java.util.concurrent.Future;
 public class DatabaseTools extends JFrame implements SFOListElementListener {
 
     private final JTabbedPane tabbedPane = new JTabbedPane();
+
+    public URL DatabaseUrl = new URI("https://bucanero.github.io/apollo-saves/").toURL();
 
     private String currentMenu = "root";
     private final JTextField saveDatabaseSearch = new JTextField();
@@ -72,10 +65,12 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
     private final JScrollPane saveDatabaseListingPanel = new JScrollPane(saveDatabaseListingInnerPanel,
             JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
-    private static final JTabbedPane gameDatabasePanel = new JTabbedPane(JTabbedPane.LEFT,JTabbedPane.SCROLL_TAB_LAYOUT);
+    private static final JPanel gameDatabasePanel = new JPanel();
+    private static final JTabbedPane gameDatabaseBrowserPane = new JTabbedPane(JTabbedPane.LEFT,JTabbedPane.SCROLL_TAB_LAYOUT);
     private static Map<Character, List<VimmDownloader.VimmGame>> games = null;
 
     private final SpringLayout ContentPaneLay = new SpringLayout();
+    private final SpringLayout GameDatabasePanelLay = new SpringLayout();
     private final SpringLayout SaveDatabaseLay = new SpringLayout();
     private final SpringLayout GameDatabaseLay = new SpringLayout();
 
@@ -84,10 +79,8 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private static boolean loadedGames = false;
 
-    public DatabaseTools(Frame parent) {
+    public DatabaseTools(Frame parent) throws MalformedURLException, URISyntaxException {
         super("Database Tools");
-
-        SavedVariables saved = SavedVariables.Load();
 
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
@@ -105,7 +98,7 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
 
         setResizable(false);
         setLayout(ContentPaneLay);
-        setSize(new Dimension(450, 500));
+        setSize(new Dimension(700, 500));
 
         tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
         tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
@@ -156,17 +149,17 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
 
             @Override
             public void insertUpdate(DocumentEvent e) {
-                reloadSaveDatabase(saved.DatabaseUrl, saveDatabaseSearch.getText());
+                reloadSaveDatabase(DatabaseUrl, saveDatabaseSearch.getText());
             }
 
             @Override
             public void removeUpdate(DocumentEvent e) {
-                reloadSaveDatabase(saved.DatabaseUrl, saveDatabaseSearch.getText());
+                reloadSaveDatabase(DatabaseUrl, saveDatabaseSearch.getText());
             }
 
             @Override
             public void changedUpdate(DocumentEvent e) {
-                reloadSaveDatabase(saved.DatabaseUrl, saveDatabaseSearch.getText());
+                reloadSaveDatabase(DatabaseUrl, saveDatabaseSearch.getText());
             }
 
         });
@@ -175,7 +168,7 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
             if (!currentMenu.equals("root")) {
                 currentMenu = "root";
                 saveDatabaseSearch.setText("");
-                reloadSaveDatabase(saved.DatabaseUrl, "");
+                reloadSaveDatabase(DatabaseUrl, "");
                 saveDatabaseListingInnerPanel
                         .add(new JLabel("Search by ID (e.g. ULUS03410) or by name (e.g. METAL GEAR SOLID)"));
             }
@@ -189,6 +182,14 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
 
         //#region game database
         tabbedPane.addTab("Game Database", gameDatabasePanel);
+        gameDatabasePanel.setLayout(GameDatabasePanelLay);
+
+        GameDatabasePanelLay.putConstraint(SpringLayout.NORTH, gameDatabaseBrowserPane, 0, SpringLayout.NORTH, gameDatabasePanel);
+        GameDatabasePanelLay.putConstraint(SpringLayout.SOUTH, gameDatabaseBrowserPane, 0, SpringLayout.SOUTH, gameDatabasePanel);
+        GameDatabasePanelLay.putConstraint(SpringLayout.WEST, gameDatabaseBrowserPane, 0, SpringLayout.WEST, gameDatabasePanel);
+        GameDatabasePanelLay.putConstraint(SpringLayout.EAST, gameDatabaseBrowserPane, -10, SpringLayout.HORIZONTAL_CENTER, gameDatabasePanel);
+
+        gameDatabasePanel.add(gameDatabaseBrowserPane);
         //#endregion
 
         setLocation(LaunchPage.getScreenCenter(this));
@@ -212,11 +213,11 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
                     gameList.setListData(games.get(letter).toArray(new VimmDownloader.VimmGame[0]));
                     JScrollPane scroll = new JScrollPane(gameList);
                     scroll.getVerticalScrollBar().setUnitIncrement(12);
-                    gameDatabasePanel.addTab(String.valueOf(letter), scroll);
-                    GameDatabaseLay.putConstraint(SpringLayout.WEST, gameList, 0, SpringLayout.WEST, gameDatabasePanel);
-                    GameDatabaseLay.putConstraint(SpringLayout.EAST, gameList, 0, SpringLayout.EAST, gameDatabasePanel);
-                    GameDatabaseLay.putConstraint(SpringLayout.NORTH, gameList, 0, SpringLayout.NORTH, gameDatabasePanel);
-                    GameDatabaseLay.putConstraint(SpringLayout.SOUTH, gameList, 0, SpringLayout.SOUTH, gameDatabasePanel);
+                    gameDatabaseBrowserPane.addTab(String.valueOf(letter), scroll);
+                    GameDatabaseLay.putConstraint(SpringLayout.WEST, gameList, 0, SpringLayout.WEST, gameDatabaseBrowserPane);
+                    GameDatabaseLay.putConstraint(SpringLayout.EAST, gameList, 0, SpringLayout.EAST, gameDatabaseBrowserPane);
+                    GameDatabaseLay.putConstraint(SpringLayout.NORTH, gameList, 0, SpringLayout.NORTH, gameDatabaseBrowserPane);
+                    GameDatabaseLay.putConstraint(SpringLayout.SOUTH, gameList, 0, SpringLayout.SOUTH, gameDatabaseBrowserPane);
                 }
 
             } catch (Exception e) {
@@ -345,7 +346,7 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
         if (currentMenu.equals("root")) {
             currentMenu = selectedElement.getDescription();
             saveDatabaseSearch.setText("");
-            reloadSaveDatabase(SavedVariables.Load().DatabaseUrl, saveDatabaseSearch.getText());
+            reloadSaveDatabase(DatabaseUrl, saveDatabaseSearch.getText());
         } else {
             Object choice = JOptionPane.showInputDialog(this,
                     "<html>How would you like to install the save,<br><b>" + selectedElement.getTitle()
@@ -361,7 +362,7 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
             });
             new Thread(() -> {
                 try {
-                    URL zipUrl = new URI(SavedVariables.Load().DatabaseUrl + "/PSP/" + currentMenu + "/"
+                    URL zipUrl = new URI(DatabaseUrl + "/PSP/" + currentMenu + "/"
                             + selectedElement.getDescription()).toURL();
                     System.out.println("Downloading save: " + zipUrl);
                     InputStream stream = zipUrl.openStream();

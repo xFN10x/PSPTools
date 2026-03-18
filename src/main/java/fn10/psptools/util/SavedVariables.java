@@ -46,6 +46,7 @@ import com.google.gson.GsonBuilder;
 import fn10.psptools.gson.PathTypeAdapter;
 import fn10.psptools.psp.LastSelectedPSPInfo;
 import fn10.psptools.ui.LoadingScreen;
+import org.jspecify.annotations.NonNull;
 
 public class SavedVariables {
 
@@ -64,10 +65,9 @@ public class SavedVariables {
     public static final Path saveLocation = Path.of(DataFolder.toString(), "PSPToolsSettings.json");
 
     public LastSelectedPSPInfo LastSelectedPSP;
-    public URL DatabaseUrl = new URI("https://bucanero.github.io/apollo-saves/").toURL();
     public Date SinceLastPatchUpdate;
 
-    private SavedVariables() throws MalformedURLException, URISyntaxException {
+    private SavedVariables() {
     }
 
     public static void installApolloTools(Frame parent) {
@@ -186,17 +186,16 @@ public class SavedVariables {
         }
     }
 
+    @NonNull
     public static SavedVariables Load() {
         try {
-
             if (saveLocation.toFile().exists())
                 return gson.fromJson(Files.readString(saveLocation), SavedVariables.class);
             else
                 return new SavedVariables();
         } catch (Exception e) {
-            ErrorShower.showError(null, "Failed to get settings.", e.getMessage(), e);
-            e.printStackTrace();
-            return null;
+            ErrorShower.full(PSP.alwaysOnTopFrame, "Failed to get settings.", e);
+            return new SavedVariables();
         }
     }
 
