@@ -17,6 +17,7 @@
 */
 package fn10.psptools.ui;
 
+import com.formdev.flatlaf.ui.FlatLineBorder;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import fn10.psptools.PSPTools;
 import fn10.psptools.psp.PSP;
@@ -24,6 +25,7 @@ import fn10.psptools.ui.components.ParamSFOListElement;
 import fn10.psptools.ui.interfaces.SFOListElementListener;
 import fn10.psptools.util.ErrorShower;
 import fn10.psptools.util.SavedVariables;
+import fn10.psptools.util.VimmDownloader;
 import org.apache.commons.io.FileUtils;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 
@@ -44,6 +46,9 @@ import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -67,8 +72,8 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
     private final JScrollPane saveDatabaseListingPanel = new JScrollPane(saveDatabaseListingInnerPanel,
             JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
-    private final JPanel gameDatabasePanel = new JPanel();
-
+    private static final JTabbedPane gameDatabasePanel = new JTabbedPane(JTabbedPane.LEFT,JTabbedPane.SCROLL_TAB_LAYOUT);
+    private static Map<Character, List<VimmDownloader.VimmGame>> games = null;
 
     private final SpringLayout ContentPaneLay = new SpringLayout();
     private final SpringLayout SaveDatabaseLay = new SpringLayout();
@@ -77,12 +82,12 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
     private Future<?> currentThread;
     private BufferedReader currentReader;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private static boolean loadedGames = false;
 
     public DatabaseTools(Frame parent) {
         super("Database Tools");
 
         SavedVariables saved = SavedVariables.Load();
-
 
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
@@ -103,9 +108,8 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
         setSize(new Dimension(450, 500));
 
         tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
-        tabbedPane.setTabLayoutPolicy(JTabbedPane.WRAP_TAB_LAYOUT);
-
-        boolean loadedGames = false;
+        tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+        add(tabbedPane);
 
         tabbedPane.addChangeListener(l -> {
             if (tabbedPane.getSelectedIndex() == 1) {
@@ -114,21 +118,16 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
             }
         });
 
-        //#region save database
-
-        tabbedPane.addTab("Save Database", saveDatabasePanel);
         ContentPaneLay.putConstraint(SpringLayout.NORTH, tabbedPane, 0, SpringLayout.NORTH, getContentPane());
         ContentPaneLay.putConstraint(SpringLayout.SOUTH, tabbedPane, 0, SpringLayout.SOUTH, getContentPane());
         ContentPaneLay.putConstraint(SpringLayout.EAST, tabbedPane, 0, SpringLayout.EAST, getContentPane());
         ContentPaneLay.putConstraint(SpringLayout.WEST, tabbedPane, 0, SpringLayout.WEST, getContentPane());
 
-//        Lay.putConstraint(SpringLayout.NORTH, databasePanel, 0, SpringLayout.NORTH, getContentPane());
-//        Lay.putConstraint(SpringLayout.WEST, databasePanel, 0, SpringLayout.WEST, getContentPane());
-//        Lay.putConstraint(SpringLayout.EAST, databasePanel, 0, SpringLayout.EAST, getContentPane());
-//        Lay.putConstraint(SpringLayout.SOUTH, databasePanel, 0, SpringLayout.SOUTH, getContentPane());
+        //#region save database
+        tabbedPane.addTab("Save Database", saveDatabasePanel);
+
         saveDatabaseListingInnerPanel.setLayout(new BoxLayout(saveDatabaseListingInnerPanel, BoxLayout.Y_AXIS));
 
-        add(tabbedPane);
 
         saveDatabasePanel.setLayout(SaveDatabaseLay);
 
@@ -190,49 +189,35 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
 
         //#region game database
         tabbedPane.addTab("Game Database", gameDatabasePanel);
-        gameDatabasePanel.setLayout(GameDatabaseLay);
         //#endregion
 
         setLocation(LaunchPage.getScreenCenter(this));
         setVisible(true);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         parent.setVisible(false);
-
-        if (saved.DatabaseUrl == null) {
-            String choice = JOptionPane.showInputDialog(this, "There is no save database selected.\nPlease Select one.",
-                    "Select Save Database", JOptionPane.INFORMATION_MESSAGE, null,
-                    new String[]{"Apollo Save Database"}, "Apollo Save Database").toString();
-            if (choice.equals("Apollo Save Database")) {
-                try {
-                    saved.DatabaseUrl = new URI("https://bucanero.github.io/apollo-saves/").toURL();
-                    saved.Save();
-                } catch (MalformedURLException | URISyntaxException e1) {
-                    e1.printStackTrace();
-                }
-            } else {
-                setVisible(false);
-            }
-        }
     }
 
     public void loadGameDatabase() {
         LoadingScreen loadingScreen = new LoadingScreen(this);
         loadingScreen.showWhenPossible();
         new Thread(() -> {
-            try (HttpClient client = HttpClient.newHttpClient()) {
-                Path tempDir = SavedVariables.DataFolder.resolve("GB");
-                Files.createDirectories(tempDir);
+            try {
                 loadingScreen.changeText("Downloading database...");
-                HttpRequest req = HttpRequest.newBuilder(URI.create("http://redump.org/datfile/psp/")).GET().build();
-                Path path = client.send(req, HttpResponse.BodyHandlers.ofFileDownload(tempDir, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE, StandardOpenOption.WRITE)).body();
+                games = VimmDownloader.of().getAllGames(loadingScreen);
+                loadedGames = true;
 
-                loadingScreen.changeText("Extracting contents...");
-                File file = path.toFile();
-                String datFileName = file.getName().replace(".zip", ".dat");
-                ZipUnArchiver zipUnArchiver = new ZipUnArchiver(file);
-                zipUnArchiver.setDestDirectory(tempDir.toFile());
-                zipUnArchiver.extract();
-                PSPTools.log.info(datFileName);
+                char[] letters = "#ABCDEFGHIJKLMNOPQRSTUVWXZY".toCharArray();
+                for (char letter : letters) {
+                    JList<VimmDownloader.VimmGame> gameList = new JList<>();
+                    gameList.setListData(games.get(letter).toArray(new VimmDownloader.VimmGame[0]));
+                    JScrollPane scroll = new JScrollPane(gameList);
+                    scroll.getVerticalScrollBar().setUnitIncrement(12);
+                    gameDatabasePanel.addTab(String.valueOf(letter), scroll);
+                    GameDatabaseLay.putConstraint(SpringLayout.WEST, gameList, 0, SpringLayout.WEST, gameDatabasePanel);
+                    GameDatabaseLay.putConstraint(SpringLayout.EAST, gameList, 0, SpringLayout.EAST, gameDatabasePanel);
+                    GameDatabaseLay.putConstraint(SpringLayout.NORTH, gameList, 0, SpringLayout.NORTH, gameDatabasePanel);
+                    GameDatabaseLay.putConstraint(SpringLayout.SOUTH, gameList, 0, SpringLayout.SOUTH, gameDatabasePanel);
+                }
 
             } catch (Exception e) {
                 ErrorShower.full(this, "Failed to load game database",e);
