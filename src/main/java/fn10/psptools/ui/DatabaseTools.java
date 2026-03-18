@@ -18,17 +18,14 @@
 package fn10.psptools.ui;
 
 import com.formdev.flatlaf.util.SystemFileChooser;
+import fn10.psptools.PSPTools;
 import fn10.psptools.psp.PSP;
-import fn10.psptools.psp.reader.SFOReader.Params;
 import fn10.psptools.ui.components.ParamSFOListElement;
 import fn10.psptools.ui.interfaces.SFOListElementListener;
 import fn10.psptools.util.ErrorShower;
-import fn10.psptools.util.ImageUtilites;
 import fn10.psptools.util.SavedVariables;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
-import org.jspecify.annotations.NonNull;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -41,13 +38,12 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.nio.file.StandardOpenOption;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -57,32 +53,36 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
     private final JTabbedPane tabbedPane = new JTabbedPane();
 
     private String currentMenu = "root";
-    private final JTextField databaseSearch = new JTextField();
-    private final JPanel databasePanel = new JPanel();
-    private final JButton databaseBack = new JButton("< Back");
-    private final JLabel databasePath = new JLabel(currentMenu);
-    private final JPanel databaseListingInnerPanel = new JPanel();
-    private final JScrollPane databaseListingPanel = new JScrollPane(databaseListingInnerPanel,
+    private final JTextField saveDatabaseSearch = new JTextField();
+    private final JPanel saveDatabasePanel = new JPanel();
+    private final JButton saveDatabaseBack = new JButton("< Back");
+    private final JLabel saveDatabasePath = new JLabel(currentMenu) {
+        @Override
+        protected void paintComponent(Graphics g) {
+            setText(currentMenu);
+            super.paintComponent(g);
+        }
+    };
+    private final JPanel saveDatabaseListingInnerPanel = new JPanel();
+    private final JScrollPane saveDatabaseListingPanel = new JScrollPane(saveDatabaseListingInnerPanel,
             JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
-    private final SpringLayout Lay = new SpringLayout();
-    private final SpringLayout Lay2 = new SpringLayout();
+    private final JPanel gameDatabasePanel = new JPanel();
+
+
+    private final SpringLayout ContentPaneLay = new SpringLayout();
+    private final SpringLayout SaveDatabaseLay = new SpringLayout();
+    private final SpringLayout GameDatabaseLay = new SpringLayout();
 
     private Future<?> currentThread;
     private BufferedReader currentReader;
-    // private volatile Future<?> currentThread;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
-
-    @Override
-    public void paintComponents(Graphics g) {
-        databasePath.setText(currentMenu);
-        super.paintComponents(g);
-    }
 
     public DatabaseTools(Frame parent) {
         super("Database Tools");
 
         SavedVariables saved = SavedVariables.Load();
+
 
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
@@ -99,84 +99,99 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
         });
 
         setResizable(false);
-        setLayout(Lay);
+        setLayout(ContentPaneLay);
         setSize(new Dimension(450, 500));
 
         tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
         tabbedPane.setTabLayoutPolicy(JTabbedPane.WRAP_TAB_LAYOUT);
 
-        tabbedPane.addTab("Save Database", databasePanel);
+        boolean loadedGames = false;
 
-        Lay.putConstraint(SpringLayout.NORTH, tabbedPane, 0, SpringLayout.NORTH, getContentPane());
-        Lay.putConstraint(SpringLayout.SOUTH, tabbedPane, 0, SpringLayout.SOUTH, getContentPane());
-        Lay.putConstraint(SpringLayout.EAST, tabbedPane, 0, SpringLayout.EAST, getContentPane());
-        Lay.putConstraint(SpringLayout.WEST, tabbedPane, 0, SpringLayout.WEST, getContentPane());
+        tabbedPane.addChangeListener(l -> {
+            if (tabbedPane.getSelectedIndex() == 1) {
+                if (!loadedGames)
+                    loadGameDatabase();
+            }
+        });
+
+        //#region save database
+
+        tabbedPane.addTab("Save Database", saveDatabasePanel);
+        ContentPaneLay.putConstraint(SpringLayout.NORTH, tabbedPane, 0, SpringLayout.NORTH, getContentPane());
+        ContentPaneLay.putConstraint(SpringLayout.SOUTH, tabbedPane, 0, SpringLayout.SOUTH, getContentPane());
+        ContentPaneLay.putConstraint(SpringLayout.EAST, tabbedPane, 0, SpringLayout.EAST, getContentPane());
+        ContentPaneLay.putConstraint(SpringLayout.WEST, tabbedPane, 0, SpringLayout.WEST, getContentPane());
 
 //        Lay.putConstraint(SpringLayout.NORTH, databasePanel, 0, SpringLayout.NORTH, getContentPane());
 //        Lay.putConstraint(SpringLayout.WEST, databasePanel, 0, SpringLayout.WEST, getContentPane());
 //        Lay.putConstraint(SpringLayout.EAST, databasePanel, 0, SpringLayout.EAST, getContentPane());
 //        Lay.putConstraint(SpringLayout.SOUTH, databasePanel, 0, SpringLayout.SOUTH, getContentPane());
-        databaseListingInnerPanel.setLayout(new BoxLayout(databaseListingInnerPanel, BoxLayout.Y_AXIS));
+        saveDatabaseListingInnerPanel.setLayout(new BoxLayout(saveDatabaseListingInnerPanel, BoxLayout.Y_AXIS));
 
         add(tabbedPane);
 
-        // #region datapase panel
-        databasePanel.setLayout(Lay2);
+        saveDatabasePanel.setLayout(SaveDatabaseLay);
 
-        Lay2.putConstraint(SpringLayout.NORTH, databaseSearch, 10, SpringLayout.NORTH, databasePanel);
+        SaveDatabaseLay.putConstraint(SpringLayout.NORTH, saveDatabaseSearch, 10, SpringLayout.NORTH, saveDatabasePanel);
         // Lay2.putConstraint(SpringLayout.SOUTH, databaseSearch, -40,
         // SpringLayout.SOUTH, databasePanel);
-        Lay2.putConstraint(SpringLayout.EAST, databaseSearch, -10, SpringLayout.EAST, databasePanel);
-        Lay2.putConstraint(SpringLayout.WEST, databaseSearch, 10, SpringLayout.WEST, databasePanel);
+        SaveDatabaseLay.putConstraint(SpringLayout.EAST, saveDatabaseSearch, -10, SpringLayout.EAST, saveDatabasePanel);
+        SaveDatabaseLay.putConstraint(SpringLayout.WEST, saveDatabaseSearch, 10, SpringLayout.WEST, saveDatabasePanel);
 
-        Lay2.putConstraint(SpringLayout.NORTH, databasePath, 5, SpringLayout.SOUTH, databaseSearch);
+        SaveDatabaseLay.putConstraint(SpringLayout.NORTH, saveDatabasePath, 5, SpringLayout.SOUTH, saveDatabaseSearch);
+        SaveDatabaseLay.putConstraint(SpringLayout.WEST, saveDatabasePath, 0, SpringLayout.WEST, saveDatabaseSearch);
 
-        Lay2.putConstraint(SpringLayout.NORTH, databaseListingPanel, 5, SpringLayout.SOUTH, databaseSearch);
-        Lay2.putConstraint(SpringLayout.SOUTH, databaseListingPanel, -40, SpringLayout.SOUTH, databasePanel);
-        Lay2.putConstraint(SpringLayout.EAST, databaseListingPanel, -10, SpringLayout.EAST, databasePanel);
-        Lay2.putConstraint(SpringLayout.WEST, databaseListingPanel, 10, SpringLayout.WEST, databasePanel);
+        SaveDatabaseLay.putConstraint(SpringLayout.NORTH, saveDatabaseListingPanel, 5, SpringLayout.SOUTH, saveDatabasePath);
+        SaveDatabaseLay.putConstraint(SpringLayout.SOUTH, saveDatabaseListingPanel, -40, SpringLayout.SOUTH, saveDatabasePanel);
+        SaveDatabaseLay.putConstraint(SpringLayout.EAST, saveDatabaseListingPanel, -10, SpringLayout.EAST, saveDatabasePanel);
+        SaveDatabaseLay.putConstraint(SpringLayout.WEST, saveDatabaseListingPanel, 10, SpringLayout.WEST, saveDatabasePanel);
 
-        Lay2.putConstraint(SpringLayout.NORTH, databaseBack, 5, SpringLayout.SOUTH, databaseListingPanel);
-        Lay2.putConstraint(SpringLayout.SOUTH, databaseBack, -5, SpringLayout.SOUTH, databasePanel);
-        Lay2.putConstraint(SpringLayout.EAST, databaseBack, -10, SpringLayout.EAST, databasePanel);
-        Lay2.putConstraint(SpringLayout.WEST, databaseBack, 10, SpringLayout.WEST, databasePanel);
-        databaseListingPanel.getVerticalScrollBar().setUnitIncrement(18);
-        databaseListingInnerPanel.add(new JLabel("Search by ID (e.g. ULUS03410) or by name (e.g. METAL GEAR SOLID)"));
+        SaveDatabaseLay.putConstraint(SpringLayout.NORTH, saveDatabaseBack, 5, SpringLayout.SOUTH, saveDatabaseListingPanel);
+        SaveDatabaseLay.putConstraint(SpringLayout.SOUTH, saveDatabaseBack, -5, SpringLayout.SOUTH, saveDatabasePanel);
+        SaveDatabaseLay.putConstraint(SpringLayout.EAST, saveDatabaseBack, -10, SpringLayout.EAST, saveDatabasePanel);
+        SaveDatabaseLay.putConstraint(SpringLayout.WEST, saveDatabaseBack, 10, SpringLayout.WEST, saveDatabasePanel);
+        saveDatabaseListingPanel.getVerticalScrollBar().setUnitIncrement(18);
+        saveDatabaseListingInnerPanel.add(new JLabel("Search by ID (e.g. ULUS03410) or by name (e.g. METAL GEAR SOLID)"));
 
-        databaseSearch.getDocument().addDocumentListener(new DocumentListener() {
+        saveDatabaseSearch.getDocument().addDocumentListener(new DocumentListener() {
 
             @Override
             public void insertUpdate(DocumentEvent e) {
-                reloadDatabase(saved.DatabaseUrl, databaseSearch.getText());
+                reloadSaveDatabase(saved.DatabaseUrl, saveDatabaseSearch.getText());
             }
 
             @Override
             public void removeUpdate(DocumentEvent e) {
-                reloadDatabase(saved.DatabaseUrl, databaseSearch.getText());
+                reloadSaveDatabase(saved.DatabaseUrl, saveDatabaseSearch.getText());
             }
 
             @Override
             public void changedUpdate(DocumentEvent e) {
-                reloadDatabase(saved.DatabaseUrl, databaseSearch.getText());
+                reloadSaveDatabase(saved.DatabaseUrl, saveDatabaseSearch.getText());
             }
 
         });
 
-        databaseBack.addActionListener(ac -> {
+        saveDatabaseBack.addActionListener(ac -> {
             if (!currentMenu.equals("root")) {
                 currentMenu = "root";
-                databaseSearch.setText("");
-                reloadDatabase(saved.DatabaseUrl, "");
-                databaseListingInnerPanel
+                saveDatabaseSearch.setText("");
+                reloadSaveDatabase(saved.DatabaseUrl, "");
+                saveDatabaseListingInnerPanel
                         .add(new JLabel("Search by ID (e.g. ULUS03410) or by name (e.g. METAL GEAR SOLID)"));
-                databaseBack.setEnabled(false);
             }
         });
 
-        databasePanel.add(databaseSearch);
-        databasePanel.add(databaseListingPanel);
-        databasePanel.add(databaseBack);
-        // #endregion
+        saveDatabasePanel.add(saveDatabaseSearch);
+        saveDatabasePanel.add(saveDatabaseListingPanel);
+        saveDatabasePanel.add(saveDatabaseBack);
+        saveDatabasePanel.add(saveDatabasePath);
+        //#endregion
+
+        //#region game database
+        tabbedPane.addTab("Game Database", gameDatabasePanel);
+        gameDatabasePanel.setLayout(GameDatabaseLay);
+        //#endregion
 
         setLocation(LaunchPage.getScreenCenter(this));
         setVisible(true);
@@ -186,7 +201,7 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
         if (saved.DatabaseUrl == null) {
             String choice = JOptionPane.showInputDialog(this, "There is no save database selected.\nPlease Select one.",
                     "Select Save Database", JOptionPane.INFORMATION_MESSAGE, null,
-                    new String[] { "Apollo Save Database" }, "Apollo Save Database").toString();
+                    new String[]{"Apollo Save Database"}, "Apollo Save Database").toString();
             if (choice.equals("Apollo Save Database")) {
                 try {
                     saved.DatabaseUrl = new URI("https://bucanero.github.io/apollo-saves/").toURL();
@@ -200,7 +215,34 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
         }
     }
 
-    public void reloadDatabase(URL url, String searchTerm) {
+    public void loadGameDatabase() {
+        LoadingScreen loadingScreen = new LoadingScreen(this);
+        loadingScreen.showWhenPossible();
+        new Thread(() -> {
+            try (HttpClient client = HttpClient.newHttpClient()) {
+                Path tempDir = SavedVariables.DataFolder.resolve("GB");
+                Files.createDirectories(tempDir);
+                loadingScreen.changeText("Downloading database...");
+                HttpRequest req = HttpRequest.newBuilder(URI.create("http://redump.org/datfile/psp/")).GET().build();
+                Path path = client.send(req, HttpResponse.BodyHandlers.ofFileDownload(tempDir, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE, StandardOpenOption.WRITE)).body();
+
+                loadingScreen.changeText("Extracting contents...");
+                File file = path.toFile();
+                String datFileName = file.getName().replace(".zip", ".dat");
+                ZipUnArchiver zipUnArchiver = new ZipUnArchiver(file);
+                zipUnArchiver.setDestDirectory(tempDir.toFile());
+                zipUnArchiver.extract();
+                PSPTools.log.info(datFileName);
+
+            } catch (Exception e) {
+                ErrorShower.full(this, "Failed to load game database",e);
+            } finally {
+                loadingScreen.hideWhenPossible();
+            }
+        }).start();
+    }
+
+    public void reloadSaveDatabase(URL url, String searchTerm) {
         if (currentThread != null) {
             try {
                 currentThread.cancel(true);
@@ -211,9 +253,11 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
             }
         }
 
-        databaseListingInnerPanel.removeAll();
-        databaseListingInnerPanel.repaint();
+        saveDatabaseListingInnerPanel.removeAll();
+        saveDatabaseListingInnerPanel.repaint();
+        saveDatabasePath.repaint();
         if (currentMenu.equals("root")) {
+            saveDatabaseBack.setEnabled(false);
             currentThread = executorService.submit(
                     () -> {
                         Component comp = null;
@@ -241,20 +285,20 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
                                 if (Thread.currentThread().isInterrupted())
                                     break;
 
-                                comp = databaseListingInnerPanel.add(new ParamSFOListElement(
+                                comp = saveDatabaseListingInnerPanel.add(new ParamSFOListElement(
                                         keyandval[1],
                                         keyandval[0],
                                         GameIconUrl.openStream().readAllBytes(),
                                         this));
                                 if (Thread.currentThread().isInterrupted())
-                                    databaseListingInnerPanel.remove(comp);
+                                    saveDatabaseListingInnerPanel.remove(comp);
 
-                                databaseListingInnerPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+                                saveDatabaseListingInnerPanel.add(Box.createRigidArea(new Dimension(0, 10)));
                             }
                         } catch (Exception e) {
                             if (e instanceof IOException) {
                                 if (comp != null)
-                                    databaseListingInnerPanel.remove(comp);
+                                    saveDatabaseListingInnerPanel.remove(comp);
                                 return;
                             }
 
@@ -262,6 +306,7 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
                         }
                     });
         } else {
+            saveDatabaseBack.setEnabled(true);
             currentThread = executorService.submit(
                     () -> {
                         Component comp = null;
@@ -286,21 +331,21 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
                                 if (Thread.currentThread().isInterrupted())
                                     break;
 
-                                comp = databaseListingInnerPanel.add(new ParamSFOListElement(
+                                comp = saveDatabaseListingInnerPanel.add(new ParamSFOListElement(
                                         keyandval[1],
                                         keyandval[0],
                                         GameIconUrl.openStream().readAllBytes(),
                                         this));
 
                                 if (Thread.currentThread().isInterrupted())
-                                    databaseListingInnerPanel.remove(comp);
+                                    saveDatabaseListingInnerPanel.remove(comp);
 
-                                databaseListingInnerPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+                                saveDatabaseListingInnerPanel.add(Box.createRigidArea(new Dimension(0, 10)));
                             }
                         } catch (Exception e) {
                             if (e instanceof IOException) {
                                 if (comp != null)
-                                    databaseListingInnerPanel.remove(comp);
+                                    saveDatabaseListingInnerPanel.remove(comp);
                                 return;
                             }
                             ErrorShower.full(this, e);
@@ -314,15 +359,15 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
     public void selected(ParamSFOListElement selectedElement) {
         if (currentMenu.equals("root")) {
             currentMenu = selectedElement.getDescription();
-            databaseSearch.setText("");
-            reloadDatabase(SavedVariables.Load().DatabaseUrl, databaseSearch.getText());
+            saveDatabaseSearch.setText("");
+            reloadSaveDatabase(SavedVariables.Load().DatabaseUrl, saveDatabaseSearch.getText());
         } else {
             Object choice = JOptionPane.showInputDialog(this,
                     "<html>How would you like to install the save,<br><b>" + selectedElement.getTitle()
-                            + "</b>, for game "
-                            + currentMenu + "?</html>",
+                            + "</b>, for game <b>"
+                            + currentMenu + "</b>?</html>",
                     "Install save: " + selectedElement.getTitle(), JOptionPane.QUESTION_MESSAGE, null,
-                    new String[] { "To PSP", "To Folder", "To Zip" }, "To PSP");
+                    new String[]{"To PSP", "To Folder", "To Zip"}, "To PSP");
             if (choice == null)
                 return;
             LoadingScreen loading = new LoadingScreen(this);
@@ -450,6 +495,7 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
     }
 
     @Override
-    public void onThreadCreate(Thread thread) {}
+    public void onThreadCreate(Thread thread) {
+    }
 
 }
