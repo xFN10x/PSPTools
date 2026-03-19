@@ -10,8 +10,11 @@ import org.jsoup.select.Elements;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URI;
+import java.net.http.HttpRequest;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
@@ -36,11 +39,11 @@ public class VimmDownloader {
 //    }
 //
 
-    public Map<Character, List<VimmGame>> getAllGames() throws IOException, InterruptedException {
+    public Map<Character, List<VimmGame>> getAllGames() throws InterruptedException {
         return getAllGames(null);
     }
 
-    public Map<Character, List<VimmGame>> getAllGames(@Nullable LoadingScreen ls) throws IOException, InterruptedException {
+    public Map<Character, List<VimmGame>> getAllGames(@Nullable LoadingScreen ls) throws InterruptedException {
         char[] letters = "#ABCDEFGHIJKLMNOPQRSTUVWXZY".toCharArray();
         if (ls != null)
             ls.Steps = letters.length;
@@ -59,7 +62,7 @@ public class VimmDownloader {
                 countDownLatch.countDown();
             });
             thread.setUncaughtExceptionHandler((t, e) -> {
-                PSPTools.log.error("Failed to get games with letters: " + letter, e);
+                PSPTools.log.error("Failed to get games with letter: " + letter, e);
             });
             thread.start();
         }
@@ -102,13 +105,36 @@ public class VimmDownloader {
         return Collections.unmodifiableList(games);
     }
 
-    public URI getDownloadURLFromRomID(String ID) throws IOException {
+    public HttpRequest getDownloadRequestFromRomID(String ID) throws IOException {
         Document doc = SSLHelper.getConnection(base + ID).ignoreHttpErrors(true).get();
         FormElement dlForm = (FormElement) doc.getElementById("dl_form");
         Elements idInput = dlForm.getElementsByAttributeValue("name", "mediaId");
         String id = idInput.attr("value");
+        HttpRequest req = HttpRequest.newBuilder(URI.create("https://dl3.vimm.net/?mediaId=" + id)).GET().header("Referer", base + ID).build();
+        return req;
+    }
 
-        return URI.create("https://dl3.vimm.net/").resolve(id);
+    public VimmGameDetails getDetailsFromRomID(String ID) throws IOException {
+        Document doc = SSLHelper.getConnection(base + ID).ignoreHttpErrors(true).get();
+        Elements possibleTable = doc.getElementsByClass("rounded cellpadding1");
+        Element table = possibleTable.getFirst();
+        Elements tableElements = table.getElementsByTag("tr");
+        HashMap<String, String> map = new HashMap<>();
+        for (Element tableElement : tableElements) {
+            Element first = tableElement.getAllElements().get(1);
+            if (first.hasAttr("colspan")) {
+                map.put(VimmGameDetails.PADDING_TEXT, VimmGameDetails.PADDING_TEXT);
+                continue;
+            }
+            String key = first.text();
+            String value = tableElement.getAllElements().get(3).text();
+            map.put(key, value);
+            PSPTools.log.info("{}: {}",key,value);
+            if (key.equalsIgnoreCase("SHA1")) break;
+        }
+        //get image
+        BufferedImage img = ImageIO.read(URI.create("https://dl.vimm.net/image.php?type=box&id=" + ID).toURL());
+        return new VimmGameDetails(map,img);
     }
 
     public static VimmDownloader of() {
@@ -122,5 +148,8 @@ public class VimmDownloader {
         }
     }
 
-    public record VimmGameDetails(String serial, String publisher, String year, String region, String name, String gameDownloadURL) {}
+    public record VimmGameDetails(Map<String,String> details, BufferedImage img) {
+        public static final String PADDING_TEXT = "PADDING";
+    }
+
 }
