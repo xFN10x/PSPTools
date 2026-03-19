@@ -33,7 +33,7 @@ dependencies {
     implementation("ws.schild:jave-all-deps:3.5.0")
 
     // Source: https://mvnrepository.com/artifact/commons-net/commons-net
-    implementation("commons-net:commons-net:3.12.0")
+    implementation("commons-net:commons-net:3.13.0")
 
     //https://github.com/jpcsp/jpcsp
     implementation(files("libs/JPCSP-OnlyFileSystemStuff.jar"))
