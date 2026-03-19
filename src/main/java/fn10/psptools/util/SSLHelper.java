@@ -8,7 +8,6 @@ import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.security.KeyManagementException;

@@ -162,7 +162,7 @@ public class LaunchPage extends JFrame {
 
         });
 
-        ExtraMenu.add("View SFO").addActionListener(ac -> {
+        ExtraMenu.add("View SFO").addActionListener(_ -> {
             try {
                 SystemFileChooser fileChooser = new SystemFileChooser();
                 fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -174,9 +174,9 @@ public class LaunchPage extends JFrame {
                     return;
                 RealPSPFile pspdir = new RealPSPFile(fileChooser.getSelectedFile());
                 if (pspdir.getExtension().equalsIgnoreCase("sfo"))
-                    new SFOViewer(getOwner(), SFOReader.ofPSPFile(pspdir)).setVisible(true);
+                    new SFOViewer(this, SFOReader.ofPSPFile(pspdir)).setVisible(true);
                 else if (pspdir.getExtension().equalsIgnoreCase("iso"))
-                    new SFOViewer(getOwner(), ParamSFOListElement.ofIso(pspdir, null).sfo).setVisible(true);
+                    new SFOViewer(this, ParamSFOListElement.ofIso(pspdir, null).sfo).setVisible(true);
 
             } catch (Exception e) {
                 ErrorShower.full(this, e);

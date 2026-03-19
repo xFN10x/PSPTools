@@ -13,8 +13,11 @@ import org.jspecify.annotations.Nullable;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
+import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
@@ -114,12 +117,16 @@ public class VimmDownloader {
         return req;
     }
 
+    private final HashMap<String, VimmGameDetails> detailsCache = new HashMap<>();
+
     public VimmGameDetails getDetailsFromRomID(String ID) throws IOException {
+        VimmGameDetails got = detailsCache.getOrDefault(ID, null);
+        if (got != null) return got;
         Document doc = SSLHelper.getConnection(base + ID).ignoreHttpErrors(true).get();
         Elements possibleTable = doc.getElementsByClass("rounded cellpadding1");
         Element table = possibleTable.getFirst();
         Elements tableElements = table.getElementsByTag("tr");
-        HashMap<String, String> map = new HashMap<>();
+        LinkedHashMap<String, String> map = new LinkedHashMap<>();
         for (Element tableElement : tableElements) {
             Element first = tableElement.getAllElements().get(1);
             if (first.hasAttr("colspan")) {
@@ -133,8 +140,21 @@ public class VimmDownloader {
             if (key.equalsIgnoreCase("SHA1")) break;
         }
         //get image
-        BufferedImage img = ImageIO.read(URI.create("https://dl.vimm.net/image.php?type=box&id=" + ID).toURL());
-        return new VimmGameDetails(map,img);
+        BufferedImage img;
+        try (HttpClient client = HttpClient.newHttpClient()) {
+            HttpRequest req = HttpRequest.newBuilder(URI.create("https://dl.vimm.net/image.php?type=box&id=" + ID)).GET().header("Referer", base + ID).build();
+            HttpResponse<InputStream> stream = client.send(req, HttpResponse.BodyHandlers.ofInputStream());
+            img = ImageIO.read(stream.body());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        //get title
+        Element canvas = doc.getElementById("canvas");
+        byte[] title = Base64.getDecoder().decode(canvas.attr("data-v"));
+
+        VimmGameDetails details = new VimmGameDetails(map, img, new String(title));
+        detailsCache.put(ID, details);
+        return details;
     }
 
     public static VimmDownloader of() {
@@ -148,8 +168,8 @@ public class VimmDownloader {
         }
     }
 
-    public record VimmGameDetails(Map<String,String> details, BufferedImage img) {
-        public static final String PADDING_TEXT = "PADDING";
+    public record VimmGameDetails(Map<String,String> details, BufferedImage img, String title) {
+        public static final String PADDING_TEXT = " ";
     }
 
 }

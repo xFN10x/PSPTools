@@ -8,8 +8,6 @@ import org.jspecify.annotations.NonNull;
 
 import javax.swing.*;
 import java.awt.*;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +24,7 @@ public class NewLaunchPage extends JFrame {
     public NewLaunchPage() {
         super("PSPTools");
         current = this;
-        setSize(new Dimension(669, 500));
+        setSize(new Dimension(670, 500));
         setLocation(LaunchPage.getScreenCenter(this));
         setResizable(false);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -34,7 +32,7 @@ public class NewLaunchPage extends JFrame {
 
         JMenuBar menu = new JMenuBar();
         JMenu pspMenu = new JMenu("PSP");
-        pspMenu.add("Select PSP").addActionListener(ac -> {
+        pspMenu.add("Select PSP").addActionListener(_ -> {
             PSP selected = PSPSelectionUI.getNewPSP(this);
             if (selected != null) {
                 PSP.setCurrentPSP(selected);
@@ -108,8 +106,8 @@ public class NewLaunchPage extends JFrame {
     }
 
     public static boolean isRoot(String path) {
-        String serilized = path.replace("\\", "/");
-        return serilized.lastIndexOf("/") == path.indexOf("/");
+        String serialized = path.replace("\\", "/");
+        return serialized.lastIndexOf("/") == path.indexOf("/");
     }
 
     /**

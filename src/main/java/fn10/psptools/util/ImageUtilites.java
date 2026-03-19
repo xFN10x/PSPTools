@@ -30,6 +30,10 @@ public class ImageUtilites {
         return new ImageIcon(OG.getImage().getScaledInstance(width, height, scalingMode));
     }
 
+    public static ImageIcon ResizeIcon(ImageIcon OG, Dimension di) {
+        return ResizeIcon(OG, di.width, di.height);
+    }
+
     public static ImageIcon ResizeIcon(ImageIcon OG, int width, int height) {
         return new ImageIcon(OG.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH));
     }

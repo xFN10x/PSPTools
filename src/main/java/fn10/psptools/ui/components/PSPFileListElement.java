@@ -1,8 +1,11 @@
 package fn10.psptools.ui.components;
 
 import fn10.psptools.psp.PSPFileDirectory;
+import fn10.psptools.psp.reader.SFOReader;
 import fn10.psptools.ui.NewLaunchPage;
 import fn10.psptools.ui.SFOBasedManager;
+import fn10.psptools.ui.SFOViewer;
+import fn10.psptools.util.ErrorShower;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -10,7 +13,7 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.time.Instant;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -65,8 +68,20 @@ public class PSPFileListElement extends JPanel implements MouseListener {
             nameLabel.setIcon(new ImageIcon(getClass().getResource("/fileIcons/generic-folder.png")));
             nameLabel.setText(name);
         } else if (pfd.isFile()) {
-            nameLabel.setIcon(new ImageIcon(getClass().getResource("/fileIcons/generic-icon.png")));
-            nameLabel.setText(pfd.getFile().getName());
+            if (pfd.getFile().getExtension().equalsIgnoreCase("sfo")) {
+                nameLabel.setIcon(new ImageIcon(getClass().getResource("/fileIcons/sfo.png")));
+                nameLabel.setText(pfd.getFile().getName());
+                setSpecialButton("View SFO", _ -> {
+                    try {
+                        new SFOViewer(lp, SFOReader.ofPSPFile(pfd.getFile())).setVisible(true);
+                    } catch (IOException e) {
+                        ErrorShower.full(lp, "Failed to open SFO viewer.", e);
+                    }
+                });
+            } else {
+                nameLabel.setIcon(new ImageIcon(getClass().getResource("/fileIcons/generic-icon.png")));
+                nameLabel.setText(pfd.getFile().getName());
+            }
         } else {
             nameLabel.setIcon(new ImageIcon(getClass().getResource("/fileIcons/generic-icon.png")));
             nameLabel.setText("???");

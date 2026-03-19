@@ -18,10 +18,12 @@
 package fn10.psptools.ui;
 
 import com.formdev.flatlaf.util.SystemFileChooser;
+import fn10.psptools.PSPTools;
 import fn10.psptools.psp.PSP;
 import fn10.psptools.ui.components.ParamSFOListElement;
 import fn10.psptools.ui.interfaces.SFOListElementListener;
 import fn10.psptools.util.ErrorShower;
+import fn10.psptools.util.ImageUtilites;
 import fn10.psptools.util.VimmDownloader;
 import org.apache.commons.io.FileUtils;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
@@ -29,6 +31,7 @@ import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -38,6 +41,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -66,12 +70,16 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
             JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
     private static final JPanel gameDatabasePanel = new JPanel();
+
+    private static final JPanel gameDatabaseInnerDetailsPanel = new JPanel();
+    private static final JLabel gameDiscCoverImg = new JLabel(new ImageIcon(DatabaseTools.class.getResource("/no_cover.png")));
+    private static final JLabel gameTitle = new JLabel();
+    private static final JTable gameDetails = new JTable();
+
+    private static final Dimension coverSize = new Dimension(174, 300);
     private static final JTabbedPane gameDatabaseBrowserPane = new JTabbedPane(JTabbedPane.LEFT,JTabbedPane.SCROLL_TAB_LAYOUT);
     private static Map<Character, List<VimmDownloader.VimmGame>> games = null;
 
-    private final SpringLayout ContentPaneLay = new SpringLayout();
-    private final SpringLayout GameDatabasePanelLay = new SpringLayout();
-    private final SpringLayout SaveDatabaseLay = new SpringLayout();
     private final SpringLayout GameDatabaseLay = new SpringLayout();
 
     private Future<?> currentThread;
@@ -96,52 +104,53 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
             }
         });
 
-        setResizable(false);
-        setLayout(ContentPaneLay);
+        //setResizable(false);
+        SpringLayout contentPaneLay = new SpringLayout();
+        setLayout(contentPaneLay);
         setSize(new Dimension(700, 500));
 
         tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
         tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
         add(tabbedPane);
 
-        tabbedPane.addChangeListener(l -> {
+        tabbedPane.addChangeListener(_ -> {
             if (tabbedPane.getSelectedIndex() == 1) {
                 if (!loadedGames)
                     loadGameDatabase();
             }
         });
 
-        ContentPaneLay.putConstraint(SpringLayout.NORTH, tabbedPane, 0, SpringLayout.NORTH, getContentPane());
-        ContentPaneLay.putConstraint(SpringLayout.SOUTH, tabbedPane, 0, SpringLayout.SOUTH, getContentPane());
-        ContentPaneLay.putConstraint(SpringLayout.EAST, tabbedPane, 0, SpringLayout.EAST, getContentPane());
-        ContentPaneLay.putConstraint(SpringLayout.WEST, tabbedPane, 0, SpringLayout.WEST, getContentPane());
+        contentPaneLay.putConstraint(SpringLayout.NORTH, tabbedPane, 0, SpringLayout.NORTH, getContentPane());
+        contentPaneLay.putConstraint(SpringLayout.SOUTH, tabbedPane, 0, SpringLayout.SOUTH, getContentPane());
+        contentPaneLay.putConstraint(SpringLayout.EAST, tabbedPane, 0, SpringLayout.EAST, getContentPane());
+        contentPaneLay.putConstraint(SpringLayout.WEST, tabbedPane, 0, SpringLayout.WEST, getContentPane());
 
         //#region save database
         tabbedPane.addTab("Save Database", saveDatabasePanel);
 
         saveDatabaseListingInnerPanel.setLayout(new BoxLayout(saveDatabaseListingInnerPanel, BoxLayout.Y_AXIS));
 
+        SpringLayout saveDatabaseLay = new SpringLayout();
+        saveDatabasePanel.setLayout(saveDatabaseLay);
 
-        saveDatabasePanel.setLayout(SaveDatabaseLay);
-
-        SaveDatabaseLay.putConstraint(SpringLayout.NORTH, saveDatabaseSearch, 10, SpringLayout.NORTH, saveDatabasePanel);
+        saveDatabaseLay.putConstraint(SpringLayout.NORTH, saveDatabaseSearch, 10, SpringLayout.NORTH, saveDatabasePanel);
         // Lay2.putConstraint(SpringLayout.SOUTH, databaseSearch, -40,
         // SpringLayout.SOUTH, databasePanel);
-        SaveDatabaseLay.putConstraint(SpringLayout.EAST, saveDatabaseSearch, -10, SpringLayout.EAST, saveDatabasePanel);
-        SaveDatabaseLay.putConstraint(SpringLayout.WEST, saveDatabaseSearch, 10, SpringLayout.WEST, saveDatabasePanel);
+        saveDatabaseLay.putConstraint(SpringLayout.EAST, saveDatabaseSearch, -10, SpringLayout.EAST, saveDatabasePanel);
+        saveDatabaseLay.putConstraint(SpringLayout.WEST, saveDatabaseSearch, 10, SpringLayout.WEST, saveDatabasePanel);
 
-        SaveDatabaseLay.putConstraint(SpringLayout.NORTH, saveDatabasePath, 5, SpringLayout.SOUTH, saveDatabaseSearch);
-        SaveDatabaseLay.putConstraint(SpringLayout.WEST, saveDatabasePath, 0, SpringLayout.WEST, saveDatabaseSearch);
+        saveDatabaseLay.putConstraint(SpringLayout.NORTH, saveDatabasePath, 5, SpringLayout.SOUTH, saveDatabaseSearch);
+        saveDatabaseLay.putConstraint(SpringLayout.WEST, saveDatabasePath, 0, SpringLayout.WEST, saveDatabaseSearch);
 
-        SaveDatabaseLay.putConstraint(SpringLayout.NORTH, saveDatabaseListingPanel, 5, SpringLayout.SOUTH, saveDatabasePath);
-        SaveDatabaseLay.putConstraint(SpringLayout.SOUTH, saveDatabaseListingPanel, -40, SpringLayout.SOUTH, saveDatabasePanel);
-        SaveDatabaseLay.putConstraint(SpringLayout.EAST, saveDatabaseListingPanel, -10, SpringLayout.EAST, saveDatabasePanel);
-        SaveDatabaseLay.putConstraint(SpringLayout.WEST, saveDatabaseListingPanel, 10, SpringLayout.WEST, saveDatabasePanel);
+        saveDatabaseLay.putConstraint(SpringLayout.NORTH, saveDatabaseListingPanel, 5, SpringLayout.SOUTH, saveDatabasePath);
+        saveDatabaseLay.putConstraint(SpringLayout.SOUTH, saveDatabaseListingPanel, -40, SpringLayout.SOUTH, saveDatabasePanel);
+        saveDatabaseLay.putConstraint(SpringLayout.EAST, saveDatabaseListingPanel, -10, SpringLayout.EAST, saveDatabasePanel);
+        saveDatabaseLay.putConstraint(SpringLayout.WEST, saveDatabaseListingPanel, 10, SpringLayout.WEST, saveDatabasePanel);
 
-        SaveDatabaseLay.putConstraint(SpringLayout.NORTH, saveDatabaseBack, 5, SpringLayout.SOUTH, saveDatabaseListingPanel);
-        SaveDatabaseLay.putConstraint(SpringLayout.SOUTH, saveDatabaseBack, -5, SpringLayout.SOUTH, saveDatabasePanel);
-        SaveDatabaseLay.putConstraint(SpringLayout.EAST, saveDatabaseBack, -10, SpringLayout.EAST, saveDatabasePanel);
-        SaveDatabaseLay.putConstraint(SpringLayout.WEST, saveDatabaseBack, 10, SpringLayout.WEST, saveDatabasePanel);
+        saveDatabaseLay.putConstraint(SpringLayout.NORTH, saveDatabaseBack, 5, SpringLayout.SOUTH, saveDatabaseListingPanel);
+        saveDatabaseLay.putConstraint(SpringLayout.SOUTH, saveDatabaseBack, -5, SpringLayout.SOUTH, saveDatabasePanel);
+        saveDatabaseLay.putConstraint(SpringLayout.EAST, saveDatabaseBack, -10, SpringLayout.EAST, saveDatabasePanel);
+        saveDatabaseLay.putConstraint(SpringLayout.WEST, saveDatabaseBack, 10, SpringLayout.WEST, saveDatabasePanel);
         saveDatabaseListingPanel.getVerticalScrollBar().setUnitIncrement(18);
         saveDatabaseListingInnerPanel.add(new JLabel("Search by ID (e.g. ULUS03410) or by name (e.g. METAL GEAR SOLID)"));
 
@@ -182,14 +191,39 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
 
         //#region game database
         tabbedPane.addTab("Game Database", gameDatabasePanel);
-        gameDatabasePanel.setLayout(GameDatabasePanelLay);
+        SpringLayout gameDatabasePanelLay = new SpringLayout();
+        gameDatabasePanel.setLayout(gameDatabasePanelLay);
 
-        GameDatabasePanelLay.putConstraint(SpringLayout.NORTH, gameDatabaseBrowserPane, 0, SpringLayout.NORTH, gameDatabasePanel);
-        GameDatabasePanelLay.putConstraint(SpringLayout.SOUTH, gameDatabaseBrowserPane, 0, SpringLayout.SOUTH, gameDatabasePanel);
-        GameDatabasePanelLay.putConstraint(SpringLayout.WEST, gameDatabaseBrowserPane, 0, SpringLayout.WEST, gameDatabasePanel);
-        GameDatabasePanelLay.putConstraint(SpringLayout.EAST, gameDatabaseBrowserPane, -10, SpringLayout.HORIZONTAL_CENTER, gameDatabasePanel);
+        gameDatabasePanelLay.putConstraint(SpringLayout.NORTH, gameDatabaseBrowserPane, 0, SpringLayout.NORTH, gameDatabasePanel);
+        gameDatabasePanelLay.putConstraint(SpringLayout.SOUTH, gameDatabaseBrowserPane, 0, SpringLayout.SOUTH, gameDatabasePanel);
+        gameDatabasePanelLay.putConstraint(SpringLayout.WEST, gameDatabaseBrowserPane, 0, SpringLayout.WEST, gameDatabasePanel);
+        gameDatabasePanelLay.putConstraint(SpringLayout.EAST, gameDatabaseBrowserPane, -10, SpringLayout.HORIZONTAL_CENTER, gameDatabasePanel);
+
+        gameDatabasePanelLay.putConstraint(SpringLayout.NORTH, gameDatabaseInnerDetailsPanel, 0, SpringLayout.NORTH, gameDatabasePanel);
+        gameDatabasePanelLay.putConstraint(SpringLayout.SOUTH, gameDatabaseInnerDetailsPanel, 0, SpringLayout.SOUTH, gameDatabasePanel);
+        gameDatabasePanelLay.putConstraint(SpringLayout.EAST, gameDatabaseInnerDetailsPanel, 0, SpringLayout.EAST, gameDatabasePanel);
+        gameDatabasePanelLay.putConstraint(SpringLayout.WEST, gameDatabaseInnerDetailsPanel, 10, SpringLayout.HORIZONTAL_CENTER, gameDatabasePanel);
+
+        SpringLayout gameInnerDatabasePanelLay = new SpringLayout();
+        gameInnerDatabasePanelLay.putConstraint(SpringLayout.WEST, gameDiscCoverImg, 5, SpringLayout.WEST, gameDatabaseInnerDetailsPanel);
+        gameInnerDatabasePanelLay.putConstraint(SpringLayout.NORTH, gameDiscCoverImg, 5, SpringLayout.NORTH, gameDatabaseInnerDetailsPanel);
+
+        gameInnerDatabasePanelLay.putConstraint(SpringLayout.WEST, gameTitle, 0, SpringLayout.WEST, gameDiscCoverImg);
+        gameInnerDatabasePanelLay.putConstraint(SpringLayout.NORTH, gameTitle, 5, SpringLayout.SOUTH, gameDiscCoverImg);
+
+        gameInnerDatabasePanelLay.putConstraint(SpringLayout.NORTH, gameDetails, 0, SpringLayout.NORTH, gameDiscCoverImg);
+        gameInnerDatabasePanelLay.putConstraint(SpringLayout.WEST, gameDetails, 5, SpringLayout.EAST, gameDiscCoverImg);
+        gameInnerDatabasePanelLay.putConstraint(SpringLayout.EAST, gameDetails, -5, SpringLayout.EAST, gameDatabaseInnerDetailsPanel);
+        gameInnerDatabasePanelLay.putConstraint(SpringLayout.SOUTH, gameDetails, 0, SpringLayout.SOUTH, gameDiscCoverImg);
+
+        gameDatabaseInnerDetailsPanel.setLayout(gameInnerDatabasePanelLay);
+        gameDatabaseInnerDetailsPanel.add(gameDiscCoverImg);
+        gameDatabaseInnerDetailsPanel.add(gameTitle);
+        gameTitle.setFont(gameDiscCoverImg.getFont().deriveFont(Font.BOLD, 18));
+        gameDatabaseInnerDetailsPanel.add(gameDetails);
 
         gameDatabasePanel.add(gameDatabaseBrowserPane);
+        gameDatabasePanel.add(gameDatabaseInnerDetailsPanel);
         //#endregion
 
         setLocation(LaunchPage.getScreenCenter(this));
@@ -204,13 +238,36 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
         new Thread(() -> {
             try {
                 loadingScreen.changeText("Downloading database...");
-                games = VimmDownloader.of().getAllGames(loadingScreen);
+                VimmDownloader vimmDownloader = VimmDownloader.of();
+                games = vimmDownloader.getAllGames(loadingScreen);
                 loadedGames = true;
 
                 char[] letters = "#ABCDEFGHIJKLMNOPQRSTUVWXZY".toCharArray();
                 for (char letter : letters) {
                     JList<VimmDownloader.VimmGame> gameList = new JList<>();
                     gameList.setListData(games.get(letter).toArray(new VimmDownloader.VimmGame[0]));
+                    gameList.addListSelectionListener(_ -> {
+                        LoadingScreen ls = new LoadingScreen(this);
+                        ls.changeText("Loading game info...");
+                        ls.showWhenPossible();
+                        Thread thread = new Thread(() -> {
+                            try {
+                                VimmDownloader.VimmGameDetails details = vimmDownloader.getDetailsFromRomID(gameList.getSelectedValue().gameID());
+                                gameDiscCoverImg.setIcon(ImageUtilites.ResizeIcon(new ImageIcon(details.img()), coverSize));
+                                gameTitle.setText(details.title());
+                                ArrayList<String[]> list = new ArrayList<>();
+                                for (Map.Entry<String, String> entry : details.details().entrySet()) {
+                                    list.add(new String[] {entry.getKey(), entry.getValue()});
+                                }
+                                gameDetails.setModel(new DefaultTableModel(list.toArray(new String[0][0]), new String[] {"Key", "Value"} ));
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            } finally {
+                                ls.hideWhenPossible();
+                            }
+                        });
+                        thread.start();
+                    });
                     JScrollPane scroll = new JScrollPane(gameList);
                     scroll.getVerticalScrollBar().setUnitIncrement(12);
                     gameDatabaseBrowserPane.addTab(String.valueOf(letter), scroll);

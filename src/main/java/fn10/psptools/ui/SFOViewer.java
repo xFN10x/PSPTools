@@ -17,7 +17,7 @@
 */
 package fn10.psptools.ui;
 
-import java.awt.Window;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -32,7 +32,7 @@ import fn10.psptools.util.ErrorShower;
 
 public class SFOViewer extends JDialog {
 
-    public SFOViewer(Window parent, SFOReader sfo) {
+    public SFOViewer(Frame parent, SFOReader sfo) {
         super(parent);
         setSize(500, 500);
         setTitle("Viewing SFO");
