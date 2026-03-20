@@ -32,7 +32,7 @@ import java.nio.file.Path;
 
 public class PSPTools {
 
-    public static final String VERSION = "1.1.1";
+    public static final String VERSION = "1.2.0";
     public static final Logger log = LogManager.getLogger(PSPTools.class);
     public static final Path MainLogPath = Path.of("logs", "main.log");
 
