@@ -150,9 +150,11 @@ public class VimmDownloader {
         }
         //get title
         Element canvas = doc.getElementById("canvas");
+        Element canvas2 = doc.getElementById("canvas2");
         byte[] title = Base64.getDecoder().decode(canvas.attr("data-v"));
+        byte[] isoName = Base64.getDecoder().decode(canvas2.attr("data-v"));
 
-        VimmGameDetails details = new VimmGameDetails(map, img, new String(title));
+        VimmGameDetails details = new VimmGameDetails(map, img, new String(title), new String(isoName));
         detailsCache.put(ID, details);
         return details;
     }
@@ -168,7 +170,7 @@ public class VimmDownloader {
         }
     }
 
-    public record VimmGameDetails(Map<String,String> details, BufferedImage img, String title) {
+    public record VimmGameDetails(Map<String,String> details, BufferedImage img, String title, String isoFileName) {
         public static final String PADDING_TEXT = " ";
     }
 

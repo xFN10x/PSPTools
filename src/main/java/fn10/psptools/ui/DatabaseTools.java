@@ -18,7 +18,6 @@
 package fn10.psptools.ui;
 
 import com.formdev.flatlaf.util.SystemFileChooser;
-import fn10.psptools.PSPTools;
 import fn10.psptools.psp.PSP;
 import fn10.psptools.ui.components.ParamSFOListElement;
 import fn10.psptools.ui.interfaces.SFOListElementListener;
@@ -33,6 +32,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.*;
@@ -40,10 +40,15 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -76,8 +81,12 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
     private static final JLabel gameTitle = new JLabel();
     private static final JTable gameDetails = new JTable();
 
+    private static final JButton downloadExternalButton = new JButton("Download to File");
+    private static final JButton downloadButton = new JButton("Download to PSP");
+    private static ActionListener downloadAction = null;
+
     private static final Dimension coverSize = new Dimension(174, 300);
-    private static final JTabbedPane gameDatabaseBrowserPane = new JTabbedPane(JTabbedPane.LEFT,JTabbedPane.SCROLL_TAB_LAYOUT);
+    private static final JTabbedPane gameDatabaseBrowserPane = new JTabbedPane(JTabbedPane.LEFT, JTabbedPane.SCROLL_TAB_LAYOUT);
     private static Map<Character, List<VimmDownloader.VimmGame>> games = null;
 
     private final SpringLayout GameDatabaseLay = new SpringLayout();
@@ -216,11 +225,25 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
         gameInnerDatabasePanelLay.putConstraint(SpringLayout.EAST, gameDetails, -5, SpringLayout.EAST, gameDatabaseInnerDetailsPanel);
         gameInnerDatabasePanelLay.putConstraint(SpringLayout.SOUTH, gameDetails, 0, SpringLayout.SOUTH, gameDiscCoverImg);
 
+        gameInnerDatabasePanelLay.putConstraint(SpringLayout.WEST, downloadButton, 10, SpringLayout.WEST, gameDatabaseInnerDetailsPanel);
+        gameInnerDatabasePanelLay.putConstraint(SpringLayout.EAST, downloadButton, -10, SpringLayout.EAST, gameDatabaseInnerDetailsPanel);
+        gameInnerDatabasePanelLay.putConstraint(SpringLayout.SOUTH, downloadButton, -10, SpringLayout.SOUTH, gameDatabaseInnerDetailsPanel);
+
+        gameInnerDatabasePanelLay.putConstraint(SpringLayout.WEST, downloadExternalButton, 0, SpringLayout.WEST, downloadButton);
+        gameInnerDatabasePanelLay.putConstraint(SpringLayout.EAST, downloadExternalButton, 0, SpringLayout.EAST, downloadButton);
+        gameInnerDatabasePanelLay.putConstraint(SpringLayout.SOUTH, downloadExternalButton, -5, SpringLayout.NORTH, downloadButton);
+
         gameDatabaseInnerDetailsPanel.setLayout(gameInnerDatabasePanelLay);
         gameDatabaseInnerDetailsPanel.add(gameDiscCoverImg);
         gameDatabaseInnerDetailsPanel.add(gameTitle);
         gameTitle.setFont(gameDiscCoverImg.getFont().deriveFont(Font.BOLD, 18));
         gameDatabaseInnerDetailsPanel.add(gameDetails);
+        gameDatabaseInnerDetailsPanel.add(downloadButton);
+        gameDatabaseInnerDetailsPanel.add(downloadExternalButton);
+
+        downloadExternalButton.setActionCommand("extern");
+        downloadExternalButton.addActionListener(downloadAction);
+        downloadButton.addActionListener(downloadAction);
 
         gameDatabasePanel.add(gameDatabaseBrowserPane);
         gameDatabasePanel.add(gameDatabaseInnerDetailsPanel);
@@ -257,9 +280,33 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
                                 gameTitle.setText(details.title());
                                 ArrayList<String[]> list = new ArrayList<>();
                                 for (Map.Entry<String, String> entry : details.details().entrySet()) {
-                                    list.add(new String[] {entry.getKey(), entry.getValue()});
+                                    list.add(new String[]{entry.getKey(), entry.getValue()});
                                 }
-                                gameDetails.setModel(new DefaultTableModel(list.toArray(new String[0][0]), new String[] {"Key", "Value"} ));
+                                gameDetails.setModel(new DefaultTableModel(list.toArray(new String[0][0]), new String[]{"Key", "Value"}));
+
+                                downloadAction = ac -> {
+                                    HttpClient client = HttpClient.newHttpClient();
+                                    if (ac.getActionCommand().equalsIgnoreCase("extern")) {
+                                        LoadingScreen ls2 = new LoadingScreen(this);
+                                        ls2.showWhenPossible();
+                                        ls2.changeText("Downloading...");
+                                        new Thread(() -> {
+                                            try {
+                                                SystemFileChooser chooser = new SystemFileChooser(details.isoFileName());
+                                                chooser.showSaveDialog(this);
+                                                CompletableFuture<HttpResponse<Path>> downloaded = client.sendAsync(vimmDownloader.getDownloadRequestFromRomID(gameList.getSelectedValue().gameID()), HttpResponse.BodyHandlers.ofFileDownload(chooser.getSelectedFile().toPath(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE));
+
+                                                ls2.hideWhenPossible();
+                                            } catch (Exception e) {
+                                                throw new RuntimeException(e);
+                                            } finally {
+                                                ls2.hideWhenPossible();
+                                            }
+                                        }).start();
+                                    } else {
+
+                                    }
+                                };
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
                             } finally {
@@ -278,7 +325,7 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
                 }
 
             } catch (Exception e) {
-                ErrorShower.full(this, "Failed to load game database",e);
+                ErrorShower.full(this, "Failed to load game database", e);
             } finally {
                 loadingScreen.hideWhenPossible();
             }
