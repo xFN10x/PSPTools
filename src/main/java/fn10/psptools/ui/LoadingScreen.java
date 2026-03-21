@@ -57,7 +57,7 @@ public class LoadingScreen extends JDialog {
     public void increaseProgress(int increase, String TextChange) {
         changeText(TextChange);
         SwingUtilities.invokeLater(() -> {
-            if (!MainBar.isIndeterminate())
+            if (MainBar.isIndeterminate())
                 MainBar.setIndeterminate(false);
             MainBar.setValue(MainBar.getValue() + increase);
         });

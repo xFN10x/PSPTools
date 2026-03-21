@@ -113,7 +113,7 @@ public class VimmDownloader {
         FormElement dlForm = (FormElement) doc.getElementById("dl_form");
         Elements idInput = dlForm.getElementsByAttributeValue("name", "mediaId");
         String id = idInput.attr("value");
-        HttpRequest req = HttpRequest.newBuilder(URI.create("https://dl3.vimm.net/?mediaId=" + id)).GET().header("Referer", base + ID).build();
+        HttpRequest req = HttpRequest.newBuilder(URI.create("https://dl3.vimm.net/?mediaId=" + id)).GET().header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36").header("Referer", base + ID).build();
         return req;
     }
 

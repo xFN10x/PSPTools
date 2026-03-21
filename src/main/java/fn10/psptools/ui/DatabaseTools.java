@@ -18,14 +18,20 @@
 package fn10.psptools.ui;
 
 import com.formdev.flatlaf.util.SystemFileChooser;
+import fn10.psptools.PSPTools;
 import fn10.psptools.psp.PSP;
 import fn10.psptools.ui.components.ParamSFOListElement;
 import fn10.psptools.ui.interfaces.SFOListElementListener;
+import fn10.psptools.util.AtomicActionListener;
 import fn10.psptools.util.ErrorShower;
 import fn10.psptools.util.ImageUtilites;
 import fn10.psptools.util.VimmDownloader;
+import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry;
+import org.apache.commons.compress.archivers.sevenz.SevenZFile;
 import org.apache.commons.io.FileUtils;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
+import org.jsoup.HttpStatusException;
+import org.jsoup.Jsoup;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -41,13 +47,16 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -83,7 +92,7 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
 
     private static final JButton downloadExternalButton = new JButton("Download to File");
     private static final JButton downloadButton = new JButton("Download to PSP");
-    private static ActionListener downloadAction = null;
+    private static AtomicActionListener downloadAction = new AtomicActionListener(null);
 
     private static final Dimension coverSize = new Dimension(174, 300);
     private static final JTabbedPane gameDatabaseBrowserPane = new JTabbedPane(JTabbedPane.LEFT, JTabbedPane.SCROLL_TAB_LAYOUT);
@@ -284,29 +293,96 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
                                 }
                                 gameDetails.setModel(new DefaultTableModel(list.toArray(new String[0][0]), new String[]{"Key", "Value"}));
 
-                                downloadAction = ac -> {
-                                    HttpClient client = HttpClient.newHttpClient();
-                                    if (ac.getActionCommand().equalsIgnoreCase("extern")) {
-                                        LoadingScreen ls2 = new LoadingScreen(this);
-                                        ls2.showWhenPossible();
-                                        ls2.changeText("Downloading...");
-                                        new Thread(() -> {
+                                downloadAction.setListener(ac -> {
+                                    new Thread(() -> {
+                                        if (ac.getActionCommand().equalsIgnoreCase("extern")) {
+                                            LoadingScreen ls2 = new LoadingScreen(this);
                                             try {
-                                                SystemFileChooser chooser = new SystemFileChooser(details.isoFileName());
-                                                chooser.showSaveDialog(this);
-                                                CompletableFuture<HttpResponse<Path>> downloaded = client.sendAsync(vimmDownloader.getDownloadRequestFromRomID(gameList.getSelectedValue().gameID()), HttpResponse.BodyHandlers.ofFileDownload(chooser.getSelectedFile().toPath(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE));
+                                                System.out.println(details.isoFileName());
+                                                SystemFileChooser chooser = new SystemFileChooser();
+                                                chooser.setSelectedFile(new File("~/" + details.isoFileName()));
+                                                chooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter("ISOs", "iso"));
+                                                SwingUtilities.invokeAndWait(() -> {
+                                                    chooser.showSaveDialog(this);
+                                                });
+                                                File selectedFile = chooser.getSelectedFile();
+                                                if (selectedFile == null) return;
+                                                try (HttpClient client = HttpClient.newHttpClient()) {
+                                                    ls2.showWhenPossible();
+                                                    ls2.changeText("Starting Download...");
+                                                    HttpRequest req = vimmDownloader.getDownloadRequestFromRomID(gameList.getSelectedValue().gameID());
+                                                    HttpResponse<InputStream> downloaded = client.send(req, HttpResponse.BodyHandlers.ofInputStream());
+                                                    if (downloaded.statusCode() != 200)
+                                                        throw new HttpStatusException("Not OK", downloaded.statusCode(), req.uri().toString());
 
-                                                ls2.hideWhenPossible();
+                                                    Thread thread1 = new Thread(() -> {
+                                                        FileOutputStream output = null;
+                                                        try (InputStream body = downloaded.body()) {
+                                                            PSPTools.log.info(downloaded.request().headers());
+                                                            PSPTools.log.info(downloaded.version());
+                                                            PSPTools.log.info(downloaded.headers());
+                                                            final int size = Integer.parseInt(downloaded.headers().firstValue("Content-Length").get());
+                                                            byte[] read = {};
+                                                            int i = 0;
+
+                                                            Path file = Path.of(chooser.getSelectedFile().getAbsolutePath() + ".7z");
+                                                            if (file.toFile().exists())
+                                                                file.toFile().delete();
+                                                            Files.createFile(file);
+                                                            output = FileUtils.openOutputStream(file.toFile());
+
+                                                            while ((read = body.readNBytes(100000)).length != 0) {
+                                                                i += read.length;
+                                                                float totalPercent = (float) i / size;
+                                                                PSPTools.log.info("Read {} bytes.", read.length);
+                                                                output.write(read);
+                                                                if (i % 3 == 0) {
+                                                                    ls2.changeText("Downloading... (" + (totalPercent * 100) + "%)");
+                                                                    ls2.setProgress((int) (totalPercent * 100));
+                                                                }
+                                                            }
+                                                            SevenZFile zip = SevenZFile.builder().setFile(file.toFile()).get();
+                                                            ls2.MainBar.setIndeterminate(true);
+                                                            ls2.changeText("Unzipping...");
+                                                            SevenZArchiveEntry entry = zip.getNextEntry();
+                                                            while (entry != null) {
+                                                                PSPTools.log.info("Unzipping: {}...", entry.getName());
+                                                                if (entry.getName().equalsIgnoreCase(details.isoFileName())) {
+                                                                    int read2 = 0;
+                                                                    Path file2 = chooser.getSelectedFile().toPath();
+                                                                    file2.toFile().createNewFile();
+                                                                    FileOutputStream fileOutputStream = FileUtils.openOutputStream(file2.toFile());
+                                                                    int i2 = 0;
+                                                                    while ((read2 = zip.read()) != -1) {
+                                                                        i2++;
+                                                                        float totalPercent = (float) i2 / size;
+                                                                        ls2.changeText("Unzipping... (" + (totalPercent * 100) + "%)");
+                                                                        ls2.setProgress((int) (totalPercent * 100));
+                                                                        fileOutputStream.write(read2);
+                                                                    }
+                                                                }
+                                                                entry = zip.getNextEntry();
+                                                            }
+                                                        } catch (Exception e) {
+                                                            throw new RuntimeException(e);
+                                                        } finally {
+                                                            ls2.hideWhenPossible();
+                                                        }
+                                                    });
+                                                    thread1.setPriority(Thread.MAX_PRIORITY);
+                                                    thread1.start();
+                                                } catch (Exception e) {
+                                                    ErrorShower.full(this, e);
+                                                }
                                             } catch (Exception e) {
-                                                throw new RuntimeException(e);
-                                            } finally {
-                                                ls2.hideWhenPossible();
+                                                ErrorShower.full(this, e);
                                             }
-                                        }).start();
-                                    } else {
+                                        } else {
 
-                                    }
-                                };
+                                        }
+                                    }).start();
+
+                                });
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
                             } finally {
