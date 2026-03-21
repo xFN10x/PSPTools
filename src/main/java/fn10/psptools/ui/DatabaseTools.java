@@ -331,15 +331,13 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
                                                             Files.createFile(file);
                                                             output = FileUtils.openOutputStream(file.toFile());
 
-                                                            while ((read = body.readNBytes(100000)).length != 0) {
+                                                            while ((read = body.readNBytes(1000000)).length != 0) {
                                                                 i += read.length;
                                                                 float totalPercent = (float) i / size;
                                                                 PSPTools.log.info("Read {} bytes.", read.length);
                                                                 output.write(read);
-                                                                if (i % 3 == 0) {
-                                                                    ls2.changeText("Downloading... (" + (totalPercent * 100) + "%)");
-                                                                    ls2.setProgress((int) (totalPercent * 100));
-                                                                }
+                                                                ls2.changeText("Downloading... (" + (totalPercent * 100) + "%)");
+                                                                ls2.setProgress((int) (totalPercent * 100));
                                                             }
                                                             SevenZFile zip = SevenZFile.builder().setFile(file.toFile()).get();
                                                             ls2.MainBar.setIndeterminate(true);
@@ -348,23 +346,26 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
                                                             while (entry != null) {
                                                                 PSPTools.log.info("Unzipping: {}...", entry.getName());
                                                                 if (entry.getName().equalsIgnoreCase(details.isoFileName())) {
-                                                                    int read2 = 0;
+                                                                    byte[] read2 = new byte[1000000];
                                                                     Path file2 = chooser.getSelectedFile().toPath();
                                                                     file2.toFile().createNewFile();
                                                                     FileOutputStream fileOutputStream = FileUtils.openOutputStream(file2.toFile());
                                                                     int i2 = 0;
-                                                                    while ((read2 = zip.read()) != -1) {
-                                                                        i2++;
+                                                                    while (zip.read(read2, 0, 1000000) != -1) {
+                                                                        i2 += read2.length;
                                                                         float totalPercent = (float) i2 / size;
-                                                                        ls2.changeText("Unzipping... (" + (totalPercent * 100) + "%)");
-                                                                        ls2.setProgress((int) (totalPercent * 100));
                                                                         fileOutputStream.write(read2);
+                                                                        if (i2 % 5 == 0) {
+                                                                            ls2.changeText("Unzipping... (" + (totalPercent * 100) + "%)");
+                                                                            ls2.setProgress((int) (totalPercent * 100));
+                                                                        }
                                                                     }
+                                                                    fileOutputStream.close();
                                                                 }
                                                                 entry = zip.getNextEntry();
                                                             }
                                                         } catch (Exception e) {
-                                                            throw new RuntimeException(e);
+                                                            ErrorShower.full(this, "Failed to download game.", e);
                                                         } finally {
                                                             ls2.hideWhenPossible();
                                                         }
