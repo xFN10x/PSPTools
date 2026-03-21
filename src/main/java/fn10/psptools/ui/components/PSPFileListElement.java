@@ -14,6 +14,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -41,6 +42,32 @@ public class PSPFileListElement extends JPanel implements MouseListener {
         specialButton.addActionListener(onClick);
     }
 
+    public boolean hasChildWithExtension(String ex) {
+        if (fileDir.isDirectory()) {
+            for (PSPFileDirectory pspFileDirectory : fileDir.getDirectory().getAll()) {
+                if (pspFileDirectory.isFile()) {
+                    if (pspFileDirectory.getFile().getExtension().equalsIgnoreCase(ex)) return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean hasChildThatHasChildWithExtension(String ex) {
+        if (fileDir.isDirectory()) {
+            for (PSPFileDirectory pspFileDirectory : fileDir.getDirectory().getAll()) {
+                if (pspFileDirectory.isDirectory()) {
+                    for (PSPFileDirectory fileDirectory : pspFileDirectory.getDirectory().getAll()) {
+                        if (fileDirectory.isFile()) {
+                            if (fileDirectory.getFile().getExtension().equalsIgnoreCase(ex)) return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     public PSPFileListElement(NewLaunchPage lp, PSPFileDirectory pfd, Color bg, ArrayList<PSPFileListElement> selectedList) {
         setLayout(lay);
         Dimension dimension = new Dimension(0, 20);
@@ -57,16 +84,22 @@ public class PSPFileListElement extends JPanel implements MouseListener {
         unhovered = getBackground();
         hovered = Color.lightGray.darker();
 
-        String name = pfd.getDirectory().getName();
-        if (pfd.isDirectory() && (name.equalsIgnoreCase("ISO") || name.equalsIgnoreCase("GAME") || name.equalsIgnoreCase("GAME150") || name.equalsIgnoreCase("GAME303"))) {
-            nameLabel.setIcon(new ImageIcon(getClass().getResource("/fileIcons/iso.png")));
-            nameLabel.setText(name);
+        URL genericIcon = getClass().getResource("/fileIcons/generic-icon.png");
+        URL genericFolder = getClass().getResource("/fileIcons/generic-folder.png");
+        URL isoIcon = getClass().getResource("/fileIcons/iso.png");
+        nameLabel.setIcon(new ImageIcon(genericIcon));
+        nameLabel.setText("???");
+        if (pfd.isDirectory() && (pfd.getDirectory().getName().equalsIgnoreCase("iso") || hasChildThatHasChildWithExtension("sfo") || hasChildThatHasChildWithExtension("pbp"))) {
+            if (pfd.getDirectory().getName().equalsIgnoreCase("iso")) {
+                nameLabel.setIcon(new ImageIcon(isoIcon));
+            }
+            nameLabel.setText(pfd.getDirectory().getName());
             setSpecialButton("Open Manager", _ -> {
-                new SFOBasedManager(lp, SFOBasedManager.GAMES_MODE, "SFO Manager: " + name, pfd.getDirectory()).setVisible(true);
+                new SFOBasedManager(lp, "SFO Manager: " + pfd.getDirectory().getName(), pfd.getDirectory()).setVisible(true);
             });
         } else if (pfd.isDirectory()) {
-            nameLabel.setIcon(new ImageIcon(getClass().getResource("/fileIcons/generic-folder.png")));
-            nameLabel.setText(name);
+            nameLabel.setIcon(new ImageIcon(genericFolder));
+            nameLabel.setText(pfd.getDirectory().getName());
         } else if (pfd.isFile()) {
             if (pfd.getFile().getExtension().equalsIgnoreCase("sfo")) {
                 nameLabel.setIcon(new ImageIcon(getClass().getResource("/fileIcons/sfo.png")));
@@ -79,12 +112,8 @@ public class PSPFileListElement extends JPanel implements MouseListener {
                     }
                 });
             } else {
-                nameLabel.setIcon(new ImageIcon(getClass().getResource("/fileIcons/generic-icon.png")));
                 nameLabel.setText(pfd.getFile().getName());
             }
-        } else {
-            nameLabel.setIcon(new ImageIcon(getClass().getResource("/fileIcons/generic-icon.png")));
-            nameLabel.setText("???");
         }
 
         lay.putConstraint(SpringLayout.WEST, nameLabel, 5, SpringLayout.WEST, this);
