@@ -107,7 +107,7 @@ public class LaunchPage extends JFrame {
                 }
             } else {
                 setVisible(false);
-                new SFOBasedManager(this, SFOBasedManager.SAVES_MODE, "Save Manager",
+                new SFOBasedManager(this, "Save Manager",
                         PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA")).setVisible(true);
 
             }
@@ -128,7 +128,7 @@ public class LaunchPage extends JFrame {
                 }
             } else {
                 setVisible(false);
-                new SFOBasedManager(this, SFOBasedManager.GAMES_MODE, "Game Manager",
+                new SFOBasedManager(this, "Game Manager",
                         PSP.getCurrentPSP().getFolder("PSP", "GAME"),
                         PSP.getCurrentPSP().getFolder("PSP", "GAME150"),
                         PSP.getCurrentPSP().getFolder("ISO"),
@@ -156,7 +156,7 @@ public class LaunchPage extends JFrame {
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             fileChooser.showOpenDialog(this);
             if (fileChooser.getSelectedFile() != null)
-                new SFOBasedManager(this, SFOBasedManager.SINGLE, "Single SFO",
+                new SFOBasedManager(this, "Single SFO",
                         new RealPSPDirectory(fileChooser.getSelectedFile()))
                         .setVisible(true);
 

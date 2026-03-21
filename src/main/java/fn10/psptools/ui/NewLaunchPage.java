@@ -51,7 +51,7 @@ public class NewLaunchPage extends JFrame {
 
         JButton gmButton = new JButton("Game Manager");
         gmButton.addActionListener(_ -> {
-            new SFOBasedManager(this, SFOBasedManager.GAMES_MODE, "Game Manager",
+            new SFOBasedManager(this, "Game Manager",
                     PSP.getCurrentPSP().getFolder("PSP", "GAME"),
                     PSP.getCurrentPSP().getFolder("PSP", "GAME150"),
                     PSP.getCurrentPSP().getFolder("ISO"),
@@ -59,7 +59,7 @@ public class NewLaunchPage extends JFrame {
         });
         JButton smButton = new JButton("Save Manager");
         smButton.addActionListener(_ -> {
-            new SFOBasedManager(this, SFOBasedManager.GAMES_MODE, "Game Manager",
+            new SFOBasedManager(this, "Save Manager",
                     PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA")).setVisible(true);
         });
         JButton npButton = new JButton("Save Patching");

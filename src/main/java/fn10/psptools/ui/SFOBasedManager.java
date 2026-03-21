@@ -53,10 +53,6 @@ import java.text.SimpleDateFormat;
 
 public class SFOBasedManager extends JFrame implements SFOListElementListener, VideoPlayingListener {
 
-    public static final int SAVES_MODE = 0;
-    public static final int GAMES_MODE = 1;
-    public static final int SINGLE = 2;
-
     private static final Dimension Size = new Dimension(706, 392);
 
     protected final JPanel InnerSFOFolderViewer = new JPanel();
@@ -83,7 +79,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
 
     private final JLabel Background = new JLabel(new ImageIcon());
 
-    public SFOBasedManager(Component parent, int mode, String title, PSPDirectory... targets) {
+    public SFOBasedManager(Component parent, String title, PSPDirectory... targets) {
         super(title);
 
         addWindowListener(new WindowAdapter() {
