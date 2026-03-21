@@ -98,7 +98,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                     return (sfo.getParam(Params.SaveFolderName).toString()).replace("\u0000", "").replace(":", " ")
                             + ".zip";
 
-                case "sd": // psvita,4,5 save data
+                case "SD": // psvita,4,5 save data
                     if (sfo.paramData.containsKey("PARENT_DIRECTORY")) // vita
                         return sfo.getParam("PARENT_DIRECTORY").toString().replace("/", "").replace("\u0000", "")
                                 .replace(":", "")
@@ -336,7 +336,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                     SFOTitle.setText((String) sfo.getParam(Params.Title, true));
                     break;
 
-                case "sd": // PSVita, 4, 5
+                case "SD": // PSVita, 4, 5
                     if (sfo.paramData.containsKey("PARENT_DIRECTORY")) // vita
                         SFOTitle.setText(sfo.getParam("PARENT_DIRECTORY", true).toString().replace("/", ""));
                     else
