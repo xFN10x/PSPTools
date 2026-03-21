@@ -192,10 +192,8 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
         ViewBG.add(ViewingDesc);
         ViewBG.add(OpenFolderButton);
         ViewBG.add(ViewingCategory);
-        if (mode == SAVES_MODE) {
-            ViewBG.add(BackupButton);
-            ViewBG.add(RestoreButton);
-        }
+        ViewBG.add(BackupButton);
+        ViewBG.add(RestoreButton);
 
         add(SFOFolderViewer);
         add(ViewBG);
@@ -415,42 +413,37 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
         int option;
         if (!backupPath.toFile().exists())
             option = JOptionPane.showConfirmDialog(this,
-                    "Backup this save?\nIt will be backed up at " + backupPath, "Backup save?",
+                    "Backup this?\nIt will be backed up at " + backupPath, "Backup?",
                     JOptionPane.YES_NO_OPTION);
         else {
             option = JOptionPane.showConfirmDialog(this,
                     "Override this backup?\nThe last backup was made " + new SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
                             .format(new Date(backupPath.toFile().lastModified())),
-                    "Backup save?",
+                    "Backup?",
                     JOptionPane.YES_NO_OPTION);
         }
         if (option == JOptionPane.YES_OPTION) {
-            try {
-                org.apache.commons.io.FileUtils.createParentDirectories(backupPath.toFile());
-                if (!backupPath.toFile().exists())
-                    backupPath.toFile().createNewFile();
+            LoadingScreen loading = new LoadingScreen(this);
+            makeAndStartMaxThread(() -> {
+                try {
+                    loading.showWhenPossible();
+                    FileUtils.createParentDirectories(backupPath.toFile());
+                    if (!backupPath.toFile().exists())
+                        backupPath.toFile().createNewFile();
 
-                // backup save
-                ZipArchiver zip = new ZipArchiver();
-                zip.setDestFile(backupPath.toFile());
+                    // backup save
+                    ZipArchiver zip = new ZipArchiver();
+                    zip.setDestFile(backupPath.toFile());
 
-                LoadingScreen loading = new LoadingScreen(this);
-                SwingUtilities.invokeLater(() -> {
-                    loading.setVisible(true);
-                });
-
-                zip.addFileSet(DefaultFileSet.fileSet(((RealPSPDirectory) selected.dir).getDirOnDisc()));
-                zip.createArchive();
-
-                SwingUtilities.invokeLater(() -> {
-                    loading.setVisible(false);
-
+                    zip.addFileSet(DefaultFileSet.fileSet(((RealPSPDirectory) selected.dir).getDirOnDisc()));
+                    zip.createArchive();
+                } catch (Exception e) {
+                    ErrorShower.full(this, "Failed to backup.", e);
+                } finally {
+                    loading.hideWhenPossible();
                     FillOutWindow(targets);
-                });
-
-            } catch (Exception e) {
-                ErrorShower.full(this, "Failed to backup save.", e);
-            }
+                }
+            });
         }
     }
 
@@ -458,31 +451,34 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
     public void restore() {
         Path backupPath = Path.of(SavedVariables.DataFolder.toString(), "PSPSaveBackups", selected.getBackupName());
         int option = JOptionPane.showConfirmDialog(this,
-                "Restore & override this save?\nThe backup was made at "
+                "Restore & override this?\nThe backup was made at "
                         + new SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
                         .format(new Date(backupPath.toFile().lastModified())),
-                "Restore save?",
+                "Restore?",
                 JOptionPane.YES_NO_OPTION);
 
         if (option == JOptionPane.YES_OPTION) {
-            try {
-                ZipUnArchiver zip = new ZipUnArchiver(backupPath.toFile());
+            LoadingScreen loading = new LoadingScreen(this);
+            makeAndStartMaxThread(() -> {
+                try {
+                    loading.showWhenPossible();
+                    ZipUnArchiver zip = new ZipUnArchiver(backupPath.toFile());
 
-                LoadingScreen loading = new LoadingScreen(this);
-                SwingUtilities.invokeLater(() -> {
-                    loading.setVisible(true);
-                });
+                    Path dest = Path.of(targets[0].toString(),
+                            backupPath.toFile().getName().replace(".zip", ""));
 
-                Path dest = Path.of(targets[0].toString(),
-                        backupPath.toFile().getName().replace(".zip", ""));
+                    FileUtils.deleteDirectory(dest.toFile());
+                    Files.createDirectory(dest);
 
-                FileUtils.deleteDirectory(dest.toFile());
-                Files.createDirectory(dest);
+                    zip.setDestDirectory(dest.toFile());
+                    zip.extract();
 
-                zip.setDestDirectory(dest.toFile());
-                zip.extract();
+                    SwingUtilities.invokeLater(() -> {
 
-                SwingUtilities.invokeLater(() -> {
+                    });
+                } catch (Exception e) {
+                    ErrorShower.full(this, "Failed to restore save.", e);
+                } finally {
                     int Option = JOptionPane.showConfirmDialog(null,
                             "Would you like to delete this backup?",
                             "Delete?",
@@ -493,14 +489,17 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                     } catch (Exception e) {
                         ErrorShower.full(this, e);
                     }
-                    loading.setVisible(false);
-
+                    loading.hideWhenPossible();
                     FillOutWindow(targets);
-                });
-            } catch (Exception e) {
-                ErrorShower.full(this, "Failed to restore save.", e);
-            }
+                }
+            });
         }
+    }
+
+    public void makeAndStartMaxThread(Runnable run) {
+        Thread thread = new Thread(run);
+        thread.setPriority(Thread.MAX_PRIORITY);
+        thread.start();
     }
 
     @Override
@@ -509,8 +508,8 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
             // Path backupPath = Path.of(System.getProperty("user.home"), "PSPSaveBackups",
             // getBackupName());
             int option = JOptionPane.showConfirmDialog(this,
-                    "Are you sure you want to delete this save? (it will be gone for a LONG time)",
-                    "DELETE SAVE?",
+                    "Are you sure you want to delete this? (it will be gone for a LONG time)",
+                    "DELETE?",
                     JOptionPane.YES_NO_OPTION);
 
             if (option == JOptionPane.YES_OPTION) {
