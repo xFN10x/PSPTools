@@ -79,7 +79,7 @@ public class NewLaunchPage extends JFrame {
         buttons.add(smButton);
         buttons.add(npButton);
         buttons.add(dtButton);
-        buttons.add(pmButton);
+        //buttons.add(pmButton);
 
         lay.putConstraint(SpringLayout.WEST, scroll, 5, SpringLayout.WEST, getContentPane());
         lay.putConstraint(SpringLayout.EAST, scroll, -5, SpringLayout.EAST, getContentPane());
