@@ -54,13 +54,13 @@ import java.nio.file.StandardOpenOption;
 
 public class ParamSFOListElement extends JPanel implements MouseListener {
 
-    public static ParamSFOListElement makeEmpty(SFOListElementListener listiener)
+    public static ParamSFOListElement makeEmpty(SFOListElementListener listener)
             throws NameNotFoundException, IOException {
         return new ParamSFOListElement(
                 SFOReader.ofStream(ParamSFOListElement.class.getResourceAsStream("/EmptyParam/PARAM.SFO")), null,
                 ParamSFOListElement.class.getResourceAsStream("/EmptyParam/ICON0.PNG").readAllBytes(),
                 ParamSFOListElement.class.getResourceAsStream("/EmptyParam/PIC1.PNG").readAllBytes(), null, null,
-                listiener);
+                listener);
     }
 
     private static final Dimension Size = new Dimension(290, 60);
@@ -75,12 +75,12 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
     private boolean corrupt = false;
     private final SpringLayout Lay = new SpringLayout();
 
-    private final JLabel SFOTitle = new JLabel();
-    private final JLabel SFODesc = new JLabel();
-    private final JLabel Icon0 = new JLabel();
-    private final JLabel HasAudio = new JLabel();
-    private final JLabel HasVideo = new JLabel();
-    private final JLabel BackedUp = new JLabel(new ImageIcon(getClass().getResource("/backed.png")));
+    protected final JLabel SFOTitle = new JLabel();
+    protected final JLabel SFODesc = new JLabel();
+    protected final JLabel Icon0 = new JLabel();
+    protected final JLabel HasAudio = new JLabel();
+    protected final JLabel HasVideo = new JLabel();
+    protected final JLabel BackedUp = new JLabel(new ImageIcon(getClass().getResource("/backed.png")));
 
     private final JPopupMenu RightClickMenu = new JPopupMenu();
 
