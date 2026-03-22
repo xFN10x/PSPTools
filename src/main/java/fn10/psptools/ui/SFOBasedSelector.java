@@ -17,24 +17,17 @@
 */
 package fn10.psptools.ui;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Frame;
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.SpringLayout;
-
 import fn10.psptools.psp.PSP;
 import fn10.psptools.psp.PSPDirectory;
 import fn10.psptools.ui.components.ParamSFOListElement;
 import fn10.psptools.ui.interfaces.SFOListElementListener;
 import fn10.psptools.util.ErrorShower;
 import fn10.psptools.util.ImageUtilites;
+import org.jspecify.annotations.NonNull;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.function.Consumer;
 
 public class SFOBasedSelector extends JDialog implements SFOListElementListener {
 
@@ -56,7 +49,13 @@ public class SFOBasedSelector extends JDialog implements SFOListElementListener 
     private final JLabel Background = new JLabel(new ImageIcon(getClass().getResource("/no_icon0.png")));
 
     public static ParamSFOListElement openSaveSelector(Frame parent) {
+        return openSaveSelector(parent, _ -> {
+        });
+    }
+
+    public static ParamSFOListElement openSaveSelector(Frame parent, @NonNull Consumer<ParamSFOListElement> specialFunc) {
         SFOBasedSelector selector = new SFOBasedSelector(parent, SAVES_MODE, "Select Save...",
+                specialFunc,
                 PSP.getCurrentPSP().getFolder("PSP", "SAVEDATA"));
 
         selector.setVisible(true);
@@ -65,6 +64,9 @@ public class SFOBasedSelector extends JDialog implements SFOListElementListener 
     }
 
     private SFOBasedSelector(Frame parent, int mode, String title, PSPDirectory... targets) {
+        this(parent, mode, title, _ -> {},targets);
+    }
+    private SFOBasedSelector(Frame parent, int mode, String title, Consumer<ParamSFOListElement> con, PSPDirectory... targets) {
         super(parent, title);
 
         InnerSFOFolderViewer.setLayout(new BoxLayout(InnerSFOFolderViewer, BoxLayout.Y_AXIS));
@@ -103,7 +105,7 @@ public class SFOBasedSelector extends JDialog implements SFOListElementListener 
 
         setModal(true);
 
-        SFOBasedManager.FillOutWindow(InnerSFOFolderViewer, this, targets);
+        SFOBasedManager.FillOutWindow(InnerSFOFolderViewer, this, con, targets);
     }
 
 
@@ -138,5 +140,6 @@ public class SFOBasedSelector extends JDialog implements SFOListElementListener 
     }
 
     @Override
-    public void onThreadCreate(Thread thread) {}
+    public void onThreadCreate(Thread thread) {
+    }
 }

@@ -17,25 +17,25 @@
 */
 package fn10.psptools.ui;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Desktop;
-import java.awt.Dimension;
-import java.awt.Frame;
+import fn10.psptools.psp.PSP;
+import fn10.psptools.psp.reader.SFOReader;
+import fn10.psptools.psp.reader.SFOReader.Params;
+import fn10.psptools.ui.components.ParamSFOListElement;
+import fn10.psptools.util.ErrorShower;
+import fn10.psptools.util.ImageUtilites;
+import fn10.psptools.util.SavedVariables;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
+import org.jspecify.annotations.NonNull;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
+import java.io.*;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -45,38 +45,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTabbedPane;
-import javax.swing.JTextField;
-import javax.swing.SpringLayout;
-import javax.swing.SwingUtilities;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-
-import fn10.psptools.util.ErrorShower;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
-
-import com.formdev.flatlaf.util.SystemFileChooser;
-import fn10.psptools.psp.PSP;
-import fn10.psptools.psp.reader.SFOReader;
-import fn10.psptools.psp.reader.SFOReader.Params;
-import fn10.psptools.ui.components.ParamSFOListElement;
-import fn10.psptools.ui.interfaces.SFOListElementListener;
-import fn10.psptools.util.ImageUtilites;
-import fn10.psptools.util.SavedVariables;
-import org.jspecify.annotations.NonNull;
 
 public class SavePatching extends JFrame {
 
@@ -109,7 +77,7 @@ public class SavePatching extends JFrame {
 
     private Future<?> currentThread;
     private BufferedReader currentReader;
-    private String currentMenu = "root";
+    private final String currentMenu = "root";
     // private volatile Future<?> currentThread;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
@@ -205,7 +173,7 @@ public class SavePatching extends JFrame {
             try {
                 Object option = JOptionPane.showInputDialog(this, "What patches would you like to download",
                         "Patch Downloader", JOptionPane.QUESTION_MESSAGE, null,
-                        new String[] { "PSP + PS3", "PSP", "PS3" },
+                        new String[]{"PSP + PS3", "PSP", "PS3"},
                         "PSP + PS3");
 
                 if (option == null)
@@ -233,8 +201,8 @@ public class SavePatching extends JFrame {
 
                         loading.changeText("Deleting old patches...");
                         FileUtils.deleteDirectory(Path.of(SavedVariables.DataFolder.toString(), "Patches").toFile()); // remove
-                                                                                                                      // old
-                                                                                                                      // patches
+                        // old
+                        // patches
 
                         // tempFile.deleteOnExit();
                         System.out.println(tempFile.getPath());
@@ -381,9 +349,27 @@ public class SavePatching extends JFrame {
             }
         });
 
-        SelectPSPSave.addActionListener(ac -> {
+        SelectPSPSave.addActionListener(_ -> {
             if (canPatch(T_PSP)) {
-                ParamSFOListElement selected = SFOBasedSelector.openSaveSelector(this);
+                File PSPPatchDir = Path.of(SavedVariables.DataFolder.toString(), "Patches", "PSP").toFile();
+                ParamSFOListElement selected = SFOBasedSelector.openSaveSelector(this, element -> {
+                    try {
+                        for (File file : PSPPatchDir.listFiles()) {
+                            if (!file.getName().endsWith(".savepatch"))
+                                continue;
+                            // if the name of the savepatch is somewhere in the save
+                            // BEGIN PARSE!!!!
+                            if (element.sfo.getParam(Params.SaveFolderName).toString()
+                                    .contains(file.getName().substring(0, file.getName().indexOf(".")))) {
+                                element.BackedUp.setIcon(new ImageIcon(getClass().getResource("/y.png")));
+                                element.add(element.BackedUp);
+                            }
+                        }
+                    } catch (Exception e) {
+                        ErrorShower.full(this, e);
+                    }
+                });
+                if (selected == null) return;
                 currentSfoListElement = selected;
 
                 SaveIcon.setIcon(ImageUtilites.ResizeIcon(selected.getIcon0(), 117, 65));
@@ -391,7 +377,6 @@ public class SavePatching extends JFrame {
                     SaveName.setText(selected.sfo.getParam(SFOReader.Params.SaveTitle, true).toString());
                     SaveGameName.setText(selected.sfo.getParam(SFOReader.Params.Title, true).toString());
 
-                    File PSPPatchDir = Path.of(SavedVariables.DataFolder.toString(), "Patches", "PSP").toFile();
                     boolean foundPatch = false;
                     System.out.println(PSPPatchDir.getAbsolutePath());
                     for (File file : PSPPatchDir.listFiles()) {
@@ -493,6 +478,7 @@ public class SavePatching extends JFrame {
                     }
                 }
 
+                //TODO: this is broken or something... ill fix it later
                 ProcessBuilder procBuilder = new ProcessBuilder(
                         Path.of(SavedVariables.DataFolder.toString(), "tools", "patcher").toString(),
                         currentSavePatch.getAbsolutePath(), String.join(", ", patchNumbers),

@@ -80,7 +80,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
     protected final JLabel Icon0 = new JLabel();
     protected final JLabel HasAudio = new JLabel();
     protected final JLabel HasVideo = new JLabel();
-    protected final JLabel BackedUp = new JLabel(new ImageIcon(getClass().getResource("/backed.png")));
+    public final JLabel BackedUp = new JLabel(new ImageIcon(getClass().getResource("/backed.png")));
 
     private final JPopupMenu RightClickMenu = new JPopupMenu();
 

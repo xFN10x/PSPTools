@@ -51,6 +51,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
+import java.util.function.Consumer;
 
 public class SFOBasedManager extends JFrame implements SFOListElementListener, VideoPlayingListener {
 
@@ -215,6 +216,10 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
     }
 
     public static void FillOutWindow(JPanel toAddTo, SFOListElementListener listener, PSPDirectory... Target) {
+        FillOutWindow(toAddTo, listener, _ -> {}, Target);
+    }
+
+    public static void FillOutWindow(JPanel toAddTo, SFOListElementListener listener, Consumer<ParamSFOListElement> consumer, PSPDirectory... Target) {
         Thread main = new Thread(() -> {
             toAddTo.removeAll();
             ParamSFOListElement first = null;
@@ -234,6 +239,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                                 ParamSFOListElement ToAdd = new ParamSFOListElement(sfo, actualDirectory, listener);
                                 toAddTo.add(Box.createRigidArea(new Dimension(0, 10)));
                                 toAddTo.add(ToAdd);
+                                consumer.accept(ToAdd);
                                 if (first == null)
                                     first = ToAdd;
                             } else if (eboot != null
@@ -242,6 +248,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                                 ParamSFOListElement ToAdd = pbpReader.createListElement(listener);
                                 toAddTo.add(Box.createRigidArea(new Dimension(0, 10)));
                                 toAddTo.add(ToAdd);
+                                consumer.accept(ToAdd);
                                 if (first == null)
                                     first = ToAdd;
                             }
