@@ -1,13 +1,28 @@
 package fn10.psptools.ui;
 
+import com.formdev.flatlaf.util.SystemFileChooser;
 import fn10.psptools.PSPTools;
 import fn10.psptools.psp.PSP;
 import fn10.psptools.psp.PSPFileDirectory;
+import fn10.psptools.psp.psps.real.RealPSP;
+import fn10.psptools.psp.psps.real.RealPSPDirectory;
+import fn10.psptools.psp.psps.real.RealPSPFile;
+import fn10.psptools.psp.reader.SFOReader;
 import fn10.psptools.ui.components.PSPFileListElement;
+import fn10.psptools.ui.components.ParamSFOListElement;
+import fn10.psptools.util.ErrorShower;
+import fn10.psptools.util.SavedVariables;
+import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 import org.jspecify.annotations.NonNull;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +55,96 @@ public class NewLaunchPage extends JFrame {
             }
         });
 
+        //#region extra menu
+        JMenu extraMenu = new JMenu("Extra");
+
+        extraMenu.add("Open Custom SFO Manager").addActionListener(_ -> {
+            SystemFileChooser fileChooser = new SystemFileChooser();
+            fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            fileChooser.showOpenDialog(this);
+            if (fileChooser.getSelectedFile() != null)
+                new SFOBasedManager(this, "Single SFO",
+                        new RealPSPDirectory(fileChooser.getSelectedFile()))
+                        .setVisible(true);
+
+        });
+
+        extraMenu.add("View SFO").addActionListener(_ -> {
+            try {
+                SystemFileChooser fileChooser = new SystemFileChooser();
+                fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                fileChooser.addChoosableFileFilter(new SystemFileChooser.FileNameExtensionFilter("Supported Files", "sfo", "iso"));
+                fileChooser.addChoosableFileFilter(new SystemFileChooser.FileNameExtensionFilter("SFO Files", "sfo"));
+                fileChooser.addChoosableFileFilter(new SystemFileChooser.FileNameExtensionFilter("ISO Files", "iso"));
+                fileChooser.showOpenDialog(this);
+                if (fileChooser.getSelectedFile() == null)
+                    return;
+                RealPSPFile pspdir = new RealPSPFile(fileChooser.getSelectedFile());
+                if (pspdir.getExtension().equalsIgnoreCase("sfo"))
+                    new SFOViewer(this, SFOReader.ofPSPFile(pspdir)).setVisible(true);
+                else if (pspdir.getExtension().equalsIgnoreCase("iso"))
+                    new SFOViewer(this, ParamSFOListElement.ofIso(pspdir, null).sfo).setVisible(true);
+
+            } catch (Exception e) {
+                ErrorShower.full(this, e);
+            }
+        });
+
+        extraMenu.add("Select Demo PSP").addActionListener(ac -> {
+            int choice = JOptionPane.showConfirmDialog(this,
+                    "<html>Selecting the Demo PSP will set the PSP is this session to an example one, with example games, and saves; all of which their data removed, so its only the things required for PSPTools to know what it is.<br/> <br/> <b>Save patching is not possible with these saves.</b></html>",
+                    "Entering Demo Mode", JOptionPane.OK_CANCEL_OPTION);
+            if (choice == JOptionPane.OK_OPTION) {
+                try {
+                    Path demoFolder = SavedVariables.DataFolder.resolve("demo");
+
+                    if (!demoFolder.toFile().exists()) {
+                        Files.createDirectories(demoFolder);
+                        File tempZip = File.createTempFile("PSPTOOLS", "TEMPDEMOZIP.zip");
+                        Files.write(tempZip.toPath(), getClass().getResourceAsStream("/DEMO.zip").readAllBytes(),
+                                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING,
+                                StandardOpenOption.WRITE);
+                        tempZip.deleteOnExit();
+                        ZipUnArchiver zua = new ZipUnArchiver(tempZip);
+                        zua.setDestDirectory(demoFolder.toFile());
+                        zua.extract();
+
+                    }
+                    PSP.DemoMode = true;
+                    PSP.setCurrentPSP(new RealPSP(demoFolder), true, false);
+                } catch (Exception e) {
+                    ErrorShower.full(this, "Unable to enter demo mode.", e);
+                }
+            }
+        });
+        //#endregion
+
+        JMenu aboutMenu = new JMenu("About");
+        aboutMenu.add("PSPTools by _FN10_").setEnabled(false);
+        aboutMenu.add("Version " + PSPTools.VERSION).setEnabled(false);
+        aboutMenu.addSeparator();
+
+        Desktop desktop = Desktop.getDesktop();
+        aboutMenu.add("PSPTools on Github").addActionListener(_ ->
+        {
+            try {
+                desktop.browse(URI.create("https://github.com/xFN10x/PSPTools"));
+            } catch (IOException e) {
+                ErrorShower.full(this, "Failed to browse",e);
+            }
+        });
+        aboutMenu.add("PSPTools on Flavourtown").addActionListener(_ ->
+        {
+            try {
+                desktop.browse(URI.create("https://flavortown.hackclub.com/projects/9854"));
+            } catch (IOException e) {
+                ErrorShower.full(this, "Failed to browse",e);
+            }
+        });
+
         menu.add(pspMenu);
+        menu.add(extraMenu);
+        menu.add(aboutMenu);
         setJMenuBar(menu);
 
         JScrollPane scroll = new JScrollPane(files);
