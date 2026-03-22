@@ -72,6 +72,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
     private final ImageIcon icon0;
     private final ImageIcon pic1;
     public final PSPDirectory dir;
+    private boolean corrupt = false;
     private final SpringLayout Lay = new SpringLayout();
 
     private final JLabel SFOTitle = new JLabel();
@@ -104,7 +105,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                                 .replace(":", "")
                                 .replace("\n", " ").replace(" ", "-") + ".zip";
                     else
-                        return sfo.getParam("TITLE_ID").toString().replace("/", "").replace("\u0000", "")
+                        return sfo.getParam(Params.Title).toString().replace("/", "").replace("\u0000", "")
                                 .replace(":", "")
                                 .replace("\n", " ").replace(" ", "-") + ".zip";
 
@@ -243,6 +244,15 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         this.dir = dir;
         this.audioData = snd0Data;
 
+        if (icon0Data == null) {
+            icon0Data = getClass().getResource("/no_icon0.png").openStream().readAllBytes();
+        }
+
+        if (pic1Data == null) {
+            corrupt = true;
+            pic1Data = getClass().getResource("/no_icon0.png").openStream().readAllBytes();
+        }
+
         if (snd0Data != null)
             this.hasAudio = true;
 
@@ -270,8 +280,6 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
             if (backupPath.toFile().exists())
                 RightClickMenu.add("Restore").addActionListener(ac -> selectedFunction.restore());
         }
-        System.out.println(backupPath);
-        System.out.println(dir);
 
         backuped = backupPath.toFile().exists() && dir != null && sfo != null;
 
@@ -300,6 +308,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                                     + ")");
                     break;
 
+                case "ME":
                 case "UG": // umd game
 
                     SFOTitle.setText((String) sfo.getParam(Params.Title));
@@ -340,7 +349,7 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
                     if (sfo.paramData.containsKey("PARENT_DIRECTORY")) // vita
                         SFOTitle.setText(sfo.getParam("PARENT_DIRECTORY", true).toString().replace("/", ""));
                     else
-                        SFOTitle.setText(sfo.getParam("MAINTITLE", true).toString().replace("/", ""));
+                        SFOTitle.setText(sfo.getParam("TITLE", true).toString().replace("/", ""));
                     break;
 
                 case "MG":
@@ -410,7 +419,10 @@ public class ParamSFOListElement extends JPanel implements MouseListener {
         add(SFOTitle);
         add(Icon0);
         add(SFODesc);
-        if (backuped) {
+        if (corrupt) {
+            BackedUp.setIcon(new ImageIcon(getClass().getResource("/corrupt.png")));
+        }
+        if (backuped || corrupt) {
             add(BackedUp);
         }
         if (icon1Data != null) {

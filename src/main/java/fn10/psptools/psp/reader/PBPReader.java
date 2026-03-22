@@ -5,6 +5,7 @@ import fn10.psptools.PSPTools;
 import fn10.psptools.psp.PSPFile;
 import fn10.psptools.ui.components.ParamSFOListElement;
 import fn10.psptools.ui.interfaces.SFOListElementListener;
+import org.jspecify.annotations.Nullable;
 
 import javax.imageio.ImageIO;
 import javax.naming.NameNotFoundException;
@@ -38,8 +39,13 @@ public class PBPReader {
         this.sn0 = sn0;
     }
 
+    public byte[] emptyToNull(byte[] array) {
+        if (array.length == 0) return null;
+        return array;
+    }
+
     public ParamSFOListElement createListElement(SFOListElementListener lis) throws NameNotFoundException, IOException {
-        return new ParamSFOListElement(param, null,  ic0, pic1,  ic1, sn0, lis);
+        return new ParamSFOListElement(param, null,  emptyToNull(ic0), emptyToNull(pic1),  emptyToNull(ic1), emptyToNull(sn0), lis);
     }
 
     //https://www.psdevwiki.com/ps3/PBP#Content_Information_Files

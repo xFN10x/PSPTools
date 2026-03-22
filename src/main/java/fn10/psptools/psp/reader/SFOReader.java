@@ -77,12 +77,14 @@ public class SFOReader {
         CATEGORIES.put("UA", "UMD Audio");
         CATEGORIES.put("UC", "UMD Cleaning Disc");
 
+        //idk
+        CATEGORIES.put("ME", "Unknown (Popstation?)");
     }
 
     public Header header;
-    public List<IndexEntry> index_table = new ArrayList<IndexEntry>();
-    public Map<String, byte[]> paramData = new HashMap<String, byte[]>();
-    public Map<String, Integer> dataTypes = new HashMap<String, Integer>();
+    public List<IndexEntry> index_table = new ArrayList<>();
+    public Map<String, byte[]> paramData = new HashMap<>();
+    public Map<String, Integer> dataTypes = new HashMap<>();
 
     public static class Header {
         public String magic;

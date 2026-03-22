@@ -53,7 +53,7 @@ public class SFOBasedSelector extends JDialog implements SFOListElementListener 
 
     private ParamSFOListElement selected = null;
 
-    private final JLabel Background = new JLabel(new ImageIcon(getClass().getResource("/bg.png")));
+    private final JLabel Background = new JLabel(new ImageIcon(getClass().getResource("/no_icon0.png")));
 
     public static ParamSFOListElement openSaveSelector(Frame parent) {
         SFOBasedSelector selector = new SFOBasedSelector(parent, SAVES_MODE, "Select Save...",

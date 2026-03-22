@@ -18,6 +18,7 @@
 package fn10.psptools.ui;
 
 import com.formdev.flatlaf.ui.FlatLineBorder;
+import fn10.psptools.PSPTools;
 import fn10.psptools.psp.PSPDirectory;
 import fn10.psptools.psp.PSPFile;
 import fn10.psptools.psp.PSPFileDirectory;
@@ -313,6 +314,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                     }
                     break;
 
+                case "ME":
                 case "UG":
                     ViewingName.setText(selectedElement.sfo.getParam(Params.Title, false).toString());
                     ViewingDesc.setText("UMD Game: " + selectedElement.sfo.getParam(Params.DiscID, false).toString());
@@ -343,16 +345,16 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
                     ViewingSubDesc.setText("");
                     break;
 
-                case "sd": // psptools
+                case "SD": // psptools
                     if (selectedElement.sfo.paramData.containsKey("PARENT_DIRECTORY")) // vita
                     {
                         ViewingName.setText(selectedElement.sfo.getParam("PARENT_DIRECTORY", true).toString());
                         ViewingDesc.setText("PSVita saves do not contain much info about them.");
                         ViewingSubDesc.setText("(Vita)");
                     } else {
-                        ViewingName.setText(selectedElement.sfo.getParam("MAINTITLE", true).toString());
-                        ViewingDesc.setText(selectedElement.sfo.getParam("SUBTITLE", true).toString());
-                        ViewingSubDesc.setText(selectedElement.sfo.getParam("TITLE_ID", true).toString());
+                        ViewingName.setText(selectedElement.sfo.getParam("TITLE", true).toString());
+                        ViewingDesc.setText(selectedElement.sfo.getParam("SUB_TITLE", true).toString());
+                        ViewingSubDesc.setText(selectedElement.sfo.getParam(Params.SaveFolderName, true).toString());
                     }
                     break;
 
@@ -404,6 +406,7 @@ public class SFOBasedManager extends JFrame implements SFOListElementListener, V
     public void backup() {
         if (!(selected.dir instanceof RealPSPDirectory)) {
             JOptionPane.showMessageDialog(this, "You cannot back this up.");
+            return;
         }
         Path backupPath = Path.of(SavedVariables.DataFolder.toString(), "PSPSaveBackups", selected.getBackupName());
         int option;
