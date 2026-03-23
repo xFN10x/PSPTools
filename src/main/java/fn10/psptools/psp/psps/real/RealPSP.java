@@ -37,10 +37,8 @@ public class RealPSP extends PSP {
     public boolean pspActive() {
         try {
             File PSPFolder = new File(Path.of(path.toString(), "PSP").toString());
-            File ISOFolder = new File(Path.of(path.toString(), "ISO").toString());
-            File PSPGameFolder = new File(Path.of(path.toString(), "PSP", "Game").toString());
 
-            return (PSPFolder.exists() && ISOFolder.exists() && PSPGameFolder.exists());
+            return PSPFolder.exists();
         } catch (Exception e) {
             return false;
         }
