@@ -38,6 +38,8 @@ dependencies {
     //https://github.com/jpcsp/jpcsp
     implementation(files("libs/JPCSP-OnlyFileSystemStuff.jar"))
 
+    //1.2.0
+
     implementation("org.apache.logging.log4j:log4j-core:2.25.3")
     annotationProcessor("org.apache.logging.log4j:log4j-core:2.25.3")
 

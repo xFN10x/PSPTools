@@ -2,21 +2,23 @@
 
 ![hackatime](https://hackatime-badge.hackclub.com/U0923KXMGUR/PSPTools) [![Java CI with Gradle](https://github.com/xFN10x/PSPTools/actions/workflows/gradle.yml/badge.svg)](https://github.com/xFN10x/PSPTools/actions/workflows/gradle.yml)
 
-Various tools for managing your Playstation® Portable, Playstation® Vita, or any other playsation save. (PS3-PS5)
+Various tools for managing your Playstation® Portable, Playstation® Vita, or any other playstation save. (PS3-PS5)
 
 Features include:
 
-- ***Launch Page***
-  - **Save Manager** - View all the saves on your PSP, listien to the XMB music, watch the XMB video, and back them up.
-  - **Save Tools** - Various tools regarding saves.
-    - **Save Database** - Downloads saves from the [apollo database](https://github.com/bucanero/apollo-saves).
-    - **Save Patching** - Patch saves all within the app, using the [apollo patch database](https://github.com/bucanero/apollo-patches).
-  - **Game Manager** - View games, ISO games included, on your PSP. View the XMB icons, and watch those videos aswell.
-- ***Extra***
-  - **Open Custom SFO Manager** - Use this to open any folder that is SFO based. (For example, the PSP/SAVEDATA folder is SFO based, since each folder in SAVEDATA has an SFO.)
-  - **View SFO** - View the raw data of any SFO. Useful for developers.
-  - **Select Demo PSP** - Use this to test out the program without the need for any folder setting up, or a PSP. (When using the demo PSP, you cannot do save patching.)
+### Game Manager
+<img src="img.png" alt="game manager" width="500"> 
 
+### Save Manager
+<img src="img_1.png" alt="save manager" width="500"> 
+
+### Database Tools
+<img src="img_2.png" alt="database tools 1" width="300"> <img src="img_3.png" alt="database tools 2" width="300">
+
+### File Manager
+<img src="img_4.png" alt="file manager" width="400">
+
+### 
 > [!TIP]
 > **Using JAR**
 >
