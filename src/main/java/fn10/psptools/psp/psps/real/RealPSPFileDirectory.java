@@ -18,6 +18,7 @@
 package fn10.psptools.psp.psps.real;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import fn10.psptools.psp.PSPDirectory;
@@ -38,7 +39,7 @@ public class RealPSPFileDirectory implements PSPFileDirectory {
 
     @Override
     public boolean isDirectory() {
-        return file.isDirectory();
+        return Files.isDirectory(file.toPath());
     }
 
     @Override
