@@ -3,6 +3,7 @@ package fn10.psptools.ui;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import fn10.psptools.PSPTools;
 import fn10.psptools.psp.PSP;
+import fn10.psptools.psp.PSPDirectory;
 import fn10.psptools.psp.PSPFileDirectory;
 import fn10.psptools.psp.psps.real.RealPSP;
 import fn10.psptools.psp.psps.real.RealPSPDirectory;
@@ -90,7 +91,7 @@ public class NewLaunchPage extends JFrame {
             }
         });
 
-        extraMenu.add("Select Demo PSP").addActionListener(ac -> {
+        extraMenu.add("Select Demo PSP").addActionListener(_ -> {
             int choice = JOptionPane.showConfirmDialog(this,
                     "<html>Selecting the Demo PSP will set the PSP is this session to an example one, with example games, and saves; all of which their data removed, so its only the things required for PSPTools to know what it is.<br/> <br/> <b>Save patching is not possible with these saves.</b></html>",
                     "Entering Demo Mode", JOptionPane.OK_CANCEL_OPTION);
@@ -108,10 +109,11 @@ public class NewLaunchPage extends JFrame {
                         ZipUnArchiver zua = new ZipUnArchiver(tempZip);
                         zua.setDestDirectory(demoFolder.toFile());
                         zua.extract();
-
                     }
+
                     PSP.DemoMode = true;
                     PSP.setCurrentPSP(new RealPSP(demoFolder), true, false);
+                    showDir("");
                 } catch (Exception e) {
                     ErrorShower.full(this, "Unable to enter demo mode.", e);
                 }
@@ -210,8 +212,9 @@ public class NewLaunchPage extends JFrame {
     }
 
     public static boolean isRoot(String path) {
-        String serialized = path.replace("\\", "/");
-        return serialized.lastIndexOf("/") == path.indexOf("/");
+        Path rootOfPsp = Path.of(PSP.getCurrentPSP().getFolder("").getPath());
+        Path otherPath = rootOfPsp.resolve(path);
+        return rootOfPsp.getNameCount() == otherPath.getNameCount();
     }
 
     /**
@@ -232,8 +235,8 @@ public class NewLaunchPage extends JFrame {
     public void showDir(String path) {
         Thread thread = new Thread(() -> {
             selectedFilesList.clear();
-            dirText.setText(path);
-            String print = "Listing Directory '" + path + "'...";
+            dirText.setText(Path.of(path).toString());
+            String print = "Listing Directory '" + Path.of(path) + "'...";
             PSPTools.log.info(print);
             loadingText.setText(print);
             int i = 1;
@@ -267,20 +270,25 @@ public class NewLaunchPage extends JFrame {
             ArrayList<PSPFileDirectory> all = new ArrayList<>(List.of(currentPSP.getFolder(path).getAll()));
             all.sort((o1, o2) -> {
                 if (o1.isDirectory() && !o2.isDirectory()) {
-                    return 1;
+                    return -1;
                 } else if (o1.isDirectory() && o2.isDirectory()) {
                     return 0;
                 } else
-                    return -1;
+                    return 1;
             });
             for (PSPFileDirectory pfd : all) {
-                PSPFileListElement comp;
-                if (i % 2 == 0)
-                    comp = new PSPFileListElement(this, pfd, Color.darkGray.darker(), selectedFilesList);
-                else
-                    comp = new PSPFileListElement(this, pfd, selectedFilesList);
-                i++;
-                files.add(comp);
+                try {
+                    PSPFileListElement comp;
+                    if (i % 2 == 0)
+                        comp = new PSPFileListElement(this, pfd, Color.darkGray.darker(), selectedFilesList);
+                    else
+                        comp = new PSPFileListElement(this, pfd, selectedFilesList);
+                    i++;
+                    files.add(comp);
+                } catch (Exception e) {
+                    files.add(new JLabel(e.getMessage()));
+                    PSPTools.log.error("Failed to add file list element", e);
+                }
             }
             loadingText.setText("Not Busy");
         });
