@@ -19,7 +19,7 @@ dependencies {
 
     implementation("com.google.code.gson:gson:2.13.2")
 
-    implementation("com.google.guava:guava:33.5.0-jre")
+    implementation("com.google.guava:guava:33.6.0-jre")
 
     implementation("commons-io:commons-io:2.21.0")
 
