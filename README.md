@@ -24,16 +24,11 @@ Features include:
 >
 > If you don't have a prebuilt version of PSPTools made for your platform, you can use the cross-platform jar. To do this you need to have java 25 installed. You can get one at <https://learn.microsoft.com/en-ca/java/openjdk/download#openjdk-25>
 
-> [!NOTE]
-> **For Flavourtown Users/Shipwrights**
-> 
-> For testing, please use the demo mode. Or, if you actually own a PSP or Vita, you can try that to get the full experiance.
-
-
 ## Special Thanks
 
 - **[bucanero](https://github.com/bucanero)** - Save patching & save database ([apollo-lib](https://github.com/bucanero/apollo-lib), [apollo-patches](https://github.com/bucanero/apollo-patches), [apollo-saves](https://github.com/bucanero/apollo-saves)) Support them here: <https://www.patreon.com/dparrino>
 - **[georgemoralis](https://github.com/georgemoralis)** - [JPCSP](https://github.com/jpcsp/jpcsp)'s UMD ISO reader, used for reading ISO files.
+- **<https://vimm.net>** - Game database
 
 ## Building
 PSPTools is made with gradle, so building is easy.
