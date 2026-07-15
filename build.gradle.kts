@@ -54,10 +54,10 @@ java {
     }
 }
 
-var mainClass = "fn10.psptools.PSPTools"
+var mainlass = "fn10.psptools.PSPTools"
 
 application {
-    mainClass = mainClass
+    mainClass = mainlass
 }
 
 var version = "1.2"
@@ -78,7 +78,7 @@ tasks.jpackage {
     type = org.panteleyev.jpackage.ImageType.APP_IMAGE
 
     mainJar = "PSPTools-$version-all.jar"
-    mainClass = mainClass
+    mainClass = mainlass
 
     windows {
         icon = layout.projectDirectory.file("/src/main/resources/icon.ico")

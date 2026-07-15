@@ -94,7 +94,7 @@ public class VimmDownloader {
         for (Element tableEntry : tableEntrys) {
             //looking at the website, the order is: title, region, version
             Elements elements = tableEntry.getElementsByTag("td");
-            Element titleElement = elements.get(0).getElementsByTag("a").getFirst();
+            Element titleElement = elements.get(0).getElementsByTag("a").get(1);
 
             String ver = elements.get(2).text();
             String link = titleElement.attr("href");
@@ -113,7 +113,11 @@ public class VimmDownloader {
         FormElement dlForm = (FormElement) doc.getElementById("dl_form");
         Elements idInput = dlForm.getElementsByAttributeValue("name", "mediaId");
         String id = idInput.attr("value");
-        HttpRequest req = HttpRequest.newBuilder(URI.create("https://dl3.vimm.net/?mediaId=" + id)).GET().header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36").header("Referer", base + ID).build();
+        HttpRequest req = HttpRequest.newBuilder(URI
+                .create("https://dl2.vimm.net/?mediaId=" + id)).GET()
+                .header("User-Agent", 
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36")
+                .header("Referer", base + ID).build();
         return req;
     }
 

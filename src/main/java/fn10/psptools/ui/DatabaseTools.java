@@ -54,6 +54,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -298,7 +299,9 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
                                             chooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter("ISOs", "iso"));
                                             SwingUtilities.invokeLater(() -> {
                                                 chooser.showSaveDialog(this);
-                                                downloadGameToFile(details, vimmDownloader, gameList, chooser.getSelectedFile());
+                                                new Thread(() ->
+                                                        downloadGameToFile(details, vimmDownloader, gameList, chooser.getSelectedFile())
+                                                ).start();
                                             });
                                         } else {
                                             PSP currentPSP = PSP.getCurrentPSP();
@@ -341,9 +344,9 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
         try {
             if (selectedFile == null) return;
             LoadingScreen ls2 = new LoadingScreen(this);
+            ls2.showWhenPossible();
+            ls2.changeText("Starting Download...");
             try (HttpClient client = HttpClient.newHttpClient()) {
-                ls2.showWhenPossible();
-                ls2.changeText("Starting Download...");
                 HttpRequest req = vimmDownloader.getDownloadRequestFromRomID(gameList.getSelectedValue().gameID());
                 HttpResponse<InputStream> downloaded = client.send(req, HttpResponse.BodyHandlers.ofInputStream());
                 if (downloaded.statusCode() != 200)
@@ -365,7 +368,8 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
                         Files.createFile(file);
                         output = FileUtils.openOutputStream(file.toFile());
 
-                        while ((read = body.readNBytes(1000000)).length != 0) {
+                        int bufSize = 1000000;
+                        while ((read = body.readNBytes(bufSize)).length != 0) {
                             i += read.length;
                             float totalPercent = (float) i / size;
                             PSPTools.log.info("Read {} bytes.", read.length);
@@ -385,7 +389,7 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
                                 selectedFile.createNewFile();
                                 FileOutputStream fileOutputStream = FileUtils.openOutputStream(file2.toFile());
                                 int i2 = 0;
-                                while (zip.read(read2, 0, 1000000) != -1) {
+                                while (zip.read(read2, 0, bufSize) != -1) {
                                     i2 += read2.length;
                                     float totalPercent = (float) i2 / entry.getSize();
                                     fileOutputStream.write(read2);
@@ -398,17 +402,21 @@ public class DatabaseTools extends JFrame implements SFOListElementListener {
                             }
                             entry = zip.getNextEntry();
                         }
+                        zip.close();
                         ls2.changeText("Cleaning up...");
-                        file.toFile().delete();
+                        if (!file.toFile().delete()) {
+                            JOptionPane.showMessageDialog(ls2, "Failed to delete 7z archive, but the installation finished.", "Error", JOptionPane.WARNING_MESSAGE);
+                        }
                     } catch (Exception e) {
                         ErrorShower.full(this, "Failed to download game.", e);
                     } finally {
                         ls2.hideWhenPossible();
                     }
                 });
-                thread1.setPriority(Thread.MAX_PRIORITY);
+                thread1.setPriority(7);
                 thread1.start();
             } catch (Exception e) {
+                ls2.hideWhenPossible();
                 ErrorShower.full(this, e);
             }
         } catch (Exception e) {
