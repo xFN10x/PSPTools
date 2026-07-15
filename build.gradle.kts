@@ -60,7 +60,7 @@ application {
     mainClass = mainlass
 }
 
-var version = "1.2"
+var version = "1.2.1"
 
 tasks.jpackage {
     dependsOn("build", "shadowJar")
