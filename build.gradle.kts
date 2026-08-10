@@ -44,7 +44,7 @@ dependencies {
     annotationProcessor("org.apache.logging.log4j:log4j-core:2.25.3")
 
     // jsoup HTML parser library @ https://jsoup.org/
-    implementation("org.jsoup:jsoup:1.22.1")
+    implementation("org.jsoup:jsoup:1.22.2")
 }
 
 
