@@ -30,7 +30,7 @@ dependencies {
     //1.1.0
 
     // https://mvnrepository.com/artifact/ws.schild/jave-all-deps
-    implementation("ws.schild:jave-all-deps:3.5.0")
+    implementation("ws.schild:jave-all-deps:4.2.0")
 
     // Source: https://mvnrepository.com/artifact/commons-net/commons-net
     implementation("commons-net:commons-net:3.13.0")
